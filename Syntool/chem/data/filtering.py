@@ -917,12 +917,12 @@ def filter_reactions(
     config: ReactionCheckConfig,
     reaction_database_path: str,
     result_directory_path: str = "./",
-    result_reactions_file_name: str = "clean_reactions",
-    filtered_reactions_file_name: str = "removed_reactions",
+    result_reactions_file_name: str = "reaction_data_filtered",
+    filtered_reactions_file_name: str = "reaction_data_removed",
     output_files_format: str = "rdf",
     append_results: bool = False,
     num_cpus: int = 1,
-    batch_size: int = 10,
+    batch_size: int = 100,
 ) -> None:
     """
     Processes a database of chemical reactions, applying checks based on the provided configuration,
@@ -945,7 +945,7 @@ def filter_reactions(
 
     checkers = config.create_checkers()
 
-    ray.init(num_cpus=num_cpus, ignore_reinit_error=True)
+    ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
 
     max_concurrent_batches = num_cpus  # Limit the number of concurrent batches
 
@@ -979,7 +979,6 @@ def filter_reactions(
 
         futures = {}
         batch = []
-
         for index, reaction in enumerate(reactions_file):
             reaction.meta["reaction_index"] = index
             batch.append((index, reaction))
@@ -1012,6 +1011,7 @@ def filter_reactions(
             )
 
         pbar.close()
+
     result_file.close()
     filtered_file.close()
     ray.shutdown()

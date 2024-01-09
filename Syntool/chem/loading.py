@@ -6,6 +6,7 @@ import logging
 import pickle
 from time import time
 from tqdm import tqdm
+from pathlib import Path
 
 import pandas as pd
 

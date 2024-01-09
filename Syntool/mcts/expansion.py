@@ -10,7 +10,6 @@ from Syntool.ml.training import mol_to_pyg
 from Syntool.utils.config import PolicyNetworkConfig
 
 
-
 class PolicyFunction:
     """
     Policy function based on policy neural network for node expansion in MCTS
@@ -87,5 +86,5 @@ class PolicyFunction:
         sorted_probs, sorted_rules = sorted_probs.tolist(), sorted_rules.tolist()
 
         for prob, rule_id in zip(sorted_probs, sorted_rules):
-            if prob > self.config.threshold:
+            if prob > self.config.rule_prob_threshold:
                 yield prob, reaction_rules[rule_id], rule_id

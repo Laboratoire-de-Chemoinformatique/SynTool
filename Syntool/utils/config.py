@@ -380,7 +380,6 @@ class PolicyNetworkConfig(ConfigABC):
     num_conv_layers: int = 5
     num_epoch: int = 100
     weights_path: str = None
-    threshold: float = 0.0
 
     # for filtering policy
     priority_rules_fraction: float = 0.5

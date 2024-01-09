@@ -4,7 +4,6 @@ Module containing functions for running value network tuning with self-tuning ap
 
 import csv
 import logging
-import os.path
 from collections import defaultdict
 from pathlib import Path
 from random import shuffle

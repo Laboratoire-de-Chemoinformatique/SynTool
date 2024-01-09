@@ -19,6 +19,18 @@ from Syntool.ml.networks.policy import PolicyNetworkConfig
 from Syntool.utils.config import read_planning_config, read_training_config, TreeConfig
 from Syntool.mcts.search import tree_search
 
+from Syntool.chem.data.filtering import (
+    filter_reactions,
+    ReactionCheckConfig,
+    CCRingBreakingConfig,
+    WrongCHBreakingConfig,
+    CCsp3BreakingConfig,
+    DynamicBondsConfig,
+    MultiCenterConfig,
+    NoReactionConfig,
+    SmallMoleculesConfig,
+)
+
 warnings.filterwarnings("ignore")
 main = click.Group()
 
@@ -57,7 +69,7 @@ def training_data_cli():
 @click.option("--config",
               "config_path",
               required=True,
-              help="Path to the config YAML molecules_path. To generate default config, use command Synto_default_config",
+              help="Path to the config YAML molecules_path.",
               type=click.Path(exists=True, path_type=Path),
               )
 def syntool_planning_cli(config_path):
@@ -101,6 +113,8 @@ def syntool_training_cli(config_path):
     config = read_training_config(config_path)
     print('Config is read')
 
+    reaction_data_file = config['InputData']['reaction_data_path']
+
     # reaction data mapping
     data_output_folder = os.path.join(config['General']['results_root'], 'reaction_data')
     Path(data_output_folder).mkdir(parents=True, exist_ok=True)
@@ -111,15 +125,43 @@ def syntool_training_cli(config_path):
         remove_reagents_and_map_from_file(input_file=config['InputData']['reaction_data_path'],
                                           output_file=mapped_data_file)
 
+        reaction_data_file = mapped_data_file
+
     # reaction data cleaning
     cleaned_data_file = os.path.join(data_output_folder, 'reaction_data_cleaned.rdf')
     if config['DataCleaning']['clean_reactions']:
         print('\nCLEAN REACTION DATA ...')
 
-        input_file = mapped_data_file if config['DataCleaning']['map_reactions'] else config['InputData']['reaction_data_path']
-        reactions_cleaner(input_file=input_file,
+        reactions_cleaner(input_file=reaction_data_file,
                           output_file=cleaned_data_file,
                           num_cpus=config['General']['num_cpus'])
+
+        reaction_data_file = cleaned_data_file
+
+    # reactions data filtering
+    if config['DataCleaning']['filter_reactions']:
+        print('\nFILTER REACTION DATA ...')
+        #
+        filtration_config = ReactionCheckConfig(
+            remove_small_molecules=False,
+            small_molecules_config=SmallMoleculesConfig(limit=6),
+            dynamic_bonds_config=DynamicBondsConfig(min_bonds_number=1, max_bonds_number=6),
+            no_reaction_config=NoReactionConfig(),
+            multi_center_config=MultiCenterConfig(),
+            wrong_ch_breaking_config=WrongCHBreakingConfig(),
+            cc_sp3_breaking_config=CCsp3BreakingConfig(),
+            cc_ring_breaking_config=CCRingBreakingConfig()
+        )
+
+        filtered_data_file = os.path.join(data_output_folder, 'reaction_data_filtered.rdf')
+        filter_reactions(config=filtration_config,
+                         reaction_database_path=reaction_data_file,
+                         result_directory_path=data_output_folder,
+                         result_reactions_file_name='reaction_data_filtered',
+                         num_cpus=config['General']['num_cpus'],
+                         batch_size=100)
+
+        reaction_data_file = filtered_data_file
 
     # standardize building blocks
     if config['DataCleaning']['standardize_building_blocks']:
@@ -130,12 +172,6 @@ def syntool_training_cli(config_path):
 
     # reaction rules extraction
     print('\nEXTRACT REACTION RULES ...')
-    if config['DataCleaning']['clean_reactions']:
-        reaction_file = cleaned_data_file
-    elif config['DataCleaning']['map_reactions']:
-        reaction_file = mapped_data_file
-    else:
-        reaction_file = config['InputData']['reaction_data_path']
 
     rules_output_folder = os.path.join(config['General']['results_root'], 'reaction_rules')
     Path(rules_output_folder).mkdir(parents=True, exist_ok=True)
@@ -143,7 +179,7 @@ def syntool_training_cli(config_path):
     config['InputData']['reaction_rules_path'] = reaction_rules_path
 
     extract_rules_from_reactions(config=config,
-                                 reaction_file=reaction_file,
+                                 reaction_file=reaction_data_file,
                                  results_root=rules_output_folder,
                                  num_cpus=config['General']['num_cpus'])
 
@@ -154,7 +190,7 @@ def syntool_training_cli(config_path):
     policy_data_file = os.path.join(policy_output_folder, 'policy_dataset.pt')
 
     if config['PolicyNetwork']['policy_type'] == 'ranking':
-        molecules_or_reactions_path = reaction_file
+        molecules_or_reactions_path = reaction_data_file
     elif config['PolicyNetwork']['policy_type'] == 'filtering':
         molecules_or_reactions_path = config['InputData']['policy_data_path']
     else:

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "syntool"
 version = "0.9.0"
-description = "Chemocal synthesis planning tool"
+description = "Chemical synthesis planning tool"
 authors = ["Laboratoire de Chemoinformatique <tagirshin@gmail.com>"]
 license = "MIT"
 readme = "README.rst"
@@ -44,7 +44,8 @@ optional = true
 
 [tool.poetry.group.gpu.dependencies]
 adabelief-pytorch = ">=0.2.1"
-torch = [{ url = "https://download.pytorch.org/whl/cu121/torch-2.1.0%2Bcu121-cp310-cp310-linux_x86_64.whl" }]
+# torch = [{ url = "https://download.pytorch.org/whl/cu121/torch-2.1.0%2Bcu121-cp310-cp310-linux_x86_64.whl" }]
+# torch = "1.8"
 torch-geometric = "2.4.0"
 pytorch-lightning = ">=1.9,<2"
 torch-scatter = [{markers = "sys_platform == 'linux'", url="https://data.pyg.org/whl/torch-2.1.0%2Bcu121/torch_scatter-2.1.2+pt21cu121-cp310-cp310-linux_x86_64.whl"}]
