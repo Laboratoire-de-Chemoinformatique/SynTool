@@ -401,12 +401,12 @@ def run_self_tuning(config: dict, results_root=None):
         inp = inp_data.read()
         file_length = len(inp)
 
-    num_simulations = config['SelfTuning']['num_simulations']
+    num_simulations = config['Reinforcement']['num_simulations']
     for simul_id in range(num_simulations):
         processed_molecules_path = experiment_root.joinpath(f"simulation_{simul_id}",
                                                             f"tree_retrons_sim_{simul_id}.smi")
 
-        batch_size = config['SelfTuning']['batch_size']
+        batch_size = config['Reinforcement']['batch_size']
         batch_splits = list(range(file_length // batch_size + int(bool(file_length % batch_size))))
         print(f'{len(batch_splits)} batches were created with {batch_size} molecules each')
         for batch_id in batch_splits:

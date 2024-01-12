@@ -35,7 +35,7 @@ Tree:
   max_tree_size: 1000000
   ucb_type: uct
   silent: true
-SelfTuning:
+Reinforcement:
   batch_size: 5
   num_simulations: 1
 PolicyNetwork:

@@ -74,7 +74,7 @@ For example, on Ubuntu we can install miniconda and set an environment in which 
 
     # navigate to the Syntool folder and run the following command:
     cd Syntool/
-    poetry install --with cpu
+    poetry install --with gpu
 
 If Poetry fails with error, a possible solution is to update the bashrc file with the following command:
 
