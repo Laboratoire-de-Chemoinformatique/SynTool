@@ -23,8 +23,8 @@ from torch_geometric.data.makedirs import makedirs
 from torch_geometric.transforms import ToUndirected
 from tqdm import tqdm
 
-from Syntool.chem.loading import load_reaction_rules
-from Syntool.chem.utils import unite_molecules
+from SynTool.utils.loading import load_reaction_rules
+from SynTool.chem.utils import unite_molecules
 
 
 class ValueNetworkDataset(InMemoryDataset, ABC):
@@ -138,8 +138,11 @@ class RankingPolicyDataset(InMemoryDataset):
             inp.reset_index()
             for reaction_id, rule_id in tqdm(dataset.items()):
                 reaction: ReactionContainer = inp[reaction_id]
-                molecule = unite_molecules(reaction.products)
-                pyg_graph = mol_to_pyg(molecule)
+                try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
+                    molecule = unite_molecules(reaction.products)
+                    pyg_graph = mol_to_pyg(molecule)
+                except:
+                    continue
                 if pyg_graph is not None:
                     pyg_graph.y_rules = torch.tensor([rule_id], dtype=torch.long)
                     processed_data.append(pyg_graph)

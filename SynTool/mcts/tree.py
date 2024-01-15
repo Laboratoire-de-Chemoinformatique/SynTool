@@ -12,13 +12,13 @@ from typing import Dict, Set, List, Tuple
 from CGRtools.containers import MoleculeContainer
 from numpy.random import uniform
 from tqdm.auto import tqdm
-from Syntool.chem.loading import load_building_blocks, load_reaction_rules
-from Syntool.chem.reaction import Reaction, apply_reaction_rule
-from Syntool.chem.retron import Retron
-from Syntool.mcts.evaluation import ValueFunction
-from Syntool.mcts.expansion import PolicyFunction
-from Syntool.mcts.node import Node
-from Syntool.utils.config import TreeConfig
+from SynTool.utils.loading import load_building_blocks, load_reaction_rules
+from SynTool.chem.reaction import Reaction, apply_reaction_rule
+from SynTool.chem.retron import Retron
+from SynTool.mcts.evaluation import ValueFunction
+from SynTool.mcts.expansion import PolicyFunction
+from SynTool.mcts.node import Node
+from SynTool.utils.config import TreeConfig
 
 
 class Tree:

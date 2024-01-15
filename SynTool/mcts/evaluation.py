@@ -8,9 +8,9 @@ import torch
 
 from pathlib import Path
 
-from Syntool.chem.retron import compose_retrons
-from Syntool.ml.networks.value import SynthesabilityValueNetwork
-from Syntool.ml.training import mol_to_pyg
+from SynTool.chem.retron import compose_retrons
+from SynTool.ml.networks.value import SynthesabilityValueNetwork
+from SynTool.ml.training import mol_to_pyg
 
 
 class ValueFunction:

@@ -1,12 +1,12 @@
 """
-Module containing functions for loading reaction rules and building blocks
+Module containing functions for loading retrosynthetic models and files
 """
+
 import functools
 import logging
 import pickle
 from time import time
 from tqdm import tqdm
-from pathlib import Path
 
 import pandas as pd
 
@@ -14,6 +14,7 @@ from CGRtools import SMILESRead
 from CGRtools.reactor import Reactor
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from torch import device
 
 
 @functools.lru_cache(maxsize=None)
@@ -114,3 +115,34 @@ def load_building_blocks(file: str, canonicalize: bool = False):
     stop = time()
     logging.debug(f"{len(bb)} In-Stock Substances are loaded.\nTook {round(stop - start, 2)} seconds.")
     return bb
+
+
+def load_value_net(model_class, value_network_path):
+    """
+     Loads a model from an external path or an internal path
+
+     :param value_network_path:
+     :param model_class: The model class you want to load
+     :type model_class: pl.LightningModule
+     model will be loaded from the external path
+     """
+
+    map_location = device("cpu")
+    return model_class.load_from_checkpoint(value_network_path, map_location)
+
+
+def load_policy_net(model_class, policy_network_path):
+    """
+    Loads a model from an external path or an internal path
+
+    :param policy_network_path:
+    :param model_class: The model class you want to load
+    :type model_class: pl.LightningModule
+    model will be loaded from the external path
+    """
+
+    map_location = device("cpu")
+    # return model_class.load_from_checkpoint(policy_network_path, map_location, n_rules=n_rules,
+    #                                         vector_dim=vector_dim, batch_size=1)
+
+    return model_class.load_from_checkpoint(policy_network_path, map_location, batch_size=1)

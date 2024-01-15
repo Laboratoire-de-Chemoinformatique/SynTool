@@ -9,17 +9,17 @@ from pathlib import Path
 import click
 import gdown
 
-from Syntool.chem.reaction_rules.extraction import extract_rules_from_reactions
-from Syntool.chem.data.cleaning import reactions_cleaner
-from Syntool.chem.data.mapping import remove_reagents_and_map_from_file
-from Syntool.chem.loading import standardize_building_blocks
-from Syntool.ml.training import create_policy_dataset, run_policy_training
-from Syntool.ml.training.reinforcement import run_self_tuning
-from Syntool.ml.networks.policy import PolicyNetworkConfig
-from Syntool.utils.config import read_planning_config, read_training_config, TreeConfig
-from Syntool.mcts.search import tree_search
+from SynTool.chem.reaction_rules.extraction import extract_rules_from_reactions
+from SynTool.chem.data.cleaning import reactions_cleaner
+from SynTool.chem.data.mapping import remove_reagents_and_map_from_file
+from SynTool.utils.loading import standardize_building_blocks
+from SynTool.ml.training import create_policy_dataset, run_policy_training
+from SynTool.ml.training.reinforcement import run_self_tuning
+from SynTool.ml.networks.policy import PolicyNetworkConfig
+from SynTool.utils.config import read_planning_config, read_training_config, TreeConfig
+from SynTool.mcts.search import tree_search
 
-from Syntool.chem.data.filtering import (
+from SynTool.chem.data.filtering import (
     filter_reactions,
     ReactionCheckConfig,
     CCRingBreakingConfig,

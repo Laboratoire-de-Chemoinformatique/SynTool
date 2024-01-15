@@ -5,7 +5,7 @@ description = "Chemical synthesis planning tool"
 authors = ["Laboratoire de Chemoinformatique <tagirshin@gmail.com>"]
 license = "MIT"
 readme = "README.rst"
-packages = [{ include = "Syntool", from = "." }, ]
+packages = [{ include = "SynTool", from = "." }, ]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"

@@ -19,7 +19,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../Syntool'))
+sys.path.insert(0, os.path.abspath('../SynTool'))
 
 
 # -- General configuration ------------------------------------------------
@@ -43,7 +43,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Syntool'
+project = 'SynTool'
 copyright = '2023, University of Strasbourg'
 author = 'TA / DZ'
 

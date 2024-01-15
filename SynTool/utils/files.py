@@ -7,7 +7,7 @@ from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContain
 from CGRtools.files.SDFrw import SDFRead, SDFWrite
 from CGRtools.files.RDFrw import RDFRead, RDFWrite
 
-from Syntool.utils import path_type
+from SynTool.utils import path_type
 
 
 class SMILESRead:

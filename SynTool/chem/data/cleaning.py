@@ -5,7 +5,7 @@ from tqdm import tqdm
 from CGRtools.containers import ReactionContainer
 
 from .standardizer import Standardizer
-from Syntool.utils.files import ReactionReader, ReactionWriter
+from SynTool.utils.files import ReactionReader, ReactionWriter
 
 
 def cleaner(reaction: ReactionContainer, logger):

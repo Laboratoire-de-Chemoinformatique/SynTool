@@ -8,14 +8,14 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from Syntool.chem.utils import safe_canonicalization
-from Syntool.interfaces.visualisation import to_table
-from Syntool.mcts.tree import Tree, TreeConfig
-from Syntool.mcts.evaluation import ValueFunction
-from Syntool.mcts.expansion import PolicyFunction
-from Syntool.utils import path_type
-from Syntool.utils.files import MoleculeReader
-from Syntool.utils.config import PolicyNetworkConfig
+from SynTool.chem.utils import safe_canonicalization
+from SynTool.interfaces.visualisation import to_table
+from SynTool.mcts.tree import Tree, TreeConfig
+from SynTool.mcts.evaluation import ValueFunction
+from SynTool.mcts.expansion import PolicyFunction
+from SynTool.utils import path_type
+from SynTool.utils.files import MoleculeReader
+from SynTool.utils.config import PolicyNetworkConfig
 
 
 def extract_tree_stats(tree, target):

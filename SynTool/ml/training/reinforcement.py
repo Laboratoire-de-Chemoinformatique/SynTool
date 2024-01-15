@@ -19,18 +19,18 @@ from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
 from tqdm import tqdm
 
-from Syntool.interfaces.visualisation import to_table
-from Syntool.mcts.tree import Tree
-from Syntool.ml.training.preprocessing import ValueNetworkDataset
-from Syntool.chem.retron import compose_retrons
-from Syntool.utils.logging import DisableLogger, HiddenPrints
-from Syntool.mcts.search import extract_tree_stats
-from Syntool.ml.networks.value import SynthesabilityValueNetwork
-from Syntool.ml.training.loading import load_value_net
-from Syntool.mcts.expansion import PolicyFunction
-from Syntool.mcts.evaluation import ValueFunction
-from Syntool.ml.networks.policy import PolicyNetworkConfig
-from Syntool.mcts.tree import TreeConfig
+from SynTool.interfaces.visualisation import to_table
+from SynTool.mcts.tree import Tree
+from SynTool.ml.training.preprocessing import ValueNetworkDataset
+from SynTool.chem.retron import compose_retrons
+from SynTool.utils.logging import DisableLogger, HiddenPrints
+from SynTool.mcts.search import extract_tree_stats
+from SynTool.ml.networks.value import SynthesabilityValueNetwork
+from SynTool.utils.loading import load_value_net
+from SynTool.mcts.expansion import PolicyFunction
+from SynTool.mcts.evaluation import ValueFunction
+from SynTool.ml.networks.policy import PolicyNetworkConfig
+from SynTool.mcts.tree import TreeConfig
 
 
 def create_targets_batch(experiment_root=None, targets_file=None, tmp_file_id=None, batch_slices=None):

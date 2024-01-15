@@ -6,7 +6,7 @@ from tqdm import tqdm
 from chython import smiles, RDFRead, RDFWrite, ReactionContainer
 from chython.exceptions import MappingError
 
-from Syntool.utils import path_type
+from SynTool.utils import path_type
 
 
 def remove_reagents_and_map(rea: ReactionContainer) -> Union[ReactionContainer, None]:

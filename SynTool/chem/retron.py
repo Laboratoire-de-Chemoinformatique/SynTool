@@ -5,7 +5,7 @@ Module containing a class Retron that represents a retron (extend molecule objec
 from CGRtools.containers import MoleculeContainer
 from CGRtools.exceptions import InvalidAromaticRing
 
-from Syntool.chem.utils import safe_canonicalization
+from SynTool.chem.utils import safe_canonicalization
 
 
 class Retron:

@@ -4,10 +4,10 @@ Module containing a class that represents a policy function for node expansion i
 
 import torch
 import torch_geometric
-from Syntool.chem.retron import Retron
-from Syntool.ml.networks.policy import PolicyNetwork
-from Syntool.ml.training import mol_to_pyg
-from Syntool.utils.config import PolicyNetworkConfig
+from SynTool.chem.retron import Retron
+from SynTool.ml.networks.policy import PolicyNetwork
+from SynTool.ml.training import mol_to_pyg
+from SynTool.utils.config import PolicyNetworkConfig
 
 
 class PolicyFunction:
