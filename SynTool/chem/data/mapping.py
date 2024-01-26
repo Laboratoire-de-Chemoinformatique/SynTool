@@ -20,9 +20,8 @@ def remove_reagents_and_map(rea: ReactionContainer) -> Union[ReactionContainer, 
     """
     try:
         rea.reset_mapping()
-    except:
-        # rea.reset_mapping()
-        return None
+    except MappingError:
+        rea.reset_mapping()  # Successive reset_mapping works
     try:
         rea.remove_reagents()
         return rea
@@ -66,24 +65,27 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
     mapping_errors = 0
     parsing_errors = 0
     for rea_raw in tqdm(enumerator):
-        try:
-            rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
-        except IncorrectSmiles:
-            parsing_errors += 1
-            continue
-        try:
-            rea_mapped = remove_reagents_and_map(rea)
-        except MappingError:
+        rea = remove_reagents_and_map(smiles(rea_raw.strip('\n')) if input_ext == ".smi"
+                                      else rea_raw)
+        if rea:
             try:
-                rea_mapped = remove_reagents_and_map(smiles(str(rea)))
-            except MappingError:
-                mapping_errors += 1
+                rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
+            except IncorrectSmiles:
+                parsing_errors += 1
                 continue
-        if rea_mapped:
-            rea_output = format(rea, "m") + "\n" if out_ext == ".smi" else rea
-            output_file.write(rea_output)
-        else:
-            mapping_errors += 1
+            try:
+                rea_mapped = remove_reagents_and_map(rea)
+            except MappingError:
+                try:
+                    rea_mapped = remove_reagents_and_map(smiles(str(rea)))
+                except MappingError:
+                    mapping_errors += 1
+                    continue
+            if rea_mapped:
+                rea_output = format(rea, "m") + "\n" if out_ext == ".smi" else rea
+                output_file.write(rea_output)
+            else:
+                mapping_errors += 1
 
     input_file.close()
     output_file.close()
@@ -92,3 +94,4 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
         print(parsing_errors, "reactions couldn't be parsed")
     if mapping_errors:
         print(mapping_errors, "reactions couldn't be mapped")
+
