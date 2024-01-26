@@ -141,7 +141,7 @@ class RankingPolicyDataset(InMemoryDataset):
                 try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
                     molecule = unite_molecules(reaction.products)
                     pyg_graph = mol_to_pyg(molecule)
-                except:
+                except KeyError:
                     continue
                 if pyg_graph is not None:
                     pyg_graph.y_rules = torch.tensor([rule_id], dtype=torch.long)

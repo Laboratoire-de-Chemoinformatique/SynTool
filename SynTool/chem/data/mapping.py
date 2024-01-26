@@ -4,7 +4,7 @@ from typing import Union
 from tqdm import tqdm
 
 from chython import smiles, RDFRead, RDFWrite, ReactionContainer
-from chython.exceptions import MappingError
+from chython.exceptions import MappingError, IncorrectSmiles
 
 from SynTool.utils import path_type
 
@@ -63,10 +63,25 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
                          "- Please use smi or rdf file")
 
     mapping_errors = 0
+    parsing_errors = 0
     for rea_raw in tqdm(enumerator):
         rea = remove_reagents_and_map(smiles(rea_raw.strip('\n')) if input_ext == ".smi"
                                       else rea_raw)
         if rea:
+        try:
+            rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
+        except IncorrectSmiles:
+            parsing_errors += 1
+            continue
+        try:
+            rea_mapped = remove_reagents_and_map(rea)
+        except MappingError:
+            try:
+                rea_mapped = remove_reagents_and_map(smiles(str(rea)))
+            except MappingError:
+                mapping_errors += 1
+                continue
+        if rea_mapped:
             rea_output = format(rea, "m") + "\n" if out_ext == ".smi" else rea
             output_file.write(rea_output)
         else:
@@ -75,5 +90,7 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
     input_file.close()
     output_file.close()
 
+    if parsing_errors:
+        print(parsing_errors, "reactions couldn't be parsed")
     if mapping_errors:
         print(mapping_errors, "reactions couldn't be mapped")
