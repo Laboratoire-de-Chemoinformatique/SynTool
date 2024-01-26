@@ -65,9 +65,6 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
     mapping_errors = 0
     parsing_errors = 0
     for rea_raw in tqdm(enumerator):
-        rea = remove_reagents_and_map(smiles(rea_raw.strip('\n')) if input_ext == ".smi"
-                                      else rea_raw)
-        if rea:
         try:
             rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
         except IncorrectSmiles:
