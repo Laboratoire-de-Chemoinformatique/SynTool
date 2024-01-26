@@ -94,4 +94,3 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
         print(parsing_errors, "reactions couldn't be parsed")
     if mapping_errors:
         print(mapping_errors, "reactions couldn't be mapped")
-
