@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Tuple, Dict, Any, Optional
 
+from os.path import splitext
+
 import numpy as np
 import ray
 import yaml
@@ -10,6 +12,8 @@ from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContain
 from CGRtools.files import RDFRead, RDFWrite
 from StructureFingerprint import MorganFingerprint
 from tqdm.auto import tqdm
+
+from SynTool.utils.files import ReactionReader, ReactionWriter
 
 from SynTool.chem.utils import (
     remove_small_molecules,
@@ -532,47 +536,6 @@ class CCRingBreakingChecker:
         return False
 
 
-def tanimoto_kernel(x, y):
-    """
-    Calculate the Tanimoto coefficient between each element of arrays x and y.
-
-    Parameters
-    ----------
-    x : array-like
-        A 2D array of features.
-    y : array-like
-        A 2D array of features.
-
-    Notes
-    -----
-    Features in arrays x and y should be equal in number and ordered in the same way.
-
-    Returns
-    -------
-    ndarray
-        A 2D array containing pairwise Tanimoto coefficients.
-
-    Examples
-    --------
-    >>> x = np.array([[1, 2], [3, 4]])
-    >>> y = np.array([[5, 6], [7, 8]])
-    >>> tanimoto_kernel(x, y)
-    array([[...]])
-    """
-    x = x.astype(np.float64)
-    y = y.astype(np.float64)
-    x_dot = np.dot(x, y.T)
-    x2 = np.sum(x**2, axis=1)
-    y2 = np.sum(y**2, axis=1)
-
-    denominator = np.array([x2] * len(y2)).T + np.array([y2] * len(x2)) - x_dot
-    result = np.divide(
-        x_dot, denominator, out=np.zeros_like(x_dot), where=denominator != 0
-    )
-
-    return result
-
-
 @dataclass
 class ReactionCheckConfig(ConfigABC):
     """
@@ -834,7 +797,49 @@ class ReactionCheckConfig(ConfigABC):
         return checker_instances
 
 
-def remove_files_if_exists(directory: Path, file_names):
+
+def tanimoto_kernel(x, y):
+    """
+    Calculate the Tanimoto coefficient between each element of arrays x and y.
+
+    Parameters
+    ----------
+    x : array-like
+        A 2D array of features.
+    y : array-like
+        A 2D array of features.
+
+    Notes
+    -----
+    Features in arrays x and y should be equal in number and ordered in the same way.
+
+    Returns
+    -------
+    ndarray
+        A 2D array containing pairwise Tanimoto coefficients.
+
+    Examples
+    --------
+    >>> x = np.array([[1, 2], [3, 4]])
+    >>> y = np.array([[5, 6], [7, 8]])
+    >>> tanimoto_kernel(x, y)
+    array([[...]])
+    """
+    x = x.astype(np.float64)
+    y = y.astype(np.float64)
+    x_dot = np.dot(x, y.T)
+    x2 = np.sum(x**2, axis=1)
+    y2 = np.sum(y**2, axis=1)
+
+    denominator = np.array([x2] * len(y2)).T + np.array([y2] * len(x2)) - x_dot
+    result = np.divide(
+        x_dot, denominator, out=np.zeros_like(x_dot), where=denominator != 0
+    )
+
+    return result
+
+
+def remove_file_if_exists(directory: Path, file_names):
     for file_name in file_names:
         file_path = directory / file_name
         if file_path.is_file():
@@ -846,7 +851,7 @@ def filter_reaction(
     reaction: ReactionContainer,
     config: ReactionCheckConfig,
     checkers: list,
-    output_files_format: str = "rdf",
+    output_files_format: str = ".smi",
 ):
     is_filtered = False
     if config.remove_small_molecules:
@@ -880,7 +885,7 @@ def filter_reaction(
                 is_filtered = True
                 break
 
-    if output_files_format == "smiles":
+    if output_files_format == ".smi":
         new_reaction = to_reaction_smiles_record(new_reaction)
 
     return is_filtered, new_reaction
@@ -897,15 +902,13 @@ def process_batch(batch, config: ReactionCheckConfig, checkers, output_files_for
     return results
 
 
-def process_completed_batches(futures, filtered_file, result_file, pbar, batch_size):
+def process_completed_batches(futures, result_file, pbar, batch_size):
     done, _ = ray.wait(list(futures.keys()), num_returns=1)
     completed_batch = ray.get(done[0])
 
     # Write results of the completed batch to file
     for index, is_filtered, reaction in completed_batch:
-        if is_filtered:
-            filtered_file.write(reaction)
-        else:
+        if not is_filtered:
             result_file.write(reaction)
 
     # Remove completed future and update progress bar
@@ -916,10 +919,7 @@ def process_completed_batches(futures, filtered_file, result_file, pbar, batch_s
 def filter_reactions(
     config: ReactionCheckConfig,
     reaction_database_path: str,
-    result_directory_path: str = "./",
-    result_reactions_file_name: str = "reaction_data_filtered",
-    filtered_reactions_file_name: str = "reaction_data_removed",
-    output_files_format: str = "rdf",
+    result_reactions_file_name: str = "reaction_data_filtered.smi",
     append_results: bool = False,
     num_cpus: int = 1,
     batch_size: int = 100,
@@ -930,18 +930,13 @@ def filter_reactions(
 
     :param config: ReactionCheckConfig object containing all configuration settings.
     :param reaction_database_path: Path to the reaction database file.
-    :param result_directory_path: Name of the directory to store results.
-    :param output_files_format: Format of the output files (e.g., 'rdf').
     :param result_reactions_file_name: Name for the file containing cleaned reactions.
-    :param filtered_reactions_file_name: Name for the file containing filtered reactions.
     :param append_results: Flag indicating whether to append results to existing files.
     :param num_cpus: Number of CPUs to use for processing.
     :param batch_size: Size of the batch for processing reactions.
     :return: None. The function writes the processed reactions to specified RDF and pickle files.
              Unique reactions are written if save_only_unique is True.
     """
-    result_directory = Path(result_directory_path)
-    result_directory.mkdir(parents=True, exist_ok=True)
 
     checkers = config.create_checkers()
 
@@ -949,71 +944,44 @@ def filter_reactions(
 
     max_concurrent_batches = num_cpus  # Limit the number of concurrent batches
 
-    if output_files_format == "smiles":
+    result_reactions_file_name, out_ext = splitext(result_reactions_file_name)
+    if out_ext == ".smi":
         open_mode = "a" if append_results else "w"
-        result_file = open(
-            str(result_directory / f"{result_reactions_file_name}.smiles"),
-            open_mode,
-        )
-        filtered_file = open(
-            str(result_directory / f"{filtered_reactions_file_name}.smiles"),
-            open_mode,
-        )
-    elif output_files_format == "rdf":
-        result_file = RDFWrite(
-            str(result_directory / f"{result_reactions_file_name}.rdf"),
-            append=append_results,
-        )
-        filtered_file = RDFWrite(
-            str(result_directory / f"{filtered_reactions_file_name}.rdf"),
-            append=append_results,
-        )
+        result_file = open(f"{result_reactions_file_name}{out_ext}", open_mode)
+    elif out_ext == ".rdf":
+        result_file = RDFWrite(f"{result_reactions_file_name}{out_ext}", append=append_results)
     else:
-        raise ValueError(
-            f"I don't know this output files format: {output_files_format}"
-        )
+        raise ValueError(f"I don't know this output files format: {out_ext}")
 
-    with RDFRead(reaction_database_path, indexable=True) as reactions_file:
-        total_reactions = len(reactions_file)
-        pbar = tqdm(total=total_reactions)
+    with ReactionReader(reaction_database_path) as reactions:
+        pbar = tqdm(reactions)  # TODO fix progress bars
 
         futures = {}
         batch = []
-        for index, reaction in enumerate(reactions_file):
+        for index, reaction in enumerate(reactions):
             reaction.meta["reaction_index"] = index
             batch.append((index, reaction))
             if len(batch) == batch_size:
-                future = process_batch.remote(
-                    batch, config, checkers, output_files_format
-                )
+                future = process_batch.remote(batch, config, checkers, out_ext)
                 futures[future] = None
                 batch = []
 
                 # Check and process completed tasks if we've reached the concurrency limit
                 while len(futures) >= max_concurrent_batches:
-                    process_completed_batches(
-                        futures,
-                        filtered_file,
-                        result_file,
-                        pbar,
-                        batch_size,
-                    )
+                    process_completed_batches(futures, result_file, pbar, batch_size)
 
         # Process the last batch if it's not empty
         if batch:
-            future = process_batch.remote(batch, config, checkers, output_files_format)
+            future = process_batch.remote(batch, config, checkers, out_ext)
             futures[future] = None
 
         # Process remaining batches
         while futures:
-            process_completed_batches(
-                futures, filtered_file, result_file, pbar, batch_size
-            )
+            process_completed_batches(futures, result_file, pbar, batch_size)
 
         pbar.close()
 
     result_file.close()
-    filtered_file.close()
     ray.shutdown()
 
     # Example usage

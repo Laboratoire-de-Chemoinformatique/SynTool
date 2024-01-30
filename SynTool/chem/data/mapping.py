@@ -20,8 +20,9 @@ def remove_reagents_and_map(rea: ReactionContainer) -> Union[ReactionContainer, 
     """
     try:
         rea.reset_mapping()
-    except MappingError:
-        rea.reset_mapping()
+    except:
+        # rea.reset_mapping()
+        return None
     try:
         rea.remove_reagents()
         return rea

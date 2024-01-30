@@ -51,37 +51,70 @@ After installation, one can add the Synto environment in their Jupyter platform:
 Usage
 ------------
 The usage is mostly optimized for the command line interface.
-Here are some implemented commands:
+Here are implemented commands:
 
-* syntool_planning
-* syntool_training
+* download_planning_data
+* download_training_data
+* building_blocks
+* reaction_mapping
+* reaction_standardizing
+* reaction_filtering
+* rule_extracting
+* supervised_ranking_policy_training
+* supervised_filtering_policy_training
+* reinforcement_value_network_training
 
-Each command has a description that can be called with ``command --help``
+Each command has a description that can be called with ``syntool --help`` and ``syntool command --help``
 
-Run retrosynthetic planning
-^^^^^^^^^^^
-.. code-block:: bash
-
-    syntool_planning_data
-    syntool_planning --config="planning_config.yaml"
 
 Run training from scratch
 ^^^^^^^^^^^
 .. code-block:: bash
 
-    syntool_training_data
-    syntool_training --config="training_config.yaml"
+    cd tests
 
+    # download training data
+    syntool download_training_data --root_dir tests
+
+    # standardize building blocks
+    syntool building_blocks --input tests/building_blocks.smi --output tests/building_blocks_2.smi
+
+    # reaction data mapping
+    syntool reaction_mapping --input tests/uspto_original.smi --output tests/uspto_mapped.smi
+
+    # reaction data standardizing
+    syntool reaction_standardizing --config configs/standardization.yaml --input tests/uspto_mapped.smi --output tests/uspto_standardized.smi
+
+    # reaction data filtering
+    syntool reaction_filtering --config configs/filtration.yaml --input tests/uspto_standardized.smi --output tests/uspto_filtered.smi
+
+    # filtering reaction rule extracting
+    syntool rule_extracting --config configs/extraction.yaml --input tests/uspto_filtered.smi --output tests/reaction_rules.pickle
+
+    # supervised ranking policy training
+    syntool supervised_ranking_policy_training --config configs/policy.yaml --reaction_data tests/uspto_filtered.smi --reaction_rules tests/reaction_rules.pickle --results_dir tests/ranking_policy_network
+
+    # reinforcement value network training
+    syntool reinforcement_value_network_training --config configs/reinforcement.yaml --targets targets.smi --reaction_rules tests/reaction_rules.pickle --building_blocks tests/building_blocks.smi --policy_network tests/ranking_policy_network/weights/policy_network.ckpt --results_dir tests/value_network
+
+
+Run retrosynthetic planning
+^^^^^^^^^^^
+.. code-block:: bash
+
+    cd tests
+    # download planning data
+    syntool download_planning_data --root_dir tests
+
+    # or run retrosynthesis planning from trained retrosynthetic models
+    # planning with rollout evaluation (value network=None)
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules tests/reaction_rules.pickle --building_blocks tests/building_blocks.smi --policy_network tests/ranking_policy_network/weights/policy_network.ckpt --results_dir tests/planning
+
+    # planning with value network evaluation
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules tests/reaction_rules.pickle --building_blocks tests/building_blocks.smi --policy_network tests/ranking_policy_network/weights/policy_network.ckpt --value_network tests/value_network/weights/value_network.ckpt --results_dir tests/planning
 
 Documentation
 -----------
 
 The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/Syntool/>`_
 
-Tests
------------
-
-.. code-block:: bash
-
-    syntool_training --config="configs/training_config.yaml"
-    syntool_planning --config="configs/planning_config.yaml"

@@ -1,0 +1,5 @@
+ignore_mapping: True
+skip_errors: True
+keep_unbalanced_ions: False
+keep_reagents: False
+action_on_isotopes: True

@@ -18,7 +18,7 @@ class ValueFunction:
     Value function based on value neural network for node evaluation (synthesisability prediction) in MCTS
     """
 
-    def __init__(self, weights_path: Path) -> None:
+    def __init__(self, weights_path: str) -> None:
         """
         The value function predicts the probability to synthesize the target molecule with available building blocks
         starting from a given retron.

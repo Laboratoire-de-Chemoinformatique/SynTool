@@ -10,6 +10,7 @@ from time import time
 from typing import Dict, Set, List, Tuple
 
 from CGRtools.containers import MoleculeContainer
+from CGRtools import smiles
 from numpy.random import uniform
 from tqdm.auto import tqdm
 from SynTool.utils.loading import load_building_blocks, load_reaction_rules
@@ -55,15 +56,16 @@ class Tree:
         # config parameters
         self.config = tree_config
 
-        assert (
-            target and type(target) is MoleculeContainer and target.atoms
-        ), "Target is not defined, is not a MoleculeContainer or have no atoms"
+        # check target
+        if isinstance(target, str):
+            target = smiles(target)
+        assert (bool(target)), "Target is not defined, is not a MoleculeContainer or have no atoms"
+        if target:
+            target.canonicalize()
 
         target_retron = Retron(target, canonicalize=True)
         target_retron.prev_retrons.append(Retron(target, canonicalize=True))
-        target_node = Node(
-            retrons_to_expand=(target_retron,), new_retrons=(target_retron,)
-        )
+        target_node = Node(retrons_to_expand=(target_retron,), new_retrons=(target_retron,))
 
         # tree structure init
         self.nodes: Dict[int, Node] = {1: target_node}
@@ -88,7 +90,7 @@ class Tree:
 
         # policy and value functions
         self.policy_function = policy_function
-        if self.config.evaluation_mode == "gcn":
+        if self.config.evaluation_type == "gcn":
             if value_function is None:
                 raise ValueError(
                     "Value function not specified while evaluation mode is 'gcn'"
@@ -107,7 +109,7 @@ class Tree:
 
         return self.curr_tree_size - 1
 
-    def __iter__(self) -> "Tree": # TODO what is annotation "Tree" -> Tree ?
+    def __iter__(self) -> "Tree":  # TODO what is annotation "Tree" -> Tree ?
         """
         The function is defining an iterator for a Tree object. Also needed for the bar progress display.
         """
@@ -381,10 +383,10 @@ class Tree:
 
         node = self.nodes[node_id]
 
-        if self.config.evaluation_mode == "random":
+        if self.config.evaluation_type == "random":
             node_value = uniform()
 
-        elif self.config.evaluation_mode == "rollout":
+        elif self.config.evaluation_type == "rollout":
             node_value = min(
                 (
                     self._rollout_node(retron, current_depth=self.nodes_depth[node_id])
@@ -393,12 +395,12 @@ class Tree:
                 default=1.0,
             )
 
-        elif self.config.evaluation_mode == "gcn":
+        elif self.config.evaluation_type == "gcn":
             node_value = self.value_function.predict_value(node.new_retrons)
 
         else:
             raise ValueError(
-                f"I don't know this evaluation mode: {self.config.evaluation_mode}"
+                f"I don't know this evaluation mode: {self.config.evaluation_type}"
             )
 
         return node_value

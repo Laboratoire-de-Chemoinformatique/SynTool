@@ -7,6 +7,8 @@ from collections import defaultdict
 from itertools import islice
 from pathlib import Path
 from typing import List, Union, Tuple, IO, Dict, Set, Iterable, Any
+from os.path import splitext
+
 
 import ray
 from CGRtools.containers import MoleculeContainer, QueryContainer, ReactionContainer
@@ -16,14 +18,14 @@ from CGRtools.reactor import Reactor
 from tqdm.auto import tqdm
 
 from SynTool.chem.utils import reverse_reaction
-from SynTool.utils.config import ExtractRuleConfig
+from SynTool.utils.config import RuleExtractionConfig
+from SynTool.utils.files import ReactionReader
 
 
 def extract_rules_from_reactions(
-    config: ExtractRuleConfig,
+    config: RuleExtractionConfig,
     reaction_file: str,
-    results_root: str,
-    rules_file_name: str = 'reaction_rules',
+    rules_file_name: str = 'reaction_rules.pickle',
     num_cpus: int = 1,
     batch_size: int = 10,
 ) -> None:
@@ -37,89 +39,53 @@ def extract_rules_from_reactions(
 
     :param config: Configuration settings for rule extraction, including file paths, batch size, and other parameters.
     :param reaction_file: Path to the file containing reaction database.
-    :param results_root: Path of the directory where the results will be stored.
     :param rules_file_name: Name of the file to store the extracted rules.
     :param num_cpus: Number of CPU cores to use for processing. Defaults to 1.
     :param batch_size: Number of reactions to process in each batch. Defaults to 10.
 
     :return: None
     """
-    # create reaction rules config
-    rules_config = ExtractRuleConfig(
-        min_popularity=config['ReactionRules']['min_popularity'],
-        keep_leaving_groups=config['ReactionRules']['keep_leaving_groups'],
-        atom_info_retention={
-            "reaction_center": {
-                "neighbors": config['ReactionRules']['reaction_center_neighbors'],
-                "hybridization": config['ReactionRules']['reaction_center_hybridization'],
-                "implicit_hydrogens": config['ReactionRules']['reaction_center_implicit_hydrogens'],
-                "ring_sizes": config['ReactionRules']['reaction_center_ring_sizes'],
-            },
-            "environment": {
-                "neighbors": config['ReactionRules']['environment_neighbors'],
-                "hybridization": config['ReactionRules']['environment_hybridization'],
-                "implicit_hydrogens": config['ReactionRules']['environment_implicit_hydrogens'],
-                "ring_sizes": config['ReactionRules']['environment_ring_sizes'],
-            },
-        }
-    )
 
     # read files
     reaction_file = Path(reaction_file).resolve(strict=True)
-    results_root = Path(results_root)
-    results_root.mkdir(parents=True, exist_ok=True)
 
     ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
 
-    with RDFRead(reaction_file, indexable=True) as reactions:
-        total_reactions = len(reactions)
-        pbar = tqdm(total=total_reactions, disable=False)  # TODO progress bar disappears after finishing
+    rules_file_name, out_ext = splitext(rules_file_name)
+    with ReactionReader(reaction_file) as reactions:
+        pbar = tqdm(reactions, disable=False)
 
         futures = {}
         batch = []
         max_concurrent_batches = num_cpus
 
         rules_statistics = defaultdict(list)
-        with RDFWrite(
-            results_root / f"{rules_file_name}_full.rdf", append=True
-        ) as result_file:
-            for index, reaction in enumerate(reactions):
-                batch.append((index, reaction))
-                if len(batch) == batch_size:
-                    future = process_reaction_batch.remote(batch, rules_config)
-                    futures[future] = None
-                    batch = []
-
-                    while len(futures) >= max_concurrent_batches:
-                        process_completed_batches(
-                            futures, result_file, rules_statistics, pbar, batch_size
-                        )
-
-            if batch:
-                future = process_reaction_batch.remote(batch, rules_config)
+        for index, reaction in enumerate(reactions):
+            batch.append((index, reaction))
+            if len(batch) == batch_size:
+                future = process_reaction_batch.remote(batch, config)
                 futures[future] = None
+                batch = []
 
-            while futures:
-                process_completed_batches(
-                    futures, result_file, rules_statistics, pbar, batch_size
-                )
+                while len(futures) >= max_concurrent_batches:
+                    process_completed_batches(futures, rules_statistics, pbar, batch_size)
 
-            pbar.close()
+        if batch:
+            future = process_reaction_batch.remote(batch, config)
+            futures[future] = None
 
-        with open(
-            results_root / f"{rules_file_name}_full.pickle", "wb"
-        ) as statistics_file:
-            pickle.dump(rules_statistics, statistics_file)
+        while futures:
+            process_completed_batches(futures, rules_statistics, pbar, batch_size)
+
+        pbar.close()
 
         sorted_rules = sort_rules(
             rules_statistics,
-            min_popularity=rules_config.min_popularity,
-            single_reactant_only=rules_config.single_reactant_only,
+            min_popularity=config.min_popularity,
+            single_reactant_only=config.single_reactant_only,
         )
 
-        with open(
-            results_root / f"{rules_file_name}_filtered.pickle", "wb"
-        ) as statistics_file:
+        with open(f"{rules_file_name}.pickle", "wb") as statistics_file:
             pickle.dump(sorted_rules, statistics_file)
 
     ray.shutdown()
@@ -127,7 +93,7 @@ def extract_rules_from_reactions(
 
 @ray.remote
 def process_reaction_batch(
-    batch: List[Tuple[int, ReactionContainer]], config: ExtractRuleConfig
+    batch: List[Tuple[int, ReactionContainer]], config: RuleExtractionConfig
 ) -> list[tuple[int, list[ReactionContainer]]]:
     """
     Processes a batch of reactions to extract reaction rules based on the given configuration.
@@ -142,7 +108,7 @@ def process_reaction_batch(
     :type batch: List[Tuple[int, ReactionContainer]]
 
     :param config: An instance of ExtractRuleConfig that provides settings and parameters for the rule extraction process.
-    :type config: ExtractRuleConfig
+    :type config: RuleExtractionConfig
 
     :return: A list where each element is a tuple. The first element of the tuple is an index (int), and the second
              is a list of ReactionContainer objects representing the extracted rules for the corresponding reaction.
@@ -160,7 +126,6 @@ def process_reaction_batch(
 
 def process_completed_batches(
     futures: dict,
-    result_file: IO,
     rules_statistics: Dict[ReactionContainer, List[int]],
     pbar: tqdm,
     batch_size: int,
@@ -174,9 +139,6 @@ def process_completed_batches(
 
     :param futures: A dictionary of futures representing ongoing batch processing tasks.
     :type futures: dict
-
-    :param result_file: An open file object to which extracted rules are written.
-    :type result_file: IO
 
     :param rules_statistics: A dictionary to keep track of statistics for each rule.
     :type rules_statistics: Dict[ReactionContainer, List[int]]
@@ -198,14 +160,13 @@ def process_completed_batches(
             rules_statistics[rule].append(index)
             if len(rules_statistics) != prev_stats_len:
                 rule.meta["first_reaction_index"] = index
-                result_file.write(rule)
 
     del futures[done[0]]
     pbar.update(batch_size)
 
 
 def extract_rules(
-    config: ExtractRuleConfig, reaction: ReactionContainer
+    config: RuleExtractionConfig, reaction: ReactionContainer
 ) -> list[ReactionContainer]:
     """
     Extracts reaction rules from a given reaction based on the specified configuration.
@@ -232,7 +193,7 @@ def extract_rules(
 
 
 def create_rule(
-    config: ExtractRuleConfig, reaction: ReactionContainer
+    config: RuleExtractionConfig, reaction: ReactionContainer
 ) -> ReactionContainer:
     """
     Creates a reaction rule from a given reaction based on the specified configuration.

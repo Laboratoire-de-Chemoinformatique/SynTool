@@ -10,6 +10,25 @@ from SynTool import Tree
 from SynTool.utils import path_type
 
 
+def get_child_nodes(tree, molecule, graph):
+    nodes = []
+    try:
+        graph[molecule]
+    except KeyError:
+        return []
+    for retron in graph[molecule]:
+        temp_obj = {
+            "smiles": str(retron),
+            "type": "mol",
+            "in_stock": str(retron) in tree.building_blocks,
+        }
+        node = get_child_nodes(tree, retron, graph)
+        if node:
+            temp_obj["children"] = [node]
+        nodes.append(temp_obj)
+    return {"type": "reaction", "children": nodes}
+
+
 def extract_routes(tree, extended=False):
     """
     The function takes the target and the dictionary of
@@ -25,27 +44,27 @@ def extract_routes(tree, extended=False):
     winning_nodes = []
     if extended:
         # Gather paths
-        for indice, node in tree.nodes.items():
+        for i, node in tree.nodes.items():
             if node.is_solved():
-                winning_nodes.append(indice)
+                winning_nodes.append(i)
     else:
         winning_nodes = tree.winning_nodes
     if winning_nodes:
         for winning_node in winning_nodes:
             # Create graph for route
             nodes = tree.path_to_node(winning_node)
-            succ = {}
-            pred = {}
+            graph, pred = {}, {}
             for before, after in zip(nodes, nodes[1:]):
                 before = before.curr_retron.molecule
-                succ[before] = after = [x.molecule for x in after.new_retrons]
+                graph[before] = after = [x.molecule for x in after.new_retrons]
                 for x in after:
                     pred[x] = before
 
-            paths_block.append({"type": "mol", "smiles": str(target), "in_stock": target_in_stock,
-                "children": [get_child_nodes(tree, target, succ)], })
+            paths_block.append({"type": "mol", "smiles": str(target),
+                                "in_stock": target_in_stock,
+                                "children": [get_child_nodes(tree, target, graph)]})
     else:
-        paths_block = [{"type": "mol", "smiles": str(target), "in_stock": target_in_stock, "children": [], }]
+        paths_block = [{"type": "mol", "smiles": str(target), "in_stock": target_in_stock, "children": []}]
     return paths_block
 
 

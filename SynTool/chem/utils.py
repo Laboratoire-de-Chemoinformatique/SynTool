@@ -1,8 +1,20 @@
 from typing import List, Iterable, Tuple
 
+from chython import smiles
 from CGRtools.containers import MoleculeContainer, ReactionContainer, QueryContainer
 from CGRtools.exceptions import InvalidAromaticRing
 
+
+def smiles_is_valid(smi):
+    try:
+        mol = smiles(smi)
+        if mol:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(e)
+        return False
 
 def query_to_mol(query: QueryContainer) -> MoleculeContainer:
     """
@@ -203,7 +215,8 @@ def to_reaction_smiles_record(reaction):
     reaction_record = [format(reaction, "m")]
     sorted_meta = sorted(reaction.meta.items(), key=lambda x: x[0])
     for _, meta_info in sorted_meta:
-        meta_info = str(meta_info)
+        # meta_info = str(meta_info)
+        meta_info = ''  # TODO decide what to do with meta
         meta_info = ";".join(meta_info.split("\n"))
         reaction_record.append(str(meta_info))
     return "\t".join(reaction_record) + "\n"

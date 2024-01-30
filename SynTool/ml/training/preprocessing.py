@@ -25,6 +25,7 @@ from tqdm import tqdm
 
 from SynTool.utils.loading import load_reaction_rules
 from SynTool.chem.utils import unite_molecules
+from SynTool.utils.files import ReactionReader
 
 
 class ValueNetworkDataset(InMemoryDataset, ABC):
@@ -133,11 +134,13 @@ class RankingPolicyDataset(InMemoryDataset):
         dataset = dict(sorted(dataset.items()))
 
         processed_data = []
-        with RDFRead(self.reactions_path, indexable=True) as inp:
+        with ReactionReader(self.reactions_path) as reactions:
 
-            inp.reset_index()
+            reactions = list(reactions)
+
+            # inp.reset_index()
             for reaction_id, rule_id in tqdm(dataset.items()):
-                reaction: ReactionContainer = inp[reaction_id]
+                reaction = reactions[reaction_id]
                 try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
                     molecule = unite_molecules(reaction.products)
                     pyg_graph = mol_to_pyg(molecule)
