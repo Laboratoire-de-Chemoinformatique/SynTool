@@ -6,9 +6,10 @@ from CGRtools.containers import ReactionContainer
 
 from .standardizer import Standardizer
 from SynTool.utils.files import ReactionReader, ReactionWriter
+from SynTool.utils.config import ReactionStandardizationConfig
 
 
-def cleaner(reaction: ReactionContainer, logger):
+def cleaner(reaction: ReactionContainer, logger, config):
     """
     Standardize a reaction according to external script
 
@@ -16,12 +17,18 @@ def cleaner(reaction: ReactionContainer, logger):
     :param logger: Logger - to avoid writing log
     :return: ReactionContainer or empty list
     """
-    standardizer = Standardizer(skip_errors=True, keep_unbalanced_ions=False, id_tag='Reaction_ID', keep_reagents=False,
-                                ignore_mapping=True, action_on_isotopes=2, skip_tautomerize=True, logger=logger)
+    standardizer = Standardizer(id_tag='Reaction_ID',
+                                action_on_isotopes=2,
+                                skip_tautomerize=True,
+                                skip_errors=config.skip_errors,
+                                keep_unbalanced_ions=config.keep_unbalanced_ions,
+                                keep_reagents=config.keep_reagents,
+                                ignore_mapping=config.ignore_mapping,
+                                logger=logger)
     return standardizer.standardize(reaction)
 
 
-def worker_cleaner(to_clean: Queue, to_write: Queue):
+def worker_cleaner(to_clean: Queue, to_write: Queue, config: ReactionStandardizationConfig):
     """
     Launches standardizations using the Queue to_clean. Fills the to_write Queue with results
 
@@ -34,7 +41,7 @@ def worker_cleaner(to_clean: Queue, to_write: Queue):
         raw_reaction = to_clean.get()
         if raw_reaction == "Quit":
             break
-        res = cleaner(raw_reaction, logger)
+        res = cleaner(raw_reaction, logger, config)
         to_write.put(res)
     logger.disabled = False
 
@@ -69,10 +76,12 @@ def cleaner_writer(output_file: str, to_write: Queue, cleaned_nb: Value, remove_
                         seen_reactions.append(smi)
 
 
-def reactions_cleaner(input_file: str, output_file: str, num_cpus: int, batch_prep_size: int = 100):
+def reactions_cleaner(config: ReactionStandardizationConfig,
+                      input_file: str, output_file: str, num_cpus: int, batch_prep_size: int = 100):
     """
     Writes in output file the standardized reactions
 
+    :param config:
     :param input_file: input RDF file path
     :param output_file: output RDF file path
     :param num_cpus: number of CPU to be parallelized
@@ -88,7 +97,7 @@ def reactions_cleaner(input_file: str, output_file: str, num_cpus: int, batch_pr
 
         workers = []
         for _ in range(num_cpus - 2):
-            w = Process(target=worker_cleaner, args=(to_clean, to_write))
+            w = Process(target=worker_cleaner, args=(to_clean, to_write, config))
             w.start()
             workers.append(w)
 
@@ -110,4 +119,4 @@ def reactions_cleaner(input_file: str, output_file: str, num_cpus: int, batch_pr
 
         n_removed = n - cleaned_nb.get()
         print(f'Initial number of reactions: {n}'),
-        print(f'Removed number of reactions: {n_removed} ({100 * n_removed / n:.2f} %)')
+        print(f'Removed number of reactions: {n_removed}')

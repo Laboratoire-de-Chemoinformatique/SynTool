@@ -11,7 +11,7 @@ from SynTool.utils import path_type
 
 
 class SMILESRead:
-    def __init__(self,filename: path_type, **kwargs):
+    def __init__(self, filename: path_type, **kwargs):
         """
         Simplified class to read files containing a SMILES (Molecules or Reaction) string per line.
         :param filename: the path and name of the SMILES file to parse
@@ -21,10 +21,12 @@ class SMILESRead:
         self._file = open(filename, "r")
         self._data = self.__data()
 
+        self._len = sum(1 for _ in open(filename, "r")) #TODO replace later
+
     def __data(self) -> Iterable[Union[ReactionContainer, CGRContainer]]:
         for line in iter(self._file.readline, ''):
             x = smiles(line)
-            if isinstance(x, ReactionContainer) or isinstance(x, CGRContainer):
+            if isinstance(x, (ReactionContainer, CGRContainer, MoleculeContainer)):
                 yield x
 
     def __enter__(self):
@@ -43,6 +45,9 @@ class SMILESRead:
 
     def __next__(self):
         return next(iter(self))
+
+    def __len__(self):
+        return self._len
 
     def close(self):
         self._file.close()
@@ -190,7 +195,6 @@ class MoleculeReader(Reader):
         Class to read molecule files.
 
         :param filename: the path and name of the file
-        :type filename: path_type
 
         :return: None
         """

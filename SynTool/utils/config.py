@@ -45,9 +45,6 @@ class ConfigABC(ABC):
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the configuration into a dictionary.
-
-        Returns:
-            A dictionary representation of the ConfigABC instance.
         """
         return {k: str(v) if isinstance(v, Path) else v for k, v in self.__dict__.items()}
 
@@ -68,7 +65,71 @@ class ConfigABC(ABC):
 
 
 @dataclass
-class ExtractRuleConfig(ConfigABC):
+class ReactionStandardizationConfig(ConfigABC):
+    """
+    Configuration class for standardizing reactions.
+
+    :ivar ignore_mapping:
+    :ivar skip_errors:
+    :ivar keep_unbalanced_ions:
+    :ivar keep_reagents:
+    :ivar action_on_isotopes:
+    """
+
+    ignore_mapping: bool = True
+    skip_errors: bool = True
+    keep_unbalanced_ions: bool = False
+    keep_reagents: bool = False
+    action_on_isotopes: bool = False
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._validate_params(self.to_dict())
+
+    @staticmethod
+    def from_dict(config_dict: Dict[str, Any]):
+        """
+        Creates an ReactionStandardizationConfig instance from a dictionary of configuration parameters.
+
+        :ivar config_dict: A dictionary containing configuration parameters.
+        :return: An instance of ReactionStandardizationConfig.
+        """
+        return ReactionStandardizationConfig(**config_dict)
+
+    @staticmethod
+    def from_yaml(file_path: str):
+        """
+        Deserializes a YAML file into an ReactionStandardizationConfig object.
+
+        :ivar file_path: Path to the YAML file containing configuration parameters.
+        :return: An instance of ReactionStandardizationConfig.
+        """
+        with open(file_path, "r") as file:
+            config_dict = yaml.safe_load(file)
+        return ReactionStandardizationConfig.from_dict(config_dict)
+
+    def _validate_params(self, params: Dict[str, Any]):
+        """
+        Validate the parameters of the configuration.
+        """
+        if not isinstance(params["ignore_mapping"], bool):
+            raise ValueError("ignore_mapping must be a boolean.")
+
+        if not isinstance(params["skip_errors"], bool):
+            raise ValueError("skip_errors must be a boolean.")
+
+        if not isinstance(params["keep_unbalanced_ions"], bool):
+            raise ValueError("keep_unbalanced_ions must be a boolean.")
+
+        if not isinstance(params["keep_reagents"], bool):
+            raise ValueError("keep_reagents must be a boolean.")
+
+        if not isinstance(params["action_on_isotopes"], bool):
+            raise ValueError("action_on_isotopes must be a boolean.")
+
+
+@dataclass
+class RuleExtractionConfig(ConfigABC):
     """
     Configuration class for extracting reaction rules, inheriting from ConfigABC.
 
@@ -148,7 +209,7 @@ class ExtractRuleConfig(ConfigABC):
         :ivar config_dict: A dictionary containing configuration parameters.
         :return: An instance of ExtractRuleConfig.
         """
-        return ExtractRuleConfig(**config_dict)
+        return RuleExtractionConfig(**config_dict)
 
     @staticmethod
     def from_yaml(file_path: str):
@@ -160,7 +221,7 @@ class ExtractRuleConfig(ConfigABC):
         """
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
-        return ExtractRuleConfig.from_dict(config_dict)
+        return RuleExtractionConfig.from_dict(config_dict)
 
     def _validate_params(self, params: Dict[str, Any]):
         """
@@ -262,7 +323,7 @@ class TreeConfig(ConfigABC):
     :ivar search_strategy: The strategy used for tree search. Options are "expansion_first", "evaluation_first", defaults to "expansion_first".
     :ivar exclude_small: Whether to exclude small molecules during the search, defaults to True.
     :ivar evaluation_agg: Method for aggregating evaluation scores. Options are "max", "average", defaults to "max".
-    :ivar evaluation_mode: The method used for evaluating nodes. Options are "random", "rollout", "gcn", defaults to "gcn".
+    :ivar evaluation_type: The method used for evaluating nodes. Options are "random", "rollout", "gcn", defaults to "gcn".
     :ivar init_node_value: Initial value for a new node, defaults to 0.0.
     :ivar epsilon: A parameter in the epsilon-greedy search strategy representing the chance of random selection
     of reaction rules during the selection stage in Monte Carlo Tree Search,
@@ -284,7 +345,7 @@ class TreeConfig(ConfigABC):
     search_strategy: str = "expansion_first"
     exclude_small: bool = True
     evaluation_agg: str = "max"
-    evaluation_mode: str = "gcn"
+    evaluation_type: str = "gcn"
     init_node_value: float = 0.0
     epsilon: float = 0.0
     min_mol_size: int = 6
@@ -327,9 +388,9 @@ class TreeConfig(ConfigABC):
             raise ValueError(
                 "Invalid backprop_type. Allowed values are 'muzero', 'cumulative'."
             )
-        if params["evaluation_mode"] not in ["random", "rollout", "gcn"]:
+        if params["evaluation_type"] not in ["random", "rollout", "gcn"]:
             raise ValueError(
-                "Invalid evaluation_mode. Allowed values are 'random', 'rollout', 'gcn'."
+                "Invalid evaluation_type. Allowed values are 'random', 'rollout', 'gcn'."
             )
         if params["evaluation_agg"] not in ["max", "average"]:
             raise ValueError(
@@ -358,12 +419,13 @@ class TreeConfig(ConfigABC):
                 f"Allowed values are 'expansion_first', 'evaluation_first'"
             )
 
+
 @dataclass
 class PolicyNetworkConfig(ConfigABC):
     """
     Configuration class for the policy network, inheriting from ConfigABC.
 
-    :ivar vector_dim: simension of the input vectors.
+    :ivar vector_dim: dimension of the input vectors.
     :ivar batch_size: number of samples per batch.
     :ivar dropout: dropout rate for regularization.
     :ivar learning_rate: learning rate for the optimizer.
@@ -454,6 +516,7 @@ class ValueNetworkConfig(ConfigABC):
     :ivar num_epoch: Number of training epochs.
     """
 
+    weights_path: str = None
     vector_dim: int = 256
     batch_size: int = 500
     dropout: float = 0.4
@@ -518,6 +581,49 @@ class ValueNetworkConfig(ConfigABC):
             raise ValueError("learning_rate must be a positive float.")
 
 
+@dataclass
+class ReinforcementConfig(ConfigABC):
+    """
+    Configuration class for the reinforcement network training, inheriting from ConfigABC.
+
+    :ivar batch_size: the number of samples per batch.
+    :ivar num_simulations: the number of num_simulations.
+    """
+
+    batch_size: int = 100
+    num_simulations: int = 1
+
+    @staticmethod
+    def from_dict(config_dict: Dict[str, Any]) -> 'ReinforcementConfig':
+        """
+        Creates a ReinforcementConfig instance from a dictionary of configuration parameters.
+
+        :param config_dict: A dictionary containing configuration parameters.
+        :return: An instance of ReinforcementConfig.
+        """
+        return ReinforcementConfig(**config_dict)
+
+    @staticmethod
+    def from_yaml(file_path: str) -> 'ReinforcementConfig':
+        """
+        Deserializes a YAML file into a ReinforcementConfig object.
+
+        :param file_path: Path to the YAML file containing configuration parameters.
+        :return: An instance of ReinforcementConfig.
+        """
+        with open(file_path, 'r') as file:
+            config_dict = yaml.safe_load(file)
+        return ReinforcementConfig.from_dict(config_dict)
+
+    def _validate_params(self, params: Dict[str, Any]):
+
+        if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
+            raise ValueError("batch_size must be a positive integer.")
+
+        if not isinstance(params['num_simulations'], int) or params['num_simulations'] <= 0:
+            raise ValueError("num_simulations must be a positive integer.")
+
+
 def convert_config_to_dict(config_attr, config_type):
     """
     Converts a configuration attribute to a dictionary if it's either a dictionary
@@ -533,26 +639,3 @@ def convert_config_to_dict(config_attr, config_type):
         return config_attr.to_dict()
     return None
 
-
-def read_planning_config(config_path):
-    """
-    Reads planning configuration file and checks if the setting parameters are correct.
-
-    :param config_path: the path to the file with configuration settings for retrosynthetic planning
-    :return: the validated configuration dictionary
-    """
-    with open(config_path, "r") as file:
-        config = yaml.safe_load(file)
-    return config
-
-
-def read_training_config(config_path):
-    """
-    Reads training configuration file and checks if the setting parameters are correct
-
-    :param config_path: the path to the file with configuration settings for training policy and value networks
-    :return: the validated configuration dictionary.
-    """
-    with open(config_path, "r") as file:
-        config = yaml.safe_load(file)
-    return config

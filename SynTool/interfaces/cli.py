@@ -2,223 +2,521 @@
 Module containing commands line scripts for training and planning mode
 """
 
-import warnings
 import os
 import shutil
+import yaml
+import warnings
 from pathlib import Path
+
 import click
 import gdown
 
-from SynTool.chem.reaction_rules.extraction import extract_rules_from_reactions
 from SynTool.chem.data.cleaning import reactions_cleaner
-from SynTool.chem.data.mapping import remove_reagents_and_map_from_file
+from SynTool.chem.data.filtering import filter_reactions, ReactionCheckConfig
 from SynTool.utils.loading import standardize_building_blocks
-from SynTool.ml.training import create_policy_dataset, run_policy_training
-from SynTool.ml.training.reinforcement import run_self_tuning
-from SynTool.ml.networks.policy import PolicyNetworkConfig
-from SynTool.utils.config import read_planning_config, read_training_config, TreeConfig
+from SynTool.chem.reaction_rules.extraction import extract_rules_from_reactions
 from SynTool.mcts.search import tree_search
-
-from SynTool.chem.data.filtering import (
-    filter_reactions,
-    ReactionCheckConfig,
-    CCRingBreakingConfig,
-    WrongCHBreakingConfig,
-    CCsp3BreakingConfig,
-    DynamicBondsConfig,
-    MultiCenterConfig,
-    NoReactionConfig,
-    SmallMoleculesConfig,
-)
+from SynTool.ml.training.reinforcement import run_reinforcement_tuning
+from SynTool.ml.training.supervised import create_policy_dataset, run_policy_training
+from SynTool.utils.config import ReinforcementConfig, TreeConfig, PolicyNetworkConfig, ValueNetworkConfig
+from SynTool.utils.config import ReactionStandardizationConfig, RuleExtractionConfig
+from SynTool.chem.data.mapping import remove_reagents_and_map_from_file
 
 warnings.filterwarnings("ignore")
-main = click.Group()
 
 
-@main.command(name='planning_data')
-def planning_data_cli():
+@click.group(name="syntool")
+def syntool():
+    pass
+
+
+@syntool.command(name="download_planning_data")
+@click.option(
+    "--root_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+def download_planning_data_cli(root_dir='.'):
     """
-    Downloads a file from Google Drive using its remote ID, saves it as a zip file, extracts the contents,
-    and then deletes the zip file
+    Downloads data for retrosythesis planning
     """
-    remote_id = '1c5YJDT-rP1ZvFA-ELmPNTUj0b8an4yFf'
-    output = 'synto_planning_data.zip'
+    remote_id = "1ygq9BvQgH2Tq_rL72BvSOdASSSbPFTsL"
+    output = os.path.join(root_dir, "syntool_planning_data.zip")
     #
-    gdown.download(output=output, id=remote_id, quiet=True)
-    shutil.unpack_archive(output, './')
-    #
-    os.remove(output)
-
-
-@main.command(name='training_data')
-def training_data_cli():
-    """
-    Downloads a file from Google Drive using its remote ID, saves it as a zip file, extracts the contents,
-    and then deletes the zip file
-    """
-    remote_id = '1r4I7OskGvzg-zxYNJ7WVYpVR2HSYW10N'
-    output = 'synto_training_data.zip'
-    #
-    gdown.download(output=output, id=remote_id, quiet=True)
-    shutil.unpack_archive(output, './')
+    gdown.download(output=output, id=remote_id, quiet=False)
+    shutil.unpack_archive(output, root_dir)
     #
     os.remove(output)
 
 
-@main.command(name='syntool_planning')
-@click.option("--config",
-              "config_path",
-              required=True,
-              help="Path to the config YAML molecules_path.",
-              type=click.Path(exists=True, path_type=Path),
-              )
-def syntool_planning_cli(config_path):
+@syntool.command(name='download_training_data')
+@click.option(
+    "--root_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+def download_training_data_cli(root_dir='.'):
     """
-    Launches tree search for the given target molecules and stores search statistics and found retrosynthetic paths
-
-    :param config_path: The path to the configuration file that contains the settings and parameters for the tree search
+    Downloads data for retrosythetic models training
     """
-    config = read_planning_config(config_path)
-    config['Tree']['silent'] = True
-
-    # standardize building blocks
-    if config['InputData']['standardize_building_blocks']:
-        print('STANDARDIZE BUILDING BLOCKS ...')
-        standardize_building_blocks(config['InputData']['building_blocks_path'],
-                                    config['InputData']['building_blocks_path'])
-    # run planning
-    print('\nRUN PLANNING ...')
-    tree_config = TreeConfig.from_dict(config['Tree'])
-    tree_search(targets=config['General']['targets_path'],
-                tree_config=tree_config,
-                reaction_rules_path=config['InputData']['reaction_rules_path'],
-                building_blocks_path=config['InputData']['building_blocks_path'],
-                policy_weights_path=config['PolicyNetwork']['weights_path'],
-                value_weights_paths=config['ValueNetwork']['weights_path'],
-                results_root=config['General']['results_root'])
+    remote_id = "1ckhO1l6xud0_bnC0rCDMkIlKRUMG_xs8"
+    output = os.path.join(root_dir, "syntool_training_data.zip")
+    #
+    gdown.download(output=output, id=remote_id, quiet=False)
+    shutil.unpack_archive(output, root_dir)
+    #
+    os.remove(output)
 
 
-@main.command(name='syntool_training')
+@syntool.command(name="building_blocks")
+@click.option(
+    "--input",
+    "input_file",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--output",
+    "output_file",
+    required=True,
+    type=click.Path(),
+    help="File where the results will be stored.",
+)
+def building_blocks_cli(input_file, output_file):
+    """
+    Standardizes building blocks
+    """
+
+    standardize_building_blocks(input_file=input_file, output_file=output_file)
+
+
+@syntool.command(name="reaction_mapping")
+@click.option(
+    "--input",
+    "input_file",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--output",
+    "output_file",
+    default=Path("reaction_data_standardized.smi"),
+    type=click.Path(),
+    help="File where the results will be stored.",
+)
+def reaction_mapping_cli(input_file, output_file):
+    """
+    Reaction data mapping
+    """
+
+    remove_reagents_and_map_from_file(input_file=input_file, output_file=output_file)
+
+
+@syntool.command(name="reaction_standardizing")
 @click.option(
     "--config",
     "config_path",
     required=True,
-    help="Path to the config YAML file.",
-    type=click.Path(exists=True, path_type=Path)
-             )
-def syntool_training_cli(config_path):
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for standardizing reactions.",
+)
+@click.option(
+    "--input",
+    "input_file",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--output",
+    "output_file",
+    type=click.Path(),
+    help="File where the results will be stored.",
+)
+@click.option(
+    "--num_cpus",
+    default=8,
+    type=int,
+    help="Number of CPUs to use for processing. Defaults to 1.",
+)
+def reaction_standardizing_cli(config_path, input_file, output_file, num_cpus):
+    """
+    Standardizes reactions and remove duplicates
+    """
 
-    # read training config
-    print('READ CONFIG ...')
-    config = read_training_config(config_path)
-    print('Config is read')
+    stand_config = ReactionStandardizationConfig.from_yaml(config_path)
+    reactions_cleaner(config=stand_config,
+                      input_file=input_file,
+                      output_file=output_file,
+                      num_cpus=num_cpus)
 
-    reaction_data_file = config['InputData']['reaction_data_path']
 
-    # reaction data mapping
-    data_output_folder = os.path.join(config['General']['results_root'], 'reaction_data')
-    Path(data_output_folder).mkdir(parents=True, exist_ok=True)
-    mapped_data_file = os.path.join(data_output_folder, 'reaction_data_mapped.smi')
-    if config['DataCleaning']['map_reactions']:
-        print('\nMAP REACTION DATA ...')
+@syntool.command(name="reaction_filtering")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for filtering reactions.",
+)
+@click.option(
+    "--input",
+    "input_file",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--output",
+    "output_file",
+    default=Path("./"),
+    type=click.Path(),
+    help="File where the results will be stored.",
+)
+@click.option(
+    "--append_results",
+    is_flag=True,
+    default=False,
+    help="If set, results will be appended to existing files. By default, new files are created.",
+)
+@click.option(
+    "--batch_size",
+    default=100,
+    type=int,
+    help="Size of the batch for processing reactions. Defaults to 10.",
+)
+@click.option(
+    "--num_cpus",
+    default=8,
+    type=int,
+    help="Number of CPUs to use for processing. Defaults to 1.",
+)
+def reaction_filtering_cli(config_path,
+                           input_file,
+                           output_file,
+                           append_results,
+                           batch_size,
+                           num_cpus):
+    """
+    Filters erroneous reactions
+    """
+    reaction_check_config = ReactionCheckConfig().from_yaml(config_path)
+    filter_reactions(
+        config=reaction_check_config,
+        reaction_database_path=input_file,
+        result_reactions_file_name=output_file,
+        append_results=append_results,
+        num_cpus=num_cpus,
+        batch_size=batch_size,
+    )
 
-        remove_reagents_and_map_from_file(input_file=config['InputData']['reaction_data_path'],
-                                          output_file=mapped_data_file)
 
-        reaction_data_file = mapped_data_file
+@syntool.command(name="rule_extracting")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for reaction rules extraction.",
+)
+@click.option(
+    "--input",
+    "input_file",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--output",
+    "output_file",
+    required=True,
+    type=click.Path(),
+    help="File where the results will be stored.",
+)
+@click.option(
+    "--batch_size",
+    default=100,
+    type=int,
+    help="Size of the batch for processing reactions. Defaults to 10.",
+)
+@click.option(
+    "--num_cpus",
+    default=8,
+    type=int,
+    help="Number of CPUs to use for processing. Defaults to 1.",
+)
+def rule_extracting_cli(
+    config_path,
+    input_file,
+    output_file,
+    num_cpus,
+    batch_size,
+):
+    """
+    Extracts reaction rules
+    """
 
-    # reaction data cleaning
-    cleaned_data_file = os.path.join(data_output_folder, 'reaction_data_cleaned.rdf')
-    if config['DataCleaning']['clean_reactions']:
-        print('\nCLEAN REACTION DATA ...')
+    reaction_rule_config = RuleExtractionConfig.from_yaml(config_path)
+    extract_rules_from_reactions(config=reaction_rule_config,
+                                 reaction_file=input_file,
+                                 rules_file_name=output_file,
+                                 num_cpus=num_cpus,
+                                 batch_size=batch_size)
 
-        reactions_cleaner(input_file=reaction_data_file,
-                          output_file=cleaned_data_file,
-                          num_cpus=config['General']['num_cpus'])
 
-        reaction_data_file = cleaned_data_file
+@syntool.command(name="supervised_ranking_policy_training")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--reaction_data",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--reaction_rules",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--results_dir",
+    default=Path("."),
+    type=click.Path(),
+    help="Root directory where the results will be stored.",
+)
+@click.option(
+    "--num_cpus",
+    default=8,
+    type=int,
+    help="Number of CPUs to use for processing. Defaults to 1.",
+)
+def supervised_ranking_policy_training_cli(config_path, reaction_data, reaction_rules, results_dir, num_cpus):
+    """
+    Trains ranking policy network
+    """
 
-    # reactions data filtering
-    if config['DataCleaning']['filter_reactions']:
-        print('\nFILTER REACTION DATA ...')
-        #
-        filtration_config = ReactionCheckConfig(
-            remove_small_molecules=False,
-            small_molecules_config=SmallMoleculesConfig(limit=6),
-            dynamic_bonds_config=DynamicBondsConfig(min_bonds_number=1, max_bonds_number=6),
-            no_reaction_config=NoReactionConfig(),
-            multi_center_config=MultiCenterConfig(),
-            wrong_ch_breaking_config=WrongCHBreakingConfig(),
-            cc_sp3_breaking_config=CCsp3BreakingConfig(),
-            cc_ring_breaking_config=CCRingBreakingConfig()
-        )
+    policy_config = PolicyNetworkConfig.from_yaml(config_path)
 
-        filtered_data_file = os.path.join(data_output_folder, 'reaction_data_filtered.rdf')
-        filter_reactions(config=filtration_config,
-                         reaction_database_path=reaction_data_file,
-                         result_directory_path=data_output_folder,
-                         result_reactions_file_name='reaction_data_filtered',
-                         num_cpus=config['General']['num_cpus'],
-                         batch_size=100)
+    policy_dataset_file = os.path.join(results_dir, 'policy_dataset.ckpt')
 
-        reaction_data_file = filtered_data_file
+    datamodule = create_policy_dataset(reaction_rules_path=reaction_rules,
+                                       molecules_or_reactions_path=reaction_data,
+                                       output_path=policy_dataset_file,
+                                       dataset_type='ranking',
+                                       batch_size=policy_config.batch_size,
+                                       num_cpus=num_cpus)
 
-    # standardize building blocks
-    if config['DataCleaning']['standardize_building_blocks']:
-        print('\nSTANDARDIZE BUILDING BLOCKS ...')
+    run_policy_training(datamodule, config=policy_config, results_path=results_dir)
 
-        standardize_building_blocks(config['InputData']['building_blocks_path'],
-                                    config['InputData']['building_blocks_path'])
 
-    # reaction rules extraction
-    print('\nEXTRACT REACTION RULES ...')
+@syntool.command(name="supervised_filtering_policy_training")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--molecules_file",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the molecules database file that will be mapped.",
+)
+@click.option(
+    "--reaction_rules",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the reaction database file that will be mapped.",
+)
+@click.option(
+    "--results_dir",
+    default=Path("."),
+    type=click.Path(),
+    help="Root directory where the results will be stored.",
+)
+@click.option(
+    "--num_cpus",
+    default=8,
+    type=int,
+    help="Number of CPUs to use for processing. Defaults to 1.",
+)
+def supervised_filtering_policy_training_cli(config_path, molecules_file, reaction_rules, results_dir, num_cpus):
+    """
+    Trains filtering policy network
+    """
 
-    rules_output_folder = os.path.join(config['General']['results_root'], 'reaction_rules')
-    Path(rules_output_folder).mkdir(parents=True, exist_ok=True)
-    reaction_rules_path = os.path.join(rules_output_folder, 'reaction_rules_filtered.pickle')
-    config['InputData']['reaction_rules_path'] = reaction_rules_path
+    policy_config = PolicyNetworkConfig.from_yaml(config_path)
 
-    extract_rules_from_reactions(config=config,
-                                 reaction_file=reaction_data_file,
-                                 results_root=rules_output_folder,
-                                 num_cpus=config['General']['num_cpus'])
+    policy_dataset_file = os.path.join(results_dir, 'policy_dataset.ckpt')
+    datamodule = create_policy_dataset(reaction_rules_path=reaction_rules,
+                                       molecules_or_reactions_path=molecules_file,
+                                       output_path=policy_dataset_file,
+                                       dataset_type='filtering',
+                                       batch_size=policy_config.batch_size,
+                                       num_cpus=num_cpus)
 
-    # create policy network dataset
-    print('\nCREATE POLICY NETWORK DATASET ...')
-    policy_output_folder = os.path.join(config['General']['results_root'], 'policy_network')
-    Path(policy_output_folder).mkdir(parents=True, exist_ok=True)
-    policy_data_file = os.path.join(policy_output_folder, 'policy_dataset.pt')
+    run_policy_training(datamodule, config=policy_config, results_path=results_dir)
 
-    if config['PolicyNetwork']['policy_type'] == 'ranking':
-        molecules_or_reactions_path = reaction_data_file
-    elif config['PolicyNetwork']['policy_type'] == 'filtering':
-        molecules_or_reactions_path = config['InputData']['policy_data_path']
-    else:
-        raise ValueError(
-            "Invalid policy_type. Allowed values are 'ranking', 'filtering'."
-        )
 
-    datamodule = create_policy_dataset(reaction_rules_path=reaction_rules_path,
-                                       molecules_or_reactions_path=molecules_or_reactions_path,
-                                       output_path=policy_data_file,
-                                       dataset_type=config['PolicyNetwork']['policy_type'],
-                                       batch_size=config['PolicyNetwork']['batch_size'],
-                                       num_cpus=config['General']['num_cpus'])
+@syntool.command(name="reinforcement_value_network_training")
+@click.option(
+    "--config",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--targets",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--reaction_rules",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--building_blocks",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--policy_network",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--value_network",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--results_dir",
+    default='.',
+    type=click.Path(exists=False),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+def reinforcement_value_network_training_cli(config,
+                                             targets,
+                                             reaction_rules,
+                                             building_blocks,
+                                             policy_network,
+                                             value_network,
+                                             results_dir):
+    """
+    Trains value network with reinforcement learning
+    """
 
-    # train policy network
-    print('\nTRAIN POLICY NETWORK ...')
-    policy_config = PolicyNetworkConfig.from_dict(config['PolicyNetwork'])
-    run_policy_training(datamodule, config=policy_config, results_path=policy_output_folder)
-    config['PolicyNetwork']['weights_path'] = os.path.join(policy_output_folder, 'weights', 'policy_network.ckpt')
+    with open(config, "r") as file:
+        config = yaml.safe_load(file)
 
-    # self-tuning value network training
-    print('\nTRAIN VALUE NETWORK ...')
-    value_output_folder = os.path.join(config['General']['results_root'], 'value_network')
-    Path(value_output_folder).mkdir(parents=True, exist_ok=True)
-    config['ValueNetwork']['weights_path'] = os.path.join(value_output_folder, 'weights', 'value_network.ckpt')
+    policy_config = PolicyNetworkConfig.from_dict(config['node_expansion'])
+    policy_config.weights_path = policy_network
 
-    run_self_tuning(config, results_root=value_output_folder)
+    value_config = ValueNetworkConfig.from_dict(config['value_network'])
+    if value_network is None:
+        value_config.weights_path = os.path.join(results_dir, 'weights', 'value_network.ckpt')
+
+    tree_config = TreeConfig.from_dict(config['tree'])
+    reinforce_config = ReinforcementConfig.from_dict(config['reinforcement'])
+
+    run_reinforcement_tuning(targets=targets,
+                             tree_config=tree_config,
+                             policy_config=policy_config,
+                             value_config=value_config,
+                             reinforce_config=reinforce_config,
+                             reaction_rules_path=reaction_rules,
+                             building_blocks_path=building_blocks,
+                             results_root=results_dir)
+
+
+@syntool.command(name="planning")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--targets",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--reaction_rules",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--building_blocks",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--policy_network",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--value_network",
+    default=None,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+@click.option(
+    "--results_dir",
+    default='.',
+    type=click.Path(exists=False),
+    help="Path to the configuration file. This file contains settings for policy training.",
+)
+def planning_cli(config_path,
+                 targets,
+                 reaction_rules,
+                 building_blocks,
+                 policy_network,
+                 value_network,
+                 results_dir):
+    """
+    Runs retrosynthesis planning
+    """
+
+    with open(config_path, "r") as file:
+        config = yaml.safe_load(file)
+
+    tree_config = TreeConfig.from_dict({**config['tree'], **config['node_evaluation']})
+    policy_config = PolicyNetworkConfig.from_dict({**config['node_expansion'], **{'weights_path': policy_network}})
+
+    tree_search(targets=targets,
+                tree_config=tree_config,
+                policy_config=policy_config,
+                reaction_rules_path=reaction_rules,
+                building_blocks_path=building_blocks,
+                value_weights_path=value_network,
+                results_root=results_dir)
 
 
 if __name__ == '__main__':
-    main()
+    syntool()
+
+

@@ -1,0 +1,24 @@
+environment_atom_count: 1
+min_popularity: 3
+multicenter_rules: True
+as_query_container: True
+reverse_rule: True
+include_func_groups: False
+func_groups_list:
+include_rings: False
+keep_leaving_groups: True
+keep_incoming_groups: False
+keep_reagents: False
+keep_metadata: False
+single_reactant_only: True
+atom_info_retention:
+  reaction_center:
+    neighbors: True
+    hybridization: True
+    implicit_hydrogens: True
+    ring_sizes: True
+  environment:
+    neighbors: True
+    hybridization: True
+    implicit_hydrogens: True
+    ring_sizes: True

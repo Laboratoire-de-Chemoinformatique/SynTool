@@ -13,7 +13,8 @@ from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
 
-from SynTool.ml.networks.policy import PolicyNetwork, PolicyNetworkConfig
+from SynTool.ml.networks.policy import PolicyNetwork
+from SynTool.utils.config import PolicyNetworkConfig
 from SynTool.ml.training.preprocessing import RankingPolicyDataset, FilteringPolicyDataset
 from SynTool.utils.logging import DisableLogger, HiddenPrints
 

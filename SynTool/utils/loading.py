@@ -34,11 +34,11 @@ def load_reaction_rules(file):
     return reaction_rules
 
 
-def standardize_building_blocks(input_file, out_file):
+def standardize_building_blocks(input_file, output_file):
     """
     The function canonicalizes custom building blocks
 
-    :param out_file:
+    :param output_file:
     :param input_file: The path to the txt file that stores the original building blocks
     :param input_file: The path to the txt file that stores the canonicalazied building blocks
     """
@@ -56,9 +56,9 @@ def standardize_building_blocks(input_file, out_file):
             continue
     mols = [i.strip() for i in mols]
 
-    pd.DataFrame(mols).to_csv(out_file, header=None, index=None)
+    pd.DataFrame(mols).to_csv(output_file, header=None, index=None)
 
-    return out_file
+    return output_file
 
 
 @functools.lru_cache(maxsize=None)

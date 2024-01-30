@@ -1,0 +1,21 @@
+compete_products_config:
+  fingerprint_tanimoto_threshold: 0.5 # TODO put default values to the code
+  mcs_tanimoto_threshold: 0.5
+dynamic_bonds_config:
+  min_bonds_number: 1
+  max_bonds_number: 6
+small_molecules_config:
+  limit: 6
+strange_carbons_config:
+cgr_connected_components_config:
+rings_change_config:
+no_reaction_config:
+multi_center_config:
+wrong_ch_breaking_config:
+cc_sp3_breaking_config:
+cc_ring_breaking_config:
+rebalance_reaction: False
+remove_reagents: True
+reagents_max_size: 7
+remove_small_molecules: False
+small_molecules_max_size: 6
