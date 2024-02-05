@@ -1,6 +1,6 @@
 import os
 from multiprocessing import Queue, Process, Manager, Value
-from logging import getLogger
+from logging import getLogger, Logger
 from tqdm import tqdm
 from CGRtools.containers import ReactionContainer
 
@@ -9,12 +9,13 @@ from SynTool.utils.files import ReactionReader, ReactionWriter
 from SynTool.utils.config import ReactionStandardizationConfig
 
 
-def cleaner(reaction: ReactionContainer, logger, config):
+def cleaner(reaction: ReactionContainer, logger: Logger, config: ReactionStandardizationConfig):
     """
     Standardize a reaction according to external script
 
     :param reaction: ReactionContainer to clean/standardize
     :param logger: Logger - to avoid writing log
+    :param config: ReactionStandardizationConfig
     :return: ReactionContainer or empty list
     """
     standardizer = Standardizer(id_tag='Reaction_ID',
@@ -34,6 +35,8 @@ def worker_cleaner(to_clean: Queue, to_write: Queue, config: ReactionStandardiza
 
     :param to_clean: Queue of reactions to clean/standardize
     :param to_write: Standardized outputs to write
+    :param config: ReactionStandardizationConfig
+    :return: None
     """
     logger = getLogger()
     logger.disabled = True
@@ -117,6 +120,5 @@ def reactions_cleaner(config: ReactionStandardizationConfig,
         to_write.put("Quit")
         writer.join()
 
-        n_removed = n - cleaned_nb.get()
         print(f'Initial number of reactions: {n}'),
-        print(f'Removed number of reactions: {n_removed}')
+        print(f'Removed number of reactions: {n - cleaned_nb.get()}')

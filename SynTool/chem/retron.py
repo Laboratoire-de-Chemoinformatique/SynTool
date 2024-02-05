@@ -93,9 +93,8 @@ class Retron:
             return str(self._molecule) in stock
 
 
-def compose_retrons(
-    retrons: list = None, exclude_small=True, min_mol_size=6
-) -> MoleculeContainer:
+def compose_retrons(retrons: list = None, exclude_small=True, min_mol_size=6
+                    ) -> MoleculeContainer:
     """
     The function takes a list of retrons, excludes small retrons if specified, and composes them into a single molecule.
     This molecule is used for the prediction of synthesisability of the characterizing the possible success of the path

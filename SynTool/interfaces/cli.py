@@ -95,6 +95,13 @@ def building_blocks_cli(input_file, output_file):
 
 @syntool.command(name="reaction_mapping")
 @click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file. This file contains settings for mapping and standardizing reactions.",
+)
+@click.option(
     "--input",
     "input_file",
     required=True,
@@ -108,12 +115,13 @@ def building_blocks_cli(input_file, output_file):
     type=click.Path(),
     help="File where the results will be stored.",
 )
-def reaction_mapping_cli(input_file, output_file):
+def reaction_mapping_cli(config_path, input_file, output_file):
     """
     Reaction data mapping
     """
 
-    remove_reagents_and_map_from_file(input_file=input_file, output_file=output_file)
+    stand_config = ReactionStandardizationConfig.from_yaml(config_path)
+    remove_reagents_and_map_from_file(input_file=input_file, output_file=output_file, keep_reagent=stand_config.keep_reagents)
 
 
 @syntool.command(name="reaction_standardizing")
@@ -122,7 +130,7 @@ def reaction_mapping_cli(input_file, output_file):
     "config_path",
     required=True,
     type=click.Path(exists=True),
-    help="Path to the configuration file. This file contains settings for standardizing reactions.",
+    help="Path to the configuration file. This file contains settings for mapping and standardizing reactions.",
 )
 @click.option(
     "--input",

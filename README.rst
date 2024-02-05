@@ -80,7 +80,7 @@ Run training from scratch
     syntool building_blocks --input tests/building_blocks.smi --output tests/building_blocks_2.smi
 
     # reaction data mapping
-    syntool reaction_mapping --input tests/uspto_original.smi --output tests/uspto_mapped.smi
+    syntool reaction_mapping --config configs/standardization.yaml --input tests/uspto_original.smi --output tests/uspto_mapped.smi
 
     # reaction data standardizing
     syntool reaction_standardizing --config configs/standardization.yaml --input tests/uspto_mapped.smi --output tests/uspto_standardized.smi

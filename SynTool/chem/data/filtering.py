@@ -2,8 +2,8 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Tuple, Dict, Any, Optional
-
 from os.path import splitext
+from tqdm.auto import tqdm
 
 import numpy as np
 import ray
@@ -11,16 +11,10 @@ import yaml
 from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContainer
 from CGRtools.files import RDFRead, RDFWrite
 from StructureFingerprint import MorganFingerprint
-from tqdm.auto import tqdm
 
 from SynTool.utils.files import ReactionReader, ReactionWriter
-
-from SynTool.chem.utils import (
-    remove_small_molecules,
-    rebalance_reaction,
-    remove_reagents,
-    to_reaction_smiles_record,
-)
+from SynTool.chem.utils import (remove_small_molecules, rebalance_reaction,
+                                remove_reagents, to_reaction_smiles_record, )
 from SynTool.utils.config import ConfigABC, convert_config_to_dict
 
 
@@ -43,19 +37,13 @@ class CompeteProductsConfig(ConfigABC):
 
     def _validate_params(self, params: Dict[str, Any]):
         """Validate configuration parameters."""
-        if not isinstance(params.get("fingerprint_tanimoto_threshold"), float) or not (
-            0 <= params["fingerprint_tanimoto_threshold"] <= 1
-        ):
-            raise ValueError(
-                "Invalid 'fingerprint_tanimoto_threshold'; expected a float between 0 and 1"
-            )
+        if not isinstance(params.get("fingerprint_tanimoto_threshold"), float) \
+                or not (0 <= params["fingerprint_tanimoto_threshold"] <= 1):
+            raise ValueError("Invalid 'fingerprint_tanimoto_threshold'; expected a float between 0 and 1")
 
-        if not isinstance(params.get("mcs_tanimoto_threshold"), float) or not (
-            0 <= params["mcs_tanimoto_threshold"] <= 1
-        ):
-            raise ValueError(
-                "Invalid 'mcs_tanimoto_threshold'; expected a float between 0 and 1"
-            )
+        if not isinstance(params.get("mcs_tanimoto_threshold"), float) \
+                or not (0 <= params["mcs_tanimoto_threshold"] <= 1):
+            raise ValueError("Invalid 'mcs_tanimoto_threshold'; expected a float between 0 and 1")
 
 
 class CompeteProductsChecker:
@@ -137,26 +125,17 @@ class DynamicBondsConfig(ConfigABC):
 
     def _validate_params(self, params: Dict[str, Any]):
         """Validate configuration parameters."""
-        if (
-            not isinstance(params.get("min_bonds_number"), int)
-            or params["min_bonds_number"] < 0
-        ):
+        if not isinstance(params.get("min_bonds_number"), int) \
+                or params["min_bonds_number"] < 0:
             raise ValueError(
-                "Invalid 'min_bonds_number'; expected a non-negative integer"
-            )
+                "Invalid 'min_bonds_number'; expected a non-negative integer")
 
-        if (
-            not isinstance(params.get("max_bonds_number"), int)
-            or params["max_bonds_number"] < 0
-        ):
-            raise ValueError(
-                "Invalid 'max_bonds_number'; expected a non-negative integer"
-            )
+        if not isinstance(params.get("max_bonds_number"), int) \
+                or params["max_bonds_number"] < 0:
+            raise ValueError("Invalid 'max_bonds_number'; expected a non-negative integer")
 
         if params["min_bonds_number"] > params["max_bonds_number"]:
-            raise ValueError(
-                "'min_bonds_number' cannot be greater than 'max_bonds_number'"
-            )
+            raise ValueError("'min_bonds_number' cannot be greater than 'max_bonds_number'")
 
 
 class DynamicBondsChecker:
@@ -212,17 +191,9 @@ class SmallMoleculesChecker:
         return SmallMoleculesChecker(config.limit)
 
     def __call__(self, reaction: ReactionContainer) -> bool:
-        if len(reaction.reactants) == 1 and self.are_only_small_molecules(
-            reaction.reactants
-        ):
-            return True
-        elif len(reaction.products) == 1 and self.are_only_small_molecules(
-            reaction.products
-        ):
-            return True
-        elif self.are_only_small_molecules(
-            reaction.reactants
-        ) and self.are_only_small_molecules(reaction.products):
+        if (len(reaction.reactants) == 1 and self.are_only_small_molecules(reaction.reactants)) \
+                or (len(reaction.products) == 1 and self.are_only_small_molecules(reaction.products)) \
+                or (self.are_only_small_molecules(reaction.reactants) and self.are_only_small_molecules(reaction.products)):
             return True
         return False
 
@@ -259,7 +230,7 @@ class RingsChangeChecker:
     """Allows to check if there is changing rings number in the reaction."""
 
     @staticmethod
-    def from_config(config: RingsChangeConfig):
+    def from_config(config: RingsChangeConfig):  # TODO config class not used
         """Creates an instance of RingsChecker from a configuration object."""
         return RingsChangeChecker()
 
@@ -275,9 +246,7 @@ class RingsChangeChecker:
         reaction.thiele()
         r_rings, r_arom_rings = self._calc_rings(reaction.reactants)
         p_rings, p_arom_rings = self._calc_rings(reaction.products)
-        if r_arom_rings != p_arom_rings:
-            return True
-        elif r_rings != p_rings:
+        if (r_arom_rings != p_arom_rings) or (r_rings != p_rings):
             return True
         else:
             return False
@@ -307,7 +276,7 @@ class StrangeCarbonsChecker:
     """Checks if there are 'strange' carbons in the reaction."""
 
     @staticmethod
-    def from_config(config: StrangeCarbonsConfig):
+    def from_config(config: StrangeCarbonsConfig):  # TODO config class not used
         """Creates an instance of StrangeCarbonsChecker from a configuration object."""
         return StrangeCarbonsChecker()
 
@@ -335,7 +304,7 @@ class NoReactionChecker:
     """Checks if there is no reaction in the provided reaction container."""
 
     @staticmethod
-    def from_config(config: NoReactionConfig):
+    def from_config(config: NoReactionConfig):  # TODO config class not used
         """Creates an instance of NoReactionChecker from a configuration object."""
         return NoReactionChecker()
 
@@ -353,7 +322,7 @@ class MultiCenterChecker:
     """Checks if there is a multicenter reaction."""
 
     @staticmethod
-    def from_config(config: MultiCenterConfig):
+    def from_config(config: MultiCenterConfig):  # TODO config class not used
         return MultiCenterChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -370,7 +339,7 @@ class WrongCHBreakingChecker:
     """Checks for incorrect C-C bond formation from breaking a C-H bond."""
 
     @staticmethod
-    def from_config(config: WrongCHBreakingConfig):
+    def from_config(config: WrongCHBreakingConfig):  # TODO config class not used
         return WrongCHBreakingChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -446,7 +415,7 @@ class CCsp3BreakingChecker:
     """Checks if there is C(sp3)-C bond breaking."""
 
     @staticmethod
-    def from_config(config: CCsp3BreakingConfig):
+    def from_config(config: CCsp3BreakingConfig):  # TODO config class not used
         return CCsp3BreakingChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -482,7 +451,7 @@ class CCRingBreakingChecker:
     """Checks if a reaction involves ring C-C bond breaking."""
 
     @staticmethod
-    def from_config(config: CCRingBreakingConfig):
+    def from_config(config: CCRingBreakingConfig):  # TODO config class not used
         return CCRingBreakingChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -797,7 +766,6 @@ class ReactionCheckConfig(ConfigABC):
         return checker_instances
 
 
-
 def tanimoto_kernel(x, y):
     """
     Calculate the Tanimoto coefficient between each element of arrays x and y.
@@ -839,7 +807,7 @@ def tanimoto_kernel(x, y):
     return result
 
 
-def remove_file_if_exists(directory: Path, file_names):
+def remove_file_if_exists(directory: Path, file_names):  # TODO not used
     for file_name in file_names:
         file_path = directory / file_name
         if file_path.is_file():
@@ -851,7 +819,6 @@ def filter_reaction(
     reaction: ReactionContainer,
     config: ReactionCheckConfig,
     checkers: list,
-    output_files_format: str = ".smi",
 ):
     is_filtered = False
     if config.remove_small_molecules:
@@ -875,45 +842,49 @@ def filter_reaction(
     if new_reaction is None:
         is_filtered = True
         new_reaction = reaction.copy()
+        # TODO you are specifying that if the reaction has only reagents, it is kept as it ?
 
     if not is_filtered:
         if config.rebalance_reaction:
             new_reaction = rebalance_reaction(new_reaction)
         for checker in checkers:
             if checker(new_reaction):
+                # If checker returns True it means the reaction doesn't pass the check
                 new_reaction.meta["filtration_log"] = checker.__class__.__name__
                 is_filtered = True
                 break
-
-    if output_files_format == ".smi":
-        new_reaction = to_reaction_smiles_record(new_reaction)
 
     return is_filtered, new_reaction
 
 
 @ray.remote
-def process_batch(batch, config: ReactionCheckConfig, checkers, output_files_format):
+def process_batch(batch, config: ReactionCheckConfig, checkers):
     results = []
     for index, reaction in batch:
         is_filtered, processed_reaction = filter_reaction(
-            reaction, config, checkers, output_files_format
+            reaction, config, checkers
         )
         results.append((index, is_filtered, processed_reaction))
     return results
 
 
-def process_completed_batches(futures, result_file, pbar, batch_size):
+def process_completed_batches(futures, result_file, pbar, treated: int = 0, passed_filters: int = 0):
     done, _ = ray.wait(list(futures.keys()), num_returns=1)
     completed_batch = ray.get(done[0])
 
     # Write results of the completed batch to file
+    now_treated = 0
     for index, is_filtered, reaction in completed_batch:
+        now_treated += 1
         if not is_filtered:
             result_file.write(reaction)
+            passed_filters += 1
 
     # Remove completed future and update progress bar
     del futures[done[0]]
-    pbar.update(batch_size)
+    pbar.update(now_treated)
+    treated += now_treated
+    return treated, passed_filters
 
 
 def filter_reactions(
@@ -941,48 +912,40 @@ def filter_reactions(
     checkers = config.create_checkers()
 
     ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
-
     max_concurrent_batches = num_cpus  # Limit the number of concurrent batches
 
-    result_reactions_file_name, out_ext = splitext(result_reactions_file_name)
-    if out_ext == ".smi":
-        open_mode = "a" if append_results else "w"
-        result_file = open(f"{result_reactions_file_name}{out_ext}", open_mode)
-    elif out_ext == ".rdf":
-        result_file = RDFWrite(f"{result_reactions_file_name}{out_ext}", append=append_results)
-    else:
-        raise ValueError(f"I don't know this output files format: {out_ext}")
-
-    with ReactionReader(reaction_database_path) as reactions:
-        pbar = tqdm(reactions)  # TODO fix progress bars
+    with ReactionReader(reaction_database_path) as reactions, \
+            ReactionWriter(result_reactions_file_name, append_results) as result_file:
+        pbar = tqdm(reactions, leave=True)  # TODO fix progress bars
 
         futures = {}
         batch = []
+        treated = filtered = 0
         for index, reaction in enumerate(reactions):
             reaction.meta["reaction_index"] = index
             batch.append((index, reaction))
             if len(batch) == batch_size:
-                future = process_batch.remote(batch, config, checkers, out_ext)
+                future = process_batch.remote(batch, config, checkers)
                 futures[future] = None
                 batch = []
 
                 # Check and process completed tasks if we've reached the concurrency limit
                 while len(futures) >= max_concurrent_batches:
-                    process_completed_batches(futures, result_file, pbar, batch_size)
+                    treated, filtered = process_completed_batches(futures, result_file, pbar, treated, filtered)
 
         # Process the last batch if it's not empty
         if batch:
-            future = process_batch.remote(batch, config, checkers, out_ext)
+            future = process_batch.remote(batch, config, checkers)
             futures[future] = None
 
         # Process remaining batches
         while futures:
-            process_completed_batches(futures, result_file, pbar, batch_size)
+            treated, filtered = process_completed_batches(futures, result_file, pbar, treated, filtered)
 
         pbar.close()
-
-    result_file.close()
     ray.shutdown()
+    print(f'Initial number of reactions: {treated}'),
+    print(f'Removed number of reactions: {treated - filtered}')
 
     # Example usage
     """

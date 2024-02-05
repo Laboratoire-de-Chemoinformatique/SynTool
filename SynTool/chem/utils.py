@@ -1,20 +1,8 @@
 from typing import List, Iterable, Tuple
 
-from chython import smiles
 from CGRtools.containers import MoleculeContainer, ReactionContainer, QueryContainer
 from CGRtools.exceptions import InvalidAromaticRing
 
-
-def smiles_is_valid(smi):
-    try:
-        mol = smiles(smi)
-        if mol:
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(e)
-        return False
 
 def query_to_mol(query: QueryContainer) -> MoleculeContainer:
     """

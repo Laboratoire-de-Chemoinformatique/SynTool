@@ -7,6 +7,7 @@ from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContain
 from CGRtools.files.SDFrw import SDFRead, SDFWrite
 from CGRtools.files.RDFrw import RDFRead, RDFWrite
 
+from SynTool.chem.utils import to_reaction_smiles_record
 from SynTool.utils import path_type
 
 
@@ -183,7 +184,7 @@ class ReactionWriter(Writer):
         :return: None
         """
         if self._file_type == "SMI":
-            rea_str = format(reaction, "m") if self._mapping else str(reaction)
+            rea_str = to_reaction_smiles_record(reaction)
             self._file.write(rea_str + "\n")
         elif self._file_type == "RDF":
             self._file.write(reaction)

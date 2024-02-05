@@ -9,12 +9,14 @@ from chython.exceptions import MappingError, IncorrectSmiles
 from SynTool.utils import path_type
 
 
-def remove_reagents_and_map(rea: ReactionContainer) -> Union[ReactionContainer, None]:
+def remove_reagents_and_map(rea: ReactionContainer, keep_reagent: bool = False) -> Union[ReactionContainer, None]:
     """
     Maps atoms of the reaction using chytorch.
 
     :param rea: reaction to map
     :type rea: ReactionContainer
+    :param keep_reagent: whenever to remove reagent or not
+    :type keep_reagent: bool
 
     :return: ReactionContainer or None
     """
@@ -22,23 +24,24 @@ def remove_reagents_and_map(rea: ReactionContainer) -> Union[ReactionContainer, 
         rea.reset_mapping()
     except MappingError:
         rea.reset_mapping()  # Successive reset_mapping works
-    try:
-        rea.remove_reagents()
-        return rea
-    except:
-        # print("Error", str(rea))
-        return None
+    if not keep_reagent:
+        try:
+            rea.remove_reagents()
+        except:
+            return None
+    return rea
 
 
-def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_type) -> None:
+def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_type, keep_reagent: bool = False) -> None:
     """
     Reads a file of reactions and maps atoms of the reactions using chytorch.
 
     :param input_file: the path and name of the input file
     :type input_file: path_type
-
     :param output_file: the path and name of the output file
     :type output_file: path_type
+    :param keep_reagent: whenever to remove reagent or not
+    :type keep_reagent: bool
 
     :return: None
     """
@@ -65,27 +68,24 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
     mapping_errors = 0
     parsing_errors = 0
     for rea_raw in tqdm(enumerator):
-        rea = remove_reagents_and_map(smiles(rea_raw.strip('\n')) if input_ext == ".smi"
-                                      else rea_raw)
-        if rea:
+        try:
+            rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
+        except IncorrectSmiles:
+            parsing_errors += 1
+            continue
+        try:
+            rea_mapped = remove_reagents_and_map(rea, keep_reagent)
+        except MappingError:
             try:
-                rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
-            except IncorrectSmiles:
-                parsing_errors += 1
-                continue
-            try:
-                rea_mapped = remove_reagents_and_map(rea)
+                rea_mapped = remove_reagents_and_map(smiles(str(rea)), keep_reagent)
             except MappingError:
-                try:
-                    rea_mapped = remove_reagents_and_map(smiles(str(rea)))
-                except MappingError:
-                    mapping_errors += 1
-                    continue
-            if rea_mapped:
-                rea_output = format(rea, "m") + "\n" if out_ext == ".smi" else rea
-                output_file.write(rea_output)
-            else:
                 mapping_errors += 1
+                continue
+        if rea_mapped:
+            rea_output = format(rea, "m") + "\n" if out_ext == ".smi" else rea
+            output_file.write(rea_output)
+        else:
+            mapping_errors += 1
 
     input_file.close()
     output_file.close()

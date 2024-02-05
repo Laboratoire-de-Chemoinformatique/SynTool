@@ -17,7 +17,6 @@ from SynTool.mcts.expansion import PolicyFunction
 from SynTool.utils import path_type
 from SynTool.utils.files import MoleculeReader
 from SynTool.utils.config import PolicyNetworkConfig
-from SynTool.chem.utils import smiles_is_valid
 
 
 def extract_tree_stats(tree, target):
@@ -47,7 +46,7 @@ def tree_search(
         policy_config: PolicyNetworkConfig,
         reaction_rules_path: path_type,
         building_blocks_path: path_type,
-        policy_weights_path: path_type = None,
+        policy_weights_path: path_type = None, #TODO not used
         value_weights_path: path_type = None,
         results_root: path_type = "search_results"
 ):
