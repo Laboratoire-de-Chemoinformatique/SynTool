@@ -140,6 +140,8 @@ def run_tree_search(target: MoleculeContainer,
     policy_function = PolicyFunction(policy_config=policy_config)
     value_function = ValueFunction(weights_path=value_config.weights_path)
 
+    target = smiles('c1cc(ccc1OC)Cc2c3ncnc(c3n(C)c2)-c4ccco4')
+
     # initialize tree
     tree = Tree(target=target,
                 tree_config=tree_config,
@@ -450,11 +452,14 @@ def run_reinforcement_tuning(targets: str,
                              processed_molecules_path=processed_molecules_path,
                              targets_batch_id=batch_id)
 
-                # train value network for extracted retrons
-                run_training(processed_molecules_path=processed_molecules_path,
-                             simul_id=simul_id,
-                             value_config=value_config,
-                             experiment_root=experiment_root)
+                try:
+                    # train value network for extracted retrons
+                    run_training(processed_molecules_path=processed_molecules_path,
+                                 simul_id=simul_id,
+                                 value_config=value_config,
+                                 experiment_root=experiment_root)
+                except:
+                    continue
 
             # shuffle targets
             shuffle_targets(targets_file)

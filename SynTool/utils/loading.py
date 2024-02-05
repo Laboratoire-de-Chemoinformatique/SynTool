@@ -36,7 +36,7 @@ def load_reaction_rules(file):
 
 def standardize_building_blocks(input_file, output_file):
     """
-    The function canonicalizes custom building blocks
+    Canonicalizes custom building blocks.
 
     :param output_file:
     :param input_file: The path to the txt file that stores the original building blocks
@@ -68,10 +68,8 @@ def load_building_blocks(file: str, canonicalize: bool = False):
     building blocks.
 
     :param file: The path to the file containing the building blocks data
-    :type file: str
     :param canonicalize: The `canonicalize` parameter determines whether the loaded building blocks should be
     canonicalized or not
-    :type canonicalize: bool (optional)
     :return: The frozen set loaded building blocks
     """
     if not file:

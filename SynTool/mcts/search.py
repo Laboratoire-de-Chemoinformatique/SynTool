@@ -101,16 +101,20 @@ def tree_search(
 
         for ti, target in tqdm(enumerate(targets), total=len(targets)):
 
-            # run search
-            tree = Tree(
-                target=target,
-                tree_config=tree_config,
-                reaction_rules_path=reaction_rules_path,
-                building_blocks_path=building_blocks_path,
-                policy_function=policy_function,
-                value_function=value_function,
-            )
-            _ = list(tree)
+            try:
+                # run search
+                tree = Tree(
+                    target=target,
+                    tree_config=tree_config,
+                    reaction_rules_path=reaction_rules_path,
+                    building_blocks_path=building_blocks_path,
+                    policy_function=policy_function,
+                    value_function=value_function,
+                )
+                _ = list(tree)
+
+            except:
+                continue
 
             n_solved += bool(tree.winning_nodes)
 
@@ -125,9 +129,9 @@ def tree_search(
             statswriter.writerow(extract_tree_stats(tree, target))
             csvfile.flush()
 
-    #
-    with open(paths_file, 'w') as f:
-        json.dump(extracted_paths, f)
+            #
+            with open(paths_file, 'w') as f:
+                json.dump(extracted_paths, f)
 
     print(f"Solved number of target molecules: {n_solved}")
 

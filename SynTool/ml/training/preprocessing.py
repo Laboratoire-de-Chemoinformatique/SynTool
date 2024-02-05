@@ -178,7 +178,7 @@ class FilteringPolicyDataset(InMemoryDataset):
         self.reaction_rules_path = reaction_rules_path
         self.output_path = output_path
         self.num_cpus = num_cpus
-        self.batch_prep_size = 10
+        self.batch_size = 10
 
         if output_path and os.path.exists(output_path):
             self.data, self.slices = torch.load(self.output_path)
@@ -200,7 +200,7 @@ class FilteringPolicyDataset(InMemoryDataset):
         reaction_rules = load_reaction_rules(self.reaction_rules_path)
         reaction_rules_ids = ray.put(reaction_rules)
 
-        to_process = Queue(maxsize=self.batch_prep_size * self.num_cpus)
+        to_process = Queue(maxsize=self.batch_size * self.num_cpus)
         processed_data = []
         results_ids = [preprocess_filtering_policy_molecules.remote(to_process, reaction_rules_ids) for _ in range(self.num_cpus)]
 
@@ -241,7 +241,7 @@ class FilteringPolicyDataset(InMemoryDataset):
             with open(self.molecules_path, "r") as inp_data:
                 for molecule in tqdm(inp_data.read().splitlines()):
                     mols_batch.append(molecule)
-                    if len(mols_batch) == self.batch_prep_size:  # * self.num_cpus:
+                    if len(mols_batch) == self.batch_size:  # * self.num_cpus:
                         for mol in mols_batch:
                             to_process.put(mol)
                         mols_batch = []

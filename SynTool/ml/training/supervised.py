@@ -138,20 +138,7 @@ def run_policy_training(
         mode="min",
     )
 
-    if silent:
-        with DisableLogger(), HiddenPrints():
-            trainer = Trainer(
-                accelerator=accelerator,
-                devices=devices,
-                max_epochs=config.num_epoch,
-                callbacks=[lr_monitor, checkpoint],
-                logger=logger,
-                gradient_clip_val=1.0,
-                enable_progress_bar=False,
-            )
-
-            trainer.fit(network, datamodule)
-    else:
+    with DisableLogger(), HiddenPrints():
         trainer = Trainer(
             accelerator=accelerator,
             devices=devices,
@@ -159,7 +146,7 @@ def run_policy_training(
             callbacks=[lr_monitor, checkpoint],
             logger=logger,
             gradient_clip_val=1.0,
-            enable_progress_bar=True,
+            enable_progress_bar=False,
         )
 
         trainer.fit(network, datamodule)

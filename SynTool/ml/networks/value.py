@@ -1,8 +1,5 @@
 from abc import ABC
-from dataclasses import dataclass
-from typing import Dict, Any
 
-import yaml
 import torch
 from pytorch_lightning import LightningModule
 from torch.nn import Linear
@@ -10,7 +7,6 @@ from torch.nn.functional import binary_cross_entropy_with_logits
 from torchmetrics.functional.classification import binary_recall, binary_specificity, binary_f1_score
 
 from SynTool.ml.networks.modules import MCTSNetwork
-from SynTool.utils.config import ConfigABC
 
 
 class SynthesabilityValueNetwork(MCTSNetwork, LightningModule, ABC):

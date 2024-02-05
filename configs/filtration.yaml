@@ -1,5 +1,5 @@
 compete_products_config:
-  fingerprint_tanimoto_threshold: 0.5 # TODO put default values to the code
+  fingerprint_tanimoto_threshold: 0.5
   mcs_tanimoto_threshold: 0.5
 dynamic_bonds_config:
   min_bonds_number: 1

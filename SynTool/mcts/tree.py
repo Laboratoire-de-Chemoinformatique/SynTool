@@ -145,6 +145,7 @@ class Tree:
             self._tqdm.close()
             raise StopIteration("Time limit exceeded. \n")
 
+
         # start new iteration
         self.curr_iteration += 1
         self.curr_time = time() - self._start_time
@@ -168,9 +169,7 @@ class Tree:
                     curr_depth += 1
             else:
                 if self.nodes[node_id].is_solved():  # found path!
-                    self._update_visits(
-                        node_id
-                    )  # this prevents expanding of bb node_id
+                    self._update_visits(node_id)  # this prevents expanding of bb node_id
                     self.winning_nodes.append(node_id)
                     return True, [node_id]
 
@@ -294,7 +293,6 @@ class Tree:
         :param node_id: The `node_id` parameter is an integer that represents the ID of the current node
         :type node_id: int
         """
-
         curr_node = self.nodes[node_id]
         prev_retrons = curr_node.curr_retron.prev_retrons
 

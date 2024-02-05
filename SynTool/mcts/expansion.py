@@ -27,13 +27,6 @@ class PolicyFunction:
 
         self.config = policy_config
 
-        # policy_net = PolicyNetwork.load_from_checkpoint(   # TODO remove these block ?
-        #     self.config.weights_path,
-        #     map_location=torch.device("cpu"),
-        #     batch_size=1,
-        #     dropout=0,
-        # )
-
         policy_net = PolicyNetwork.load_from_checkpoint(
             self.config.weights_path,
             map_location=torch.device("cpu"),
@@ -86,5 +79,5 @@ class PolicyFunction:
         sorted_probs, sorted_rules = sorted_probs.tolist(), sorted_rules.tolist()
 
         for prob, rule_id in zip(sorted_probs, sorted_rules):
-            if prob > self.config.rule_prob_threshold:
+            if prob > self.config.rule_prob_threshold:  # TODO it will destroy all search if it is not correct (>0.5)
                 yield prob, reaction_rules[rule_id], rule_id

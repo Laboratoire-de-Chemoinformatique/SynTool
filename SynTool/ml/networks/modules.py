@@ -36,11 +36,7 @@ class GraphEmbedding(Module):
         super(GraphEmbedding, self).__init__()
         self.expansion = Linear(11, vector_dim)
         self.dropout = Dropout(dropout)
-        self.gcn_convs = ModuleList([GCNConv(
-            vector_dim,
-            vector_dim,
-            improved=True,
-        ) for _ in range(num_conv_layers)])
+        self.gcn_convs = ModuleList([GCNConv(vector_dim, vector_dim, improved=True, ) for _ in range(num_conv_layers)])
 
     def forward(self, graph, batch_size):
         """
