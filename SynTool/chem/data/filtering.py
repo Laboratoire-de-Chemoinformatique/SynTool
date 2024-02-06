@@ -1,20 +1,17 @@
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Tuple, Dict, Any, Optional
-from os.path import splitext
 from tqdm.auto import tqdm
 
 import numpy as np
 import ray
 import yaml
 from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContainer
-from CGRtools.files import RDFRead, RDFWrite
 from StructureFingerprint import MorganFingerprint
 
 from SynTool.utils.files import ReactionReader, ReactionWriter
-from SynTool.chem.utils import (remove_small_molecules, rebalance_reaction,
-                                remove_reagents, to_reaction_smiles_record, )
+from SynTool.chem.utils import remove_small_molecules, rebalance_reaction, remove_reagents
 from SynTool.utils.config import ConfigABC, convert_config_to_dict
 
 
@@ -211,7 +208,7 @@ class CGRConnectedComponentsChecker:
     """Allows to check if CGR contains unrelated components (without reagents)."""
 
     @staticmethod
-    def from_config(config: CGRConnectedComponentsConfig):
+    def from_config(config: CGRConnectedComponentsConfig):  # TODO config class not used
         """Creates an instance of CGRConnectedComponentsChecker from a configuration object."""
         return CGRConnectedComponentsChecker()
 

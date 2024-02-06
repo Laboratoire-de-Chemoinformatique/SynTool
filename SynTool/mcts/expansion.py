@@ -21,7 +21,7 @@ class PolicyFunction:
 
         :param policy_config: A configuration object settings for the expansion policy
         :type policy_config: PolicyConfig
-        :param compile: XX # TODO what is compile
+        :param compile: XX # TODO what is compile # TODO2 compile is a bad variable name - is a builtin function name
         :type compile: bool
         """
 

@@ -362,7 +362,7 @@ class Standardizer:
         return False
 
     def _calc_charge(self, molecule: MoleculeContainer) -> int:
-        """Computing charge of molecule
+        """Computing charge of molecule.
         :param: molecule: MoleculeContainer
         :return: int
         """

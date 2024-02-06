@@ -13,7 +13,6 @@ from os.path import splitext
 import ray
 from CGRtools.containers import MoleculeContainer, QueryContainer, ReactionContainer
 from CGRtools.exceptions import InvalidAromaticRing
-from CGRtools.files import RDFRead, RDFWrite
 from CGRtools.reactor import Reactor
 from tqdm.auto import tqdm
 
@@ -51,7 +50,7 @@ def extract_rules_from_reactions(
 
     ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
 
-    rules_file_name, out_ext = splitext(rules_file_name)
+    rules_file_name, _ = splitext(rules_file_name)
     with ReactionReader(reaction_file) as reactions:
         pbar = tqdm(reactions, disable=False)
 
@@ -71,11 +70,12 @@ def extract_rules_from_reactions(
                     process_completed_batches(futures, rules_statistics, pbar, batch_size)
 
         if batch:
+            remaining_size = len(batch)
             future = process_reaction_batch.remote(batch, config)
             futures[future] = None
 
         while futures:
-            process_completed_batches(futures, rules_statistics, pbar, batch_size)
+            process_completed_batches(futures, rules_statistics, pbar, remaining_size)
 
         pbar.close()
 

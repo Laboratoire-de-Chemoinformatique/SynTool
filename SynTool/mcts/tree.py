@@ -145,7 +145,6 @@ class Tree:
             self._tqdm.close()
             raise StopIteration("Time limit exceeded. \n")
 
-
         # start new iteration
         self.curr_iteration += 1
         self.curr_time = time() - self._start_time
@@ -511,7 +510,8 @@ class Tree:
                 reward = -1.0
                 return reward
 
-            products = tuple(Retron(product) for product in products)
+            products = tuple(Retron(product) for product in products)  # TODO /!\ Is it ok how products is defined above (line 496) ? Seems to
+            # TODO /!\ consider only last iterable of apply_reaction_rule
             history[rollout_depth]["products"] = products
 
             # check loops

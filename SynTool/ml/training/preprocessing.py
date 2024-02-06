@@ -14,7 +14,7 @@ import torch
 from CGRtools import smiles
 from CGRtools.containers import MoleculeContainer, ReactionContainer
 from CGRtools.exceptions import InvalidAromaticRing
-from CGRtools.files import SMILESRead, RDFRead
+from CGRtools.files import SMILESRead
 from CGRtools.reactor import Reactor
 # from queue import Queue, Empty
 from ray.util.queue import Queue, Empty
@@ -436,7 +436,7 @@ def bonds_to_vector(molecule: MoleculeContainer, atom_ind: int):
 
     :param molecule: The given molecule
     :type molecule: MoleculeContainer
-    :param atom_ind: The the index of the atom in the molecule for which we want to calculate the bond vector.
+    :param atom_ind: The index of the atom in the molecule for which we want to calculate the bond vector.
     :type atom_ind: int
     :return: a torch tensor of size 3, with each element representing the order of bonds connected to the atom
     with the given index in the molecule.

@@ -93,7 +93,7 @@ class Retron:
             return str(self._molecule) in stock
 
 
-def compose_retrons(retrons: list = None, exclude_small=True, min_mol_size=6
+def compose_retrons(retrons: list = None, exclude_small=True, min_mol_size: int = 6
                     ) -> MoleculeContainer:
     """
     The function takes a list of retrons, excludes small retrons if specified, and composes them into a single molecule.
@@ -104,7 +104,8 @@ def compose_retrons(retrons: list = None, exclude_small=True, min_mol_size=6
     :type retrons: list
     :param exclude_small: The parameter that determines whether small retrons should be
     excluded from the composition process. If `exclude_small` is set to `True`, only retrons with a length greater than
-    6 will be considered for composition.
+    min_mol_size will be considered for composition.
+    :param min_mol_size: parameter used with exclude_small
     :return: A composed retrons as a MoleculeContainer object.
     """
 

@@ -1,4 +1,4 @@
-from typing import List, Iterable, Tuple
+from typing import List, Iterable, Tuple, Union
 
 from CGRtools.containers import MoleculeContainer, ReactionContainer, QueryContainer
 from CGRtools.exceptions import InvalidAromaticRing
@@ -94,7 +94,7 @@ def remove_small_molecules(
         reaction: ReactionContainer,
         number_of_atoms: int = 6,
         small_molecules_to_meta: bool = True
-) -> ReactionContainer:
+) -> Union[ReactionContainer, None]:
     """
     Processes a reaction by removing small molecules.
 
@@ -106,7 +106,7 @@ def remove_small_molecules(
     new_reactants, small_reactants = split_molecules(reaction.reactants, number_of_atoms)
     new_products, small_products = split_molecules(reaction.products, number_of_atoms)
 
-    if sum(len(mol) for mol in new_reactants) == 0 or sum(len(mol) for mol in new_reactants) == 0 :
+    if sum(len(mol) for mol in new_reactants) == 0 or sum(len(mol) for mol in new_reactants) == 0:
         return None
 
     new_reaction = ReactionContainer(new_reactants, new_products, reaction.reagents, reaction.meta)
@@ -155,7 +155,7 @@ def remove_reagents(
         reaction: ReactionContainer,
         keep_reagents: bool = True,
         reagents_max_size: int = 7
-) -> ReactionContainer:
+) -> Union[ReactionContainer, None]:
     """
     Removes reagents (not changed molecules or molecules not involved in the reaction) from reactants and products
 

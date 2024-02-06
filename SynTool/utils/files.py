@@ -21,10 +21,9 @@ class SMILESRead:
         filename = str(Path(filename).resolve(strict=True))
         self._file = open(filename, "r")
         self._data = self.__data()
-
         self._len = sum(1 for _ in open(filename, "r")) #TODO replace later
 
-    def __data(self) -> Iterable[Union[ReactionContainer, CGRContainer]]:
+    def __data(self) -> Iterable[Union[ReactionContainer, CGRContainer, MoleculeContainer]]:
         for line in iter(self._file.readline, ''):
             x = smiles(line)
             if isinstance(x, (ReactionContainer, CGRContainer, MoleculeContainer)):
@@ -108,6 +107,9 @@ class Reader(FileHandler):
 
     def __next__(self):
         return next(self._file)
+
+    def __len__(self):
+        return len(self._file)
 
 
 class Writer(FileHandler):
@@ -243,7 +245,7 @@ class MoleculeWriter(Writer):
         :return: None
         """
         if self._file_type == "SMI":
-            mol_str = format(molecule, "m") if self._mapping else str(molecule)
+            mol_str = to_reaction_smiles_record(molecule)
             self._file.write(mol_str + "\n")
         elif self._file_type == "SDF":
             self._file.write(molecule)

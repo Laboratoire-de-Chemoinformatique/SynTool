@@ -72,7 +72,7 @@ def path_graph(tree, node: int) -> str:
     """
     Visualizes reaction path
 
-    :param node: int
+    :param node: node id
     :type node: int
     :return: The SVG string.
     """
@@ -224,7 +224,8 @@ def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False
     """
     Write an HTML page with the synthesis paths in SVG format and corresponding reactions in SMILES format
 
-    :param extended:
+    :param tree:  # TODO
+    :param extended:  # TODO
     :param html_path: Path to save the HTML molecules_path
     :type html_path: str (optional)
     :param aam: depict atom-to-atom mapping

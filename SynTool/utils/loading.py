@@ -38,9 +38,8 @@ def standardize_building_blocks(input_file, output_file):
     """
     Canonicalizes custom building blocks.
 
-    :param output_file:
     :param input_file: The path to the txt file that stores the original building blocks
-    :param input_file: The path to the txt file that stores the canonicalazied building blocks
+    :param output_file: The path to the txt file that stores the canonicalazied building blocks
     """
 
     parser = SMILESRead.create_parser(ignore=True)
@@ -56,7 +55,7 @@ def standardize_building_blocks(input_file, output_file):
             continue
     mols = [i.strip() for i in mols]
 
-    pd.DataFrame(mols).to_csv(output_file, header=None, index=None)
+    pd.DataFrame(mols).to_csv(output_file, header=False, index=False)
 
     return output_file
 
@@ -107,7 +106,7 @@ def load_building_blocks(file: str, canonicalize: bool = False):
                     bb = set(bb)
         else:
             raise TypeError(
-                f"expected .txt, .smi, .pickle, .pkl or .db files, not {filetype}"
+                f"expected .txt, .smi, .pickle, or .pkl files, not {filetype}"
             )
 
     stop = time()

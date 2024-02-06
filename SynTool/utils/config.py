@@ -2,15 +2,13 @@
 Module containing training and planning configuration dictionaries
 """
 
-import yaml
 from abc import ABC, abstractmethod
-from typing import List, Union, Tuple, IO, Dict, Set, Iterable, Any
+from typing import List, Union
 import yaml
-from CGRtools.containers import MoleculeContainer, QueryContainer, ReactionContainer
+from CGRtools.containers import MoleculeContainer, QueryContainer
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict
-from SynTool.utils import path_type
 
 
 @dataclass
@@ -638,4 +636,3 @@ def convert_config_to_dict(config_attr, config_type):
     elif isinstance(config_attr, config_type):
         return config_attr.to_dict()
     return None
-

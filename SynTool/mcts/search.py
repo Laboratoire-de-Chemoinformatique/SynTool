@@ -46,7 +46,7 @@ def tree_search(
         policy_config: PolicyNetworkConfig,
         reaction_rules_path: path_type,
         building_blocks_path: path_type,
-        policy_weights_path: path_type = None, #TODO not used
+        policy_weights_path: path_type = None,  # TODO not used
         value_weights_path: path_type = None,
         results_root: path_type = "search_results"
 ):
@@ -54,13 +54,14 @@ def tree_search(
     Performs a tree search on a set of target molecules using specified configuration and rules,
     logging the results and statistics.
 
-    :param tree_config: The path to the YAML file containing the configuration for the tree search.
+    :param tree_config: The config object containing the configuration for the tree search.
+    :param policy_config: The config object containing the configuration for the policy.
     :param reaction_rules_path: The path to the file containing reaction rules.
     :param building_blocks_path: The path to the file containing building blocks.
     :param targets: The path to the file containing the target molecules (in SDF or SMILES format).
     :param value_weights_path: The path to the file containing value weights (optional).
     :param results_root: The path to the directory where the results of the tree search will be saved. Defaults to 'search_results/'.
-    :param retropaths_files_name: The base name for the files that will be generated to store the retro paths. Defaults to 'retropath'.
+    :param retropaths_files_name: The base name for the files that will be generated to store the retro paths. Defaults to 'retropath'. #TODO arg dont exist
 
     This function configures and executes a tree search algorithm, leveraging reaction rules and building blocks
     to find synthetic pathways for given target molecules. The results, including paths and statistics, are
