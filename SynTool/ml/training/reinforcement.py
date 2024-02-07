@@ -132,7 +132,6 @@ def run_tree_search(target: MoleculeContainer,
 
     :param target: The target molecule. It can be either a `MoleculeContainer` object or a SMILES string
     :param tree_config: The planning configuration that contains settings for tree search
-    # TODO check docstring
     :return: The built tree
     """
 
@@ -140,9 +139,6 @@ def run_tree_search(target: MoleculeContainer,
     # TODO solve this problem between network and policy config
     policy_function = PolicyFunction(policy_config=policy_config)
     value_function = ValueFunction(weights_path=value_config.weights_path)
-
-    target = smiles('c1cc(ccc1OC)Cc2c3ncnc(c3n(C)c2)-c4ccco4')
-    # TODO remove this definition once in production mode
 
     # initialize tree
     tree = Tree(target=target,
@@ -190,10 +186,10 @@ def tune_value_network(value_net, value_config: ValueNetworkConfig, datamodule, 
     Trains a value network using a given data module and saves the trained neural network.
 
     :param value_net: The value network architecture with network weights
-    :param value_config: configuration of type ValueNetworkConfig
     :param datamodule: The instance of a PyTorch Lightning `DataModule` class with tuning set
     :param experiment_root: The root directory where the training log files and network weights will be saved
     :param simul_id: The identifier for the current simulation
+    :param n_epoch: The number of training epochs in the value network tuning
     """
 
     weights_path = experiment_root.joinpath("weights")
@@ -224,7 +220,7 @@ def run_training(processed_molecules_path=None, simul_id=None, value_config=None
     :param processed_molecules_path: The path to the directory where the processed molecules extracted from planning
     stage are stored
     :param simul_id: The simulation identifier
-    :param value_config: The configuration dictionary that contains settings for the training process
+    :param config: The configuration dictionary that contains settings for the training process
     :param experiment_root: The root directory where the training log files and weights will be saved
     """
 
@@ -254,7 +250,6 @@ def run_training(processed_molecules_path=None, simul_id=None, value_config=None
                        experiment_root=experiment_root,
                        simul_id=simul_id)
 
-
 def run_planning(simul_id: int,
                  targets_file: Path,
                  tree_config: TreeConfig,
@@ -270,11 +265,10 @@ def run_planning(simul_id: int,
     Performs planning stage (tree search) for target molecules and save extracted from built trees retrons for further
     tuning the value network in the training stage.
 
-    :param results_root: #TODO
+    :param results_root:
     :param simul_id: The simulation identifier
     :param targets_file: The path to the file containing the targets data
     :type targets_file: Path
-    #TODO docstring policy_config value_config reaction_rules_path building_blocks_path
     :param processed_molecules_path: The path to a file containing processed molecules from the previous planning stages.
     :type processed_molecules_path: Path
     :param targets_batch_id: The identifier of the batch of the targets
@@ -400,10 +394,9 @@ def run_reinforcement_tuning(targets: str,
                              results_root=None):
     """
     Performs self-tuning simulations with alternating planning and training stages
-    #TODO docstring
 
     :param results_root:
-    :param config: The configuration settings for the self-tuning process #TODO arg dont exist
+    :param config: The configuration settings for the self-tuning process
     """
 
     restart_batch = -1
@@ -429,7 +422,12 @@ def run_reinforcement_tuning(targets: str,
 
         batch_size = reinforce_config.batch_size
         batch_splits = list(range(file_length // batch_size + int(bool(file_length % batch_size))))
-        print(f'{len(batch_splits)} batches were created with {batch_size} molecules each')
+
+        if int(file_length / batch_size) == 0:
+            print(f'1 batch were created with {file_length} molecules')
+        else:
+            print(f'{len(batch_splits)} batches were created with {batch_size} molecules each')
+
         for batch_id in batch_splits:
 
             if restart_batch > batch_id:
@@ -457,7 +455,7 @@ def run_reinforcement_tuning(targets: str,
                              processed_molecules_path=processed_molecules_path,
                              targets_batch_id=batch_id)
 
-                try:
+                try:  # TODO there is a problem with batch size in lightning
                     # train value network for extracted retrons
                     run_training(processed_molecules_path=processed_molecules_path,
                                  simul_id=simul_id,

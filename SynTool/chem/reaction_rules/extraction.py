@@ -119,8 +119,11 @@ def process_reaction_batch(
     """
     processed_batch = []
     for index, reaction in batch:
-        extracted_rules = extract_rules(config, reaction)
-        processed_batch.append((index, extracted_rules))
+        try:
+            extracted_rules = extract_rules(config, reaction)
+            processed_batch.append((index, extracted_rules))
+        except:
+            continue
     return processed_batch
 
 
