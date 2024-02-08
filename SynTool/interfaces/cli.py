@@ -444,7 +444,7 @@ def reinforcement_value_network_training_cli(config,
     tree_config = TreeConfig.from_dict(config['tree'])
     reinforce_config = ReinforcementConfig.from_dict(config['reinforcement'])
 
-    run_reinforcement_tuning(targets=targets,
+    run_reinforcement_tuning(targets_path=targets,
                              tree_config=tree_config,
                              policy_config=policy_config,
                              value_config=value_config,

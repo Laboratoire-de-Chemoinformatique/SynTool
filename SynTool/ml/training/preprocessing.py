@@ -33,19 +33,19 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
     Value network dataset
     """
 
-    def __init__(self, processed_molecules_path=None):
+    def __init__(self, extracted_retrons):
         """
         Initializes a value network dataset object.
 
-        :param processed_molecules_path: The path to a file containing processed molecules (retrons) extracted from
+        :param extracted_retrons: The path to a file containing processed molecules (retrons) extracted from
         search tree.
         """
         super().__init__(None, None, None)
 
-        if processed_molecules_path:
-            self.data, self.slices = self.prepare_from_path(processed_molecules_path)
+        if extracted_retrons:
+            self.data, self.slices = self.prepare_from_extracted_retrons(extracted_retrons)
 
-    def prepare_pyg(self, molecule):
+    def prepare_pyg(self, molecule, label):
         """
         It takes a molecule as input, and converts the molecule to a PyTorch geometric graph,
         assigns the reward value (label) to the graph, and returns the graph.
@@ -56,34 +56,29 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
         the reward variable is set to 0.
         """
         if len(molecule) > 2:
-            if "label" in molecule.meta.keys():
-                reward = float(molecule.meta["label"])
-            else:
-                reward = 0
-
             pyg = mol_to_pyg(molecule)
             if pyg:
-                pyg.y = torch.tensor([reward])
+                pyg.y = torch.tensor([label])
                 return pyg
             else:
                 return None
 
-    def prepare_from_path(self, processed_molecules_path):
+    def prepare_from_extracted_retrons(self, extracted_retrons):
         """
         The function prepares processed data from a given file path by reading SMILES data, converting it to
         PyTorch geometric graph format, and returning the processed data and slices.
 
-        :param processed_molecules_path: The path to a file containing processed molecules. It is assumed that the file
+        :param extracted_retrons: The path to a file containing processed molecules. It is assumed that the file
         is in a format that can be read by the SMILESRead class, and that it has a header row with a column
         named "label"
         :return: data (PyTorch geometric graphs) and slices.
         """
         processed_data = []
-        with SMILESRead(processed_molecules_path, header=["label"]) as inp:
-            for mol in inp:
-                pyg = self.prepare_pyg(mol)
-                if pyg:
-                    processed_data.append(pyg)
+        for smi, label in extracted_retrons.items():
+            mol = smiles(smi)
+            pyg = self.prepare_pyg(mol, label)
+            if pyg:
+                processed_data.append(pyg)
         data, slices = self.collate(processed_data)
         return data, slices
 

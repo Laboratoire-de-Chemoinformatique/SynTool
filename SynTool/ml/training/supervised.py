@@ -84,8 +84,6 @@ def run_policy_training(
     config: PolicyNetworkConfig,
     results_path: str,
     accelerator: str = "gpu",
-    devices: list = [0],
-    silent=True,
 ):
     """
     Trains a policy network using a given datamodule and training configuration.
@@ -129,27 +127,18 @@ def run_policy_training(
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    logger = CSVLogger(logs_path, name=results_path)
-
-    checkpoint = ModelCheckpoint(
-        dirpath=weights_path,
-        filename='policy_network',
-        monitor="val_loss",
-        mode="min",
-    )
-
     with DisableLogger(), HiddenPrints():
         trainer = Trainer(
             accelerator=accelerator,
-            devices=devices,
+            devices=[0],
             max_epochs=config.num_epoch,
-            callbacks=[lr_monitor, checkpoint],
-            logger=logger,
+            callbacks=[lr_monitor],
             gradient_clip_val=1.0,
-            enable_progress_bar=False,
+            enable_progress_bar=False
         )
 
         trainer.fit(network, datamodule)
+        ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)
+        trainer.save_checkpoint(weights_path)
 
-    ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)
     print(f'Policy network balanced accuracy: {ba}')

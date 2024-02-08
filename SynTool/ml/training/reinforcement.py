@@ -2,29 +2,24 @@
 Module containing functions for running value network tuning with self-tuning approach
 """
 
-import csv
-import logging
+import os.path
 from collections import defaultdict
 from pathlib import Path
 from random import shuffle
 
 import torch
-from CGRtools import smiles
 from CGRtools.containers import MoleculeContainer
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
 from tqdm import tqdm
 
-from SynTool.interfaces.visualisation import to_table
 from SynTool.mcts.tree import Tree
 from SynTool.utils.files import MoleculeReader
 from SynTool.ml.training.preprocessing import ValueNetworkDataset
 from SynTool.chem.retron import compose_retrons
 from SynTool.utils.logging import DisableLogger, HiddenPrints
-from SynTool.mcts.search import extract_tree_stats
 from SynTool.ml.networks.value import SynthesabilityValueNetwork
 from SynTool.utils.loading import load_value_net
 from SynTool.mcts.expansion import PolicyFunction
@@ -32,92 +27,70 @@ from SynTool.mcts.evaluation import ValueFunction
 from SynTool.utils.config import TreeConfig, PolicyNetworkConfig, ValueNetworkConfig, ReinforcementConfig
 
 
-def create_targets_batch(experiment_root=None, targets_file=None, tmp_file_id=None, batch_slices=None):
-    """
-    Takes in an experiment root directory, a targets file, a temporary file ID, and batch slices,
-    and creates a batch file containing a subset of targets from the targets file.
+def create_value_network(value_config):
 
-    :param experiment_root: The root directory where the batch of targets will be stored
-    :param targets_file: The path to a file containing the targets data in SDF format
-    :param tmp_file_id: The unique identifier for the temporary batch file that will be created
-    :param batch_slices: The list of indices that specify which molecules from the `targets_file` should be included
-    in the batch
-    :return: The path to the created batch file.
-    """
+    weights_path = Path(value_config.weights_path)
+    value_network = SynthesabilityValueNetwork(vector_dim=value_config.vector_dim,
+                                               batch_size=value_config.batch_size,
+                                               dropout=value_config.dropout,
+                                               num_conv_layers=value_config.num_conv_layers,
+                                               learning_rate=value_config.learning_rate)
 
-    tmp_targets = experiment_root.joinpath("targets")
-    if not tmp_targets.exists():
-        tmp_targets.mkdir()
-    with MoleculeReader(targets_file) as input_file:
-        targets = list(input_file)
-        file_length = len(targets)
-        batch_slices = [i for i in batch_slices if i < file_length]
-        targets = [targets[i] for i in batch_slices]
-    batch_file = tmp_targets.joinpath(f"batch_{tmp_file_id}.smi")
-    with open(batch_file, 'w') as out:
-        for mol in targets:
-            out.write(f'{str(mol)}\n')
-    return batch_file
+    with DisableLogger() as DL, HiddenPrints() as HP:
+        trainer = Trainer()
+        trainer.strategy.connect(value_network)
+        trainer.save_checkpoint(weights_path)
+
+    return value_network
 
 
-def load_processed_molecules(path):
-    """
-    Reads a file containing processed molecules (extracted from tree retrons with their labels) and returns a dictionary
-    where the molecules are the keys and the labels are the values.
 
-    :param path: The path to the file containing the processed molecules data
-    :return: A dictionary which contains the processed molecules and their corresponding labels
-    """
-    processed_molecules = defaultdict(float)
-    with open(path, "r") as inp:
-        _ = next(inp)  # skip header
-        for line in inp:
-            smi, reward = line.strip().split()
-            reward = float(reward)
-            processed_molecules[smi] = reward
-    return processed_molecules
+def create_targets_batch(targets, batch_size):
 
+    num_targets = len(targets)
+    batch_splits = list(range(num_targets // batch_size + int(bool(num_targets % batch_size))))
 
-def shuffle_targets(targets_file):
-    """
-    The function shuffles the targets in a given set and writes new SDF
+    if int(num_targets / batch_size) == 0:
+        print(f'1 batch were created with {num_targets} molecules')
+    else:
+        print(f'{len(batch_splits)} batches were created with {batch_size} molecules each')
 
-    :param targets_file: The file that contains a set of targets to be shuffled
-    """
-    with MoleculeReader(targets_file) as targets:
-        mols = list(targets)
-    shuffle(mols)
-    with open(targets_file, 'w') as out:
-        for mol in mols:
-            out.write("%s\n" % str(mol))
-    del mols
+    targets_batch_list = []
+    for batch_id in batch_splits:
+        batch_slices = [i for i in range(batch_id * batch_size, (batch_id + 1) * batch_size) if i < len(targets)]
+        targets_batch_list.append([targets[i] for i in batch_slices])
+
+    return targets_batch_list
 
 
-def extract_tree_retrons(tree, processed_molecules=None):
+
+def extract_tree_retrons(tree_list):
     """
     Takes a built tree and a dictionary of processed molecules extracted from the previous trees as input, and returns
     the updated dictionary of processed molecules after adding the solved nodes from the given tree.
 
-    :param tree: The built tree
-    :param processed_molecules: The dictionary of precessed molecules extracted from the previous trees
+    :param tree_list: The built tree
     """
+    extracted_retrons = defaultdict(float)
+    for tree in tree_list:
+        for idx, node in tree.nodes.items():
+            # add solved nodes to set
+            if node.is_solved():
+                parent = idx
+                while parent and parent != 1:
+                    composed_smi = str(compose_retrons(tree.nodes[parent].new_retrons))
+                    extracted_retrons[composed_smi] = 1.0
+                    parent = tree.parents[parent]
+            else:
+                composed_smi = str(compose_retrons(tree.nodes[idx].new_retrons))
+                extracted_retrons[composed_smi] = 0.0
 
-    if processed_molecules is None:
-        processed_molecules = defaultdict(float)
+    # shuffle extracted retrons
+    processed_keys = list(extracted_retrons.keys())
+    shuffle(processed_keys)
+    extracted_retrons = {i: extracted_retrons[i] for i in processed_keys}
 
-    for idx, node in tree.nodes.items():
-        # add solved nodes to set
-        if node.is_solved():
-            parent = idx
-            while parent and parent != 1:
-                composed_smi = str(compose_retrons(tree.nodes[parent].new_retrons))
-                processed_molecules[composed_smi] = 1.0
-                parent = tree.parents[parent]
-        else:
-            composed_smi = str(compose_retrons(tree.nodes[idx].new_retrons))
-            processed_molecules[composed_smi] = 0.0
-
-    return processed_molecules
+    return extracted_retrons
 
 
 def run_tree_search(target: MoleculeContainer,
@@ -141,6 +114,7 @@ def run_tree_search(target: MoleculeContainer,
     value_function = ValueFunction(weights_path=value_config.weights_path)
 
     # initialize tree
+    tree_config.silent = True
     tree = Tree(target=target,
                 tree_config=tree_config,
                 reaction_rules_path=reaction_rules_path,
@@ -159,17 +133,17 @@ def run_tree_search(target: MoleculeContainer,
     return tree
 
 
-def create_tuning_set(processed_molecules_path, batch_size=1):
+def create_tuning_set(extracted_retrons, batch_size=1):
     """
     Creates a tuning dataset from a given processed molecules extracted from the trees from the
     planning stage and returns a LightningDataset object with a specified batch size for tuning value neural network.
 
     :param batch_size:
-    :param processed_molecules_path: The path to the directory where the processed molecules is stored
+    :param extracted_retrons: The path to the directory where the processed molecules is stored
     :return: A LightningDataset object, which contains the tuning sets for value network tuning
     """
 
-    full_dataset = ValueNetworkDataset(processed_molecules_path)
+    full_dataset = ValueNetworkDataset(extracted_retrons)
     train_size = int(0.6 * len(full_dataset))
     val_size = len(full_dataset) - train_size
 
@@ -181,210 +155,95 @@ def create_tuning_set(processed_molecules_path, batch_size=1):
     return LightningDataset(train_set, val_set, batch_size=batch_size, pin_memory=True, drop_last=True)
 
 
-def tune_value_network(value_net, value_config: ValueNetworkConfig, datamodule, experiment_root: Path, simul_id=0):
+def tune_value_network(datamodule, value_config: ValueNetworkConfig):
     """
     Trains a value network using a given data module and saves the trained neural network.
 
-    :param value_net: The value network architecture with network weights
     :param datamodule: The instance of a PyTorch Lightning `DataModule` class with tuning set
-    :param experiment_root: The root directory where the training log files and network weights will be saved
-    :param simul_id: The identifier for the current simulation
-    :param n_epoch: The number of training epochs in the value network tuning
+    :param value_config:
     """
 
-    weights_path = experiment_root.joinpath("weights")
-    tdi = f"{simul_id}".zfill(3)
-    current_weights = weights_path.joinpath(f"sim_{tdi}.ckpt")
-    logs_path = experiment_root.joinpath("logs")
+    current_weights = value_config.weights_path
+    value_network = load_value_net(SynthesabilityValueNetwork, current_weights)
 
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    logger = CSVLogger(str(logs_path))
 
     with DisableLogger() as DL, HiddenPrints() as HP:
-        trainer = Trainer(accelerator="gpu", devices=[0],
-                          max_epochs=value_config.num_epoch, callbacks=[lr_monitor], logger=logger,
-                          gradient_clip_val=1.0, enable_progress_bar=False)
+        trainer = Trainer(accelerator="gpu",
+                          devices=[0],
+                          max_epochs=value_config.num_epoch,
+                          callbacks=[lr_monitor],
+                          gradient_clip_val=1.0,
+                          enable_progress_bar=False)
 
-        trainer.fit(value_net, datamodule)
-        val_score = trainer.validate(value_net, datamodule.val_dataloader())[0]
+        trainer.fit(value_network, datamodule)
+        val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
         trainer.save_checkpoint(current_weights)
     #
     print(f"Value network balanced accuracy: {val_score['val_balanced_accuracy']}")
 
 
-def run_training(processed_molecules_path=None, simul_id=None, value_config=None, experiment_root=None):
+def run_training(extracted_retrons=None, value_config=None):
+
     """
     Performs the training stage in self-tuning process. Trains a value network using a set of processed molecules and
     saves the weights of the network.
 
-    :param processed_molecules_path: The path to the directory where the processed molecules extracted from planning
-    stage are stored
-    :param simul_id: The simulation identifier
-    :param config: The configuration dictionary that contains settings for the training process
-    :param experiment_root: The root directory where the training log files and weights will be saved
+    :param extracted_retrons: The path to the directory where the processed molecules extracted from planning
+    :param value_config:
     """
 
-    weights_path = experiment_root.joinpath("weights")
-    if not weights_path.exists():
-        weights_path.mkdir()
+    # create training set
+    training_set = create_tuning_set(extracted_retrons=extracted_retrons, batch_size=value_config.batch_size)
 
-    value_net = None
-    if value_config.weights_path:
-        config_weights_path = Path(value_config.weights_path)
-        if config_weights_path.exists():
-            logging.info(f"Trainer loaded weights from {config_weights_path}")
-            value_net = load_value_net(SynthesabilityValueNetwork, value_config.weights_path)
+    # retrain value network
+    tune_value_network(datamodule=training_set, value_config=value_config)
 
-    if value_net is None:
-        all_weigths = sorted(weights_path.glob("*.ckpt"))
-
-        if all_weigths:
-            value_config.weights_path = all_weigths[-1]
-            logging.info(f"Trainer loaded weights from {all_weigths[-1]}")
-            value_net = load_value_net(SynthesabilityValueNetwork, value_config.weights_path)
-
-    training_set = create_tuning_set(processed_molecules_path, batch_size=value_config.batch_size)
-    tune_value_network(value_net=value_net,
-                       value_config=value_config,
-                       datamodule=training_set,
-                       experiment_root=experiment_root,
-                       simul_id=simul_id)
-
-def run_planning(simul_id: int,
-                 targets_file: Path,
+def run_planning(targets_batch: list,
                  tree_config: TreeConfig,
                  policy_config: PolicyNetworkConfig,
                  value_config: ValueNetworkConfig,
                  reaction_rules_path: str,
                  building_blocks_path: str,
-                 results_root: Path,
-                 processed_molecules_path: Path,
                  targets_batch_id: int):
 
     """
     Performs planning stage (tree search) for target molecules and save extracted from built trees retrons for further
     tuning the value network in the training stage.
 
-    :param results_root:
-    :param simul_id: The simulation identifier
-    :param targets_file: The path to the file containing the targets data
-    :type targets_file: Path
-    :param processed_molecules_path: The path to a file containing processed molecules from the previous planning stages.
-    :type processed_molecules_path: Path
-    :param targets_batch_id: The identifier of the batch of the targets
-    :type targets_batch_id: int
+    :param targets_batch:
+    :param tree_config:
+    :param policy_config:
+    :param value_config:
+    :param reaction_rules_path:
+    :param building_blocks_path:
+    :param targets_batch_id:
     """
 
-    experiment_root = Path(results_root)
+    print(f'\nProcess batch number {targets_batch_id}')
+    tree_list = []
+    tree_config.silent = True
+    for target in tqdm(targets_batch):
 
-    # load value network
-    if tree_config.evaluation_type == "gcn":
-        value_net = None
-
-        if value_config.weights_path:
-            config_weights_path = Path(value_config.weights_path)
-            if config_weights_path.exists():
-                logging.info(f"Simulation loaded weights from {config_weights_path}")
-                value_net = load_value_net(SynthesabilityValueNetwork, value_config.weights_path)
-
-        if value_net is None:
-            weights_path = experiment_root.joinpath("weights")
-            all_weights = sorted(weights_path.glob("*.ckpt"))
-
-            if all_weights:
-                value_config.weights_path = all_weights[-1]
-                logging.info(f"Simulation loaded weights from {all_weights[-1]}")
-                value_net = load_value_net(SynthesabilityValueNetwork, value_config.weights_path)
-
-        if not value_net:
-            logging.info(f"Trainer init model without loading weights")
-            value_net = SynthesabilityValueNetwork(vector_dim=value_config.vector_dim,
-                                                   batch_size=value_config.batch_size,
-                                                   dropout=value_config.dropout,
-                                                   num_conv_layers=value_config.num_conv_layers,
-                                                   learning_rate=value_config.learning_rate)
-            #
-            with DisableLogger() as DL, HiddenPrints() as HP:
-                trainer = Trainer()
-                trainer.strategy.connect(value_net)
-                trainer.save_checkpoint(value_config.weights_path)
-
-    # load processed molecules (extracted retrons)
-    processed_molecules = None
-    if processed_molecules_path:
-        if processed_molecules_path.exists():
-            logging.info(f"Loading labelled list_of_molecules from {str(processed_molecules_path)}")
-            processed_molecules = load_processed_molecules(processed_molecules_path)
-
-    if processed_molecules is None:
-        logging.info("Labelled list_of_molecules were not loaded")
-
-    # simulation folder
-    simulation_folder = experiment_root.joinpath(f"simulation_{simul_id}")
-    if not simulation_folder.exists():
-        simulation_folder.mkdir()
-
-    stats_header = ["target_smiles", "tree_size", "search_time", "found_paths", "newick_tree", "newick_meta"]
-
-    if targets_batch_id is not None:
-        stats_file = simulation_folder.joinpath(f"tree_stats_sim_{simul_id}_batch_{targets_batch_id}.csv")
-    else:
-        stats_file = simulation_folder.joinpath(f"tree_stats_sim_{simul_id}.csv")
-
-    # read targets file
-    num_solved, total_time = 0, 0
-    with MoleculeReader(targets_file) as targets, open(stats_file, "w", newline="\n") as csvfile:
-
-        stats_writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=stats_header)
-        stats_writer.writeheader()
-
-        # run tree search for targets
-        tree_config.silent = True
-        print(f'\nProcess batch number {targets_batch_id}')
-        for target_id, target in tqdm(enumerate(targets)):
+        try:
             tree = run_tree_search(target=target,
                                    tree_config=tree_config,
                                    policy_config=policy_config,
                                    value_config=value_config,
                                    reaction_rules_path=reaction_rules_path,
                                    building_blocks_path=building_blocks_path)
+            tree_list.append(tree)
 
-            processed_molecules = extract_tree_retrons(tree, processed_molecules=processed_molecules)
+        except:
+            continue
 
-            # extract tree statistics
-            tree_stats = extract_tree_stats(tree, target)
-            if tree_stats["found_paths"] > 0:
-                num_solved += 1
-            total_time += tree_stats["search_time"]
-
-            # write tree statistics
-            stats_writer.writerow(tree_stats)
-            csvfile.flush()
-            if targets_batch_id is not None:
-                saved_paths = simulation_folder.joinpath(
-                    f"paths_target_{target_id}_sim_{simul_id}_batch_{targets_batch_id}.html")
-            else:
-                saved_paths = simulation_folder.joinpath(f"paths_target_{target_id}_sim_{simul_id}.html")
-
-            # save tree retro paths table
-            to_table(tree, str(saved_paths), extended=True)
-
+    num_solved = sum([len(i.winning_nodes) > 0 for i in tree_list])
     print(f"Planning is finished with {num_solved} solved targets")
 
-    # shuffle retrons
-    processed_keys = list(processed_molecules.keys())
-    shuffle(processed_keys)
-    processed_molecules = {i: processed_molecules[i] for i in processed_keys}
-
-    # write final file with extracted retrons
-    with open(processed_molecules_path, "w") as out:
-        out.write("smiles\tlabel\n")
-        for smi, reward in processed_molecules.items():
-            out.write(f"{smi}\t{reward}\n")
-    del processed_molecules
+    return tree_list
 
 
-def run_reinforcement_tuning(targets: str,
+def run_reinforcement_tuning(targets_path: str,
                              tree_config: TreeConfig,
                              policy_config: PolicyNetworkConfig,
                              value_config: ValueNetworkConfig,
@@ -395,74 +254,47 @@ def run_reinforcement_tuning(targets: str,
     """
     Performs self-tuning simulations with alternating planning and training stages
 
+    :param targets_path:
+    :param tree_config:
+    :param policy_config:
+    :param value_config:
+    :param reinforce_config:
+    :param reaction_rules_path:
+    :param building_blocks_path:
     :param results_root:
-    :param config: The configuration settings for the self-tuning process
     """
 
-    restart_batch = -1
-
-    experiment_root = Path(results_root)
-    targets_file = Path(targets)
-
     # create results root folder
-    if not experiment_root.exists():
-        experiment_root.mkdir()
+    results_root = Path(results_root)
+    if not results_root.exists():
+        results_root.mkdir()
 
-    logging_file = experiment_root.joinpath('self_tuning.log')
-    logging.basicConfig(filename=logging_file, encoding='utf-8', level=10,
-                        format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
-
-    with MoleculeReader(targets_file) as targets:
+    # load targets list
+    with MoleculeReader(targets_path) as targets:
         targets = list(targets)
-        file_length = len(targets)
 
-    num_simulations = reinforce_config.num_simulations
-    for simul_id in range(num_simulations):
-        processed_molecules_path = experiment_root.joinpath(f"simulation_{simul_id}", f"tree_retrons_sim_{simul_id}.smi")
+    # create value neural network
+    value_config.weights_path = os.path.join(results_root, 'value_network.ckpt')
+    value_network = create_value_network(value_config)
 
-        batch_size = reinforce_config.batch_size
-        batch_splits = list(range(file_length // batch_size + int(bool(file_length % batch_size))))
+    # create targets batch
+    targets_batch_list = create_targets_batch(targets, batch_size=reinforce_config.batch_size)
 
-        if int(file_length / batch_size) == 0:
-            print(f'1 batch were created with {file_length} molecules')
-        else:
-            print(f'{len(batch_splits)} batches were created with {batch_size} molecules each')
+    # run reinforcement training
+    for batch_id, targets_batch in enumerate(targets_batch_list, start=1):
 
-        for batch_id in batch_splits:
-
-            if restart_batch > batch_id:
-                logging.info(f"Skipped batch {batch_id} for simulation {simul_id}")
-            else:
-                restart_batch = -1
-                logging.info(f"Started simulation {simul_id} for batch {batch_id}")
-
-                # create batch of targets
-                batch_slices = range(batch_id * batch_size, (batch_id + 1) * batch_size)
-                targets_batch_file = create_targets_batch(experiment_root=experiment_root,
-                                                          targets_file=targets_file,
-                                                          tmp_file_id=batch_id,
-                                                          batch_slices=batch_slices)
-
-                # start tree planning simulation for batch of targets
-                run_planning(simul_id=simul_id,
-                             targets_file=targets_batch_file,
-                             tree_config=tree_config,
-                             policy_config=policy_config,
-                             value_config=value_config,
-                             reaction_rules_path=reaction_rules_path,
-                             building_blocks_path=building_blocks_path,
-                             results_root=results_root,
-                             processed_molecules_path=processed_molecules_path,
-                             targets_batch_id=batch_id)
-
-                try:  # TODO there is a problem with batch size in lightning
-                    # train value network for extracted retrons
-                    run_training(processed_molecules_path=processed_molecules_path,
-                                 simul_id=simul_id,
+        # start tree planning simulation for batch of targets
+        tree_list = run_planning(targets_batch=targets_batch,
+                                 tree_config=tree_config,
+                                 policy_config=policy_config,
                                  value_config=value_config,
-                                 experiment_root=experiment_root)
-                except:
-                    continue
+                                 reaction_rules_path=reaction_rules_path,
+                                 building_blocks_path=building_blocks_path,
+                                 targets_batch_id=batch_id)
 
-            # shuffle targets
-            shuffle_targets(targets_file)
+        # extract pos and neg retrons from the list of built trees
+        extracted_retrons = extract_tree_retrons(tree_list)
+
+        # TODO there is a problem with batch size in lightning
+        # train value network for extracted retrons
+        run_training(extracted_retrons=extracted_retrons, value_config=value_config)
