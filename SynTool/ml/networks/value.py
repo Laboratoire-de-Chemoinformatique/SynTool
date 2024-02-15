@@ -9,7 +9,7 @@ from torchmetrics.functional.classification import binary_recall, binary_specifi
 from SynTool.ml.networks.modules import MCTSNetwork
 
 
-class SynthesabilityValueNetwork(MCTSNetwork, LightningModule, ABC):
+class ValueNetwork(MCTSNetwork, LightningModule, ABC):
     """
     Value value network
     """
@@ -21,7 +21,7 @@ class SynthesabilityValueNetwork(MCTSNetwork, LightningModule, ABC):
 
         :param vector_dim: The dimensionality of the output linear layer.
         """
-        super(SynthesabilityValueNetwork, self).__init__(vector_dim, *args, **kwargs)
+        super(ValueNetwork, self).__init__(vector_dim, *args, **kwargs)
         self.save_hyperparameters()
         self.predictor = Linear(vector_dim, 1)
 

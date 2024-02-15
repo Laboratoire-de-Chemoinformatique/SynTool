@@ -12,11 +12,9 @@ from typing import List
 import ray
 import torch
 from CGRtools import smiles
-from CGRtools.containers import MoleculeContainer, ReactionContainer
+from CGRtools.containers import MoleculeContainer
 from CGRtools.exceptions import InvalidAromaticRing
-from CGRtools.files import SMILESRead
 from CGRtools.reactor import Reactor
-# from queue import Queue, Empty
 from ray.util.queue import Queue, Empty
 from torch_geometric.data import Data, InMemoryDataset
 from torch_geometric.data.makedirs import makedirs
@@ -511,4 +509,4 @@ MENDEL_INFO = {"Ag": (5, 11, 1, 1), "Al": (3, 13, 2, 1), "Ar": (3, 18, 2, 6), "A
     "Pb": (6, 14, 2, 2), "Pd": (5, 10, 3, 10), "Pr": (6, None, 1, 2), "Rb": (5, 1, 1, 1), "S": (3, 16, 2, 4),
     "Sb": (5, 15, 2, 3), "Se": (4, 16, 2, 4), "Si": (3, 14, 2, 2), "Sm": (6, None, 1, 2), "Sn": (5, 14, 2, 2),
     "Sr": (5, 2, 1, 2), "Te": (5, 16, 2, 4), "Ti": (4, 4, 1, 2), "Tl": (6, 13, 2, 1), "Yb": (6, None, 1, 2),
-    "Zn": (4, 12, 1, 2), }
+    "Zn": (4, 12, 1, 2)}

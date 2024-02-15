@@ -9,7 +9,7 @@ import torch
 from pathlib import Path
 
 from SynTool.chem.retron import compose_retrons
-from SynTool.ml.networks.value import SynthesabilityValueNetwork
+from SynTool.ml.networks.value import ValueNetwork
 from SynTool.ml.training import mol_to_pyg
 
 
@@ -27,7 +27,7 @@ class ValueFunction:
         :type weights_path: Path
         """
 
-        value_net = SynthesabilityValueNetwork.load_from_checkpoint(
+        value_net = ValueNetwork.load_from_checkpoint(
             weights_path,
             map_location=torch.device("cpu")
         )

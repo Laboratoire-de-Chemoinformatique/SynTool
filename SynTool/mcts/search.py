@@ -4,12 +4,10 @@ Module containing functions for running tree search for the set of target molecu
 
 import csv
 import json
-import logging
 from pathlib import Path
 
 from tqdm import tqdm
 
-from SynTool.chem.utils import safe_canonicalization
 from SynTool.interfaces.visualisation import to_table, extract_routes
 from SynTool.mcts.tree import Tree, TreeConfig
 from SynTool.mcts.evaluation import ValueFunction
@@ -41,7 +39,7 @@ def extract_tree_stats(tree, target):
 
 
 def tree_search(
-        targets: path_type,
+        targets_path: path_type,
         tree_config: TreeConfig,
         policy_config: PolicyNetworkConfig,
         reaction_rules_path: path_type,
@@ -58,7 +56,7 @@ def tree_search(
     :param policy_config: The config object containing the configuration for the policy.
     :param reaction_rules_path: The path to the file containing reaction rules.
     :param building_blocks_path: The path to the file containing building blocks.
-    :param targets: The path to the file containing the target molecules (in SDF or SMILES format).
+    :param targets_path: The path to the file containing the target molecules (in SDF or SMILES format).
     :param value_weights_path: The path to the file containing value weights (optional).
     :param results_root: The path to the directory where the results of the tree search will be saved. Defaults to 'search_results/'.
     :param retropaths_files_name: The base name for the files that will be generated to store the retro paths. Defaults to 'retropath'. #TODO arg dont exist
@@ -68,7 +66,7 @@ def tree_search(
     saved in the specified directory. Logging is used to record the process and any issues encountered.
     """
 
-    targets_file = Path(targets)
+    targets_file = Path(targets_path)
 
     # results folder
     results_root = Path(results_root)
@@ -95,11 +93,11 @@ def tree_search(
     # run search
     n_solved = 0
     extracted_paths = []
-    with MoleculeReader(targets_file) as targets, open(stats_file, "w", newline="\n") as csvfile:
+    with MoleculeReader(targets_file) as targets_path, open(stats_file, "w", newline="\n") as csvfile:
         statswriter = csv.DictWriter(csvfile, delimiter=",", fieldnames=stats_header)
         statswriter.writeheader()
 
-        for ti, target in tqdm(enumerate(targets), total=len(targets)):
+        for ti, target in tqdm(enumerate(targets_path), total=len(targets_path)):
 
             try:
                 # run search

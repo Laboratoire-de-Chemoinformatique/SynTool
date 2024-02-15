@@ -515,7 +515,7 @@ def planning_cli(config_path,
     tree_config = TreeConfig.from_dict({**config['tree'], **config['node_evaluation']})
     policy_config = PolicyNetworkConfig.from_dict({**config['node_expansion'], **{'weights_path': policy_network}})
 
-    tree_search(targets=targets,
+    tree_search(targets_path=targets,
                 tree_config=tree_config,
                 policy_config=policy_config,
                 reaction_rules_path=reaction_rules,

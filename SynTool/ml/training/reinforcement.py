@@ -20,7 +20,7 @@ from SynTool.utils.files import MoleculeReader
 from SynTool.ml.training.preprocessing import ValueNetworkDataset
 from SynTool.chem.retron import compose_retrons
 from SynTool.utils.logging import DisableLogger, HiddenPrints
-from SynTool.ml.networks.value import SynthesabilityValueNetwork
+from SynTool.ml.networks.value import ValueNetwork
 from SynTool.utils.loading import load_value_net
 from SynTool.mcts.expansion import PolicyFunction
 from SynTool.mcts.evaluation import ValueFunction
@@ -30,11 +30,11 @@ from SynTool.utils.config import TreeConfig, PolicyNetworkConfig, ValueNetworkCo
 def create_value_network(value_config):
 
     weights_path = Path(value_config.weights_path)
-    value_network = SynthesabilityValueNetwork(vector_dim=value_config.vector_dim,
-                                               batch_size=value_config.batch_size,
-                                               dropout=value_config.dropout,
-                                               num_conv_layers=value_config.num_conv_layers,
-                                               learning_rate=value_config.learning_rate)
+    value_network = ValueNetwork(vector_dim=value_config.vector_dim,
+                                 batch_size=value_config.batch_size,
+                                 dropout=value_config.dropout,
+                                 num_conv_layers=value_config.num_conv_layers,
+                                 learning_rate=value_config.learning_rate)
 
     with DisableLogger() as DL, HiddenPrints() as HP:
         trainer = Trainer()
@@ -164,7 +164,7 @@ def tune_value_network(datamodule, value_config: ValueNetworkConfig):
     """
 
     current_weights = value_config.weights_path
-    value_network = load_value_net(SynthesabilityValueNetwork, current_weights)
+    value_network = load_value_net(ValueNetwork, current_weights)
 
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
