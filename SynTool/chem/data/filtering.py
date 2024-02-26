@@ -149,9 +149,7 @@ class DynamicBondsChecker:
 
     def __call__(self, reaction: ReactionContainer) -> bool:
         cgr = ~reaction
-        return not (
-            self.min_bonds_number <= len(cgr.center_bonds) <= self.max_bonds_number
-        )
+        return not (self.min_bonds_number <= len(cgr.center_bonds) <= self.max_bonds_number)
 
 
 @dataclass
@@ -346,11 +344,13 @@ class WrongCHBreakingChecker:
         :param reaction: The reaction to be checked.
         :return: True if incorrect C-C bond formation is found, False otherwise.
         """
-        reaction.kekule()
-        if reaction.check_valence():
-            return False
-        reaction.thiele()
+
         copy_reaction = reaction.copy()
+
+        copy_reaction.kekule()
+        if copy_reaction.check_valence():
+            return False
+        copy_reaction.thiele()
         copy_reaction.explicify_hydrogens()
         cgr = ~copy_reaction
         reduced_cgr = cgr.augmented_substructure(cgr.center_atoms, deep=1)
@@ -819,10 +819,7 @@ def filter_reaction(
 ):
     is_filtered = False
     if config.remove_small_molecules:
-        new_reaction = remove_small_molecules(
-            reaction,
-            number_of_atoms=config.small_molecules_max_size,
-        )
+        new_reaction = remove_small_molecules(reaction, number_of_atoms=config.small_molecules_max_size)
     else:
         new_reaction = reaction.copy()
 
@@ -845,11 +842,14 @@ def filter_reaction(
         if config.rebalance_reaction:
             new_reaction = rebalance_reaction(new_reaction)
         for checker in checkers:
-            if checker(new_reaction):
-                # If checker returns True it means the reaction doesn't pass the check
-                new_reaction.meta["filtration_log"] = checker.__class__.__name__
-                is_filtered = True
-                break
+            try: # TODO CGRTools: ValueError: mapping of graphs is not disjoint
+                if checker(new_reaction):
+                    # If checker returns True it means the reaction doesn't pass the check
+                    new_reaction.meta["filtration_log"] = checker.__class__.__name__
+                    is_filtered = True
+            except:
+                continue
+
 
     return is_filtered, new_reaction
 
@@ -858,9 +858,7 @@ def filter_reaction(
 def process_batch(batch, config: ReactionCheckConfig, checkers):
     results = []
     for index, reaction in batch:
-        is_filtered, processed_reaction = filter_reaction(
-            reaction, config, checkers
-        )
+        is_filtered, processed_reaction = filter_reaction(reaction, config, checkers)
         results.append((index, is_filtered, processed_reaction))
     return results
 
@@ -881,6 +879,7 @@ def process_completed_batches(futures, result_file, pbar, treated: int = 0, pass
     del futures[done[0]]
     pbar.update(now_treated)
     treated += now_treated
+
     return treated, passed_filters
 
 
@@ -912,7 +911,8 @@ def filter_reactions(
     max_concurrent_batches = num_cpus  # Limit the number of concurrent batches
 
     with ReactionReader(reaction_database_path) as reactions, \
-            ReactionWriter(result_reactions_file_name, append_results) as result_file:
+         ReactionWriter(result_reactions_file_name, append_results) as result_file:
+
         pbar = tqdm(reactions, leave=True)  # TODO fix progress bars
 
         futures = {}
@@ -940,25 +940,7 @@ def filter_reactions(
             treated, filtered = process_completed_batches(futures, result_file, pbar, treated, filtered)
 
         pbar.close()
+
     ray.shutdown()
     print(f'Initial number of reactions: {treated}'),
     print(f'Removed number of reactions: {treated - filtered}')
-
-    # Example usage
-    """
-    Example usage:
-    # Importing config and reaction filtering function
-    from SynTool.chem.filtering import ReactionCheckConfig, filter_reactions
-
-    # Creating a configuration object with default parameters
-    config = ReactionCheckConfig()
-
-    # Changing default parameters
-    config.config["reaction_database_path"] = ./uspto.rdf
-    config.config["result_directory_name"] = results/
-    config.config['num_cpus'] = 8
-    config.config['batch_size'] = 20
-
-    # Launching filtering of reactions
-    filter_reactions(config)
-    """

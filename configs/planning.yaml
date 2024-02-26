@@ -16,5 +16,5 @@ node_evaluation:
   evaluation_agg: max
 node_expansion:
   top_rules: 50
-  rule_prob_threshold: 0.5
+  rule_prob_threshold: 0.0
   priority_rules_fraction: 0.5

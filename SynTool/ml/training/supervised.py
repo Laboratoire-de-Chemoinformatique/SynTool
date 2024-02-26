@@ -110,11 +110,7 @@ def run_policy_training(
     results_path = Path(results_path)
     results_path.mkdir(exist_ok=True)
 
-    logs_path = results_path.joinpath("logs/")
-    logs_path.mkdir(exist_ok=True)
-
-    weights_path = results_path.joinpath("weights/")
-    weights_path.mkdir(exist_ok=True)
+    weights_path = results_path.joinpath("policy_network.ckpt")
 
     network = PolicyNetwork(
         vector_dim=config.vector_dim,

@@ -87,6 +87,7 @@ def extract_rules_from_reactions(
 
         with open(f"{rules_file_name}.pickle", "wb") as statistics_file:
             pickle.dump(sorted_rules, statistics_file)
+            print(f'Number of extracted reaction rules: {len(sorted_rules)}')
 
     ray.shutdown()
 

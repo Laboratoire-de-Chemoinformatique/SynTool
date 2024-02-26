@@ -123,27 +123,28 @@ class RankingPolicyDataset(InMemoryDataset):
         for rule_i, (_, reactions_ids) in enumerate(reaction_rules):
             for reaction_id in reactions_ids:
                 dataset[reaction_id] = rule_i
-        del reaction_rules
         dataset = dict(sorted(dataset.items()))
 
-        processed_data = []
+        list_of_graphs = []
         with ReactionReader(self.reactions_path) as reactions:
 
-            reactions = list(reactions)
+            for reaction_id, reaction in tqdm(enumerate(reactions)):
 
-            # inp.reset_index()
-            for reaction_id, rule_id in tqdm(dataset.items()):
-                reaction = reactions[reaction_id]
-                try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
-                    molecule = unite_molecules(reaction.products)
-                    pyg_graph = mol_to_pyg(molecule)
-                except KeyError:
+                rule_id = dataset.get(reaction_id)
+                if rule_id:
+                    try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
+                        molecule = unite_molecules(reaction.products)
+                        pyg_graph = mol_to_pyg(molecule)
+                    except KeyError:
+                        continue
+
+                    if pyg_graph is not None:
+                        pyg_graph.y_rules = torch.tensor([rule_id], dtype=torch.long)
+                        list_of_graphs.append(pyg_graph)
+                else:
                     continue
-                if pyg_graph is not None:
-                    pyg_graph.y_rules = torch.tensor([rule_id], dtype=torch.long)
-                    processed_data.append(pyg_graph)
 
-        data, slices = self.collate(processed_data)
+        data, slices = self.collate(list_of_graphs)
         if self.output_path:
             makedirs(os.path.dirname(self.output_path))
             torch.save((data, slices), self.output_path)

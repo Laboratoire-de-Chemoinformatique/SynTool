@@ -253,9 +253,9 @@ def reaction_filtering_cli(config_path,
 )
 @click.option(
     "--num_cpus",
-    default=8,
+    default=4,
     type=int,
-    help="Number of CPUs to use for processing. Defaults to 1.",
+    help="Number of CPUs to use for processing. Defaults to 4.",
 )
 def rule_extracting_cli(
     config_path,
@@ -304,9 +304,9 @@ def rule_extracting_cli(
 )
 @click.option(
     "--num_cpus",
-    default=8,
+    default=4,
     type=int,
-    help="Number of CPUs to use for processing. Defaults to 1.",
+    help="Number of CPUs to use for processing. Defaults to 4.",
 )
 def supervised_ranking_policy_training_cli(config_path, reaction_data, reaction_rules, results_dir, num_cpus):
     """
@@ -315,7 +315,7 @@ def supervised_ranking_policy_training_cli(config_path, reaction_data, reaction_
 
     policy_config = PolicyNetworkConfig.from_yaml(config_path)
 
-    policy_dataset_file = os.path.join(results_dir, 'policy_dataset.ckpt')
+    policy_dataset_file = os.path.join(results_dir, 'policy_dataset.dt')
 
     datamodule = create_policy_dataset(reaction_rules_path=reaction_rules,
                                        molecules_or_reactions_path=reaction_data,

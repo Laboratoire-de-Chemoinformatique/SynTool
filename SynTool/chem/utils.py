@@ -207,7 +207,8 @@ def to_reaction_smiles_record(reaction):
         meta_info = ''  # TODO decide what to do with meta
         meta_info = ";".join(meta_info.split("\n"))
         reaction_record.append(str(meta_info))
-    return "\t".join(reaction_record) + "\n"
+    # return "\t".join(reaction_record) + "\n"
+    return "".join(reaction_record)
 
 
 def cgr_from_rule(rule: ReactionContainer):
