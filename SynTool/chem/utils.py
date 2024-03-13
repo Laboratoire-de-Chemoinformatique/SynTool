@@ -200,6 +200,9 @@ def remove_reagents(
 
 
 def to_reaction_smiles_record(reaction):
+    if isinstance(reaction, str):
+        return reaction
+
     reaction_record = [format(reaction, "m")]
     sorted_meta = sorted(reaction.meta.items(), key=lambda x: x[0])
     for _, meta_info in sorted_meta:

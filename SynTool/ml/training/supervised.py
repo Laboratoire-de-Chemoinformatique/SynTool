@@ -65,9 +65,7 @@ def create_policy_dataset(
     train_dataset, val_dataset = random_split(
         full_dataset, [train_size, val_size], torch.Generator().manual_seed(42)
     )
-    print(
-        f"Training set size: {len(train_dataset)}, validation set size: {len(val_dataset)}"
-    )
+    print(f"Training set size: {len(train_dataset)}, validation set size: {len(val_dataset)}")
 
     datamodule = LightningDataset(
         train_dataset,
@@ -128,8 +126,9 @@ def run_policy_training(
             accelerator=accelerator,
             devices=[0],
             max_epochs=config.num_epoch,
-            callbacks=[lr_monitor],
+            logger=False,
             gradient_clip_val=1.0,
+            enable_checkpointing=False,
             enable_progress_bar=False
         )
 

@@ -25,8 +25,10 @@ class SMILESRead:
 
     def __data(self) -> Iterable[Union[ReactionContainer, CGRContainer, MoleculeContainer]]:
         for line in iter(self._file.readline, ''):
+            line = line.strip()
             x = smiles(line)
             if isinstance(x, (ReactionContainer, CGRContainer, MoleculeContainer)):
+                x.meta['init_smiles'] = line
                 yield x
 
     def __enter__(self):

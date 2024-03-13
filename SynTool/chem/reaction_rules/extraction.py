@@ -58,7 +58,7 @@ def extract_rules_from_reactions(
         batch = []
         max_concurrent_batches = num_cpus
 
-        rules_statistics = defaultdict(list)
+        extracted_rules_and_statistics = defaultdict(list)
         for index, reaction in enumerate(reactions):
             batch.append((index, reaction))
             if len(batch) == batch_size:
@@ -67,7 +67,7 @@ def extract_rules_from_reactions(
                 batch = []
 
                 while len(futures) >= max_concurrent_batches:
-                    process_completed_batches(futures, rules_statistics, pbar, batch_size)
+                    process_completed_batches(futures, extracted_rules_and_statistics, pbar, batch_size)
 
         if batch:
             remaining_size = len(batch)
@@ -75,12 +75,12 @@ def extract_rules_from_reactions(
             futures[future] = None
 
         while futures:
-            process_completed_batches(futures, rules_statistics, pbar, remaining_size)
+            process_completed_batches(futures, extracted_rules_and_statistics, pbar, remaining_size)
 
         pbar.close()
 
         sorted_rules = sort_rules(
-            rules_statistics,
+            extracted_rules_and_statistics,
             min_popularity=config.min_popularity,
             single_reactant_only=config.single_reactant_only,
         )
