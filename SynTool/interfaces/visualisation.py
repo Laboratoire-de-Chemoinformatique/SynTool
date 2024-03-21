@@ -220,16 +220,18 @@ def path_graph(tree, node: int) -> str:
     return "\n".join(svg)
 
 
-def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False):
+def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False, integration: bool = False):
     """
     Write an HTML page with the synthesis paths in SVG format and corresponding reactions in SMILES format
 
     :param tree:  # TODO
     :param extended:  # TODO
-    :param html_path: Path to save the HTML molecules_path
+    :param html_path: Path to save the HTML molecules_path, if None returns the html without saving it
     :type html_path: str (optional)
     :param aam: depict atom-to-atom mapping
     :type aam: bool (optional)
+    :param integration: Whenever to output the full html file (False) or only the body (True)
+    :type integration: bool
     """
     if aam:
         MoleculeContainer.depict_settings(aam=True)
@@ -279,16 +281,17 @@ def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False
     </html>
     """
     # SVG Template
-    box_mark = """
-    <svg width="30" height="30" viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="0.5" cy="0.5" r="0.5" fill="rgb()" fill-opacity="0.35" />
-    </svg>
-    """
+    # box_mark = """
+    # <svg width="30" height="30" viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg">
+    # <circle cx="0.5" cy="0.5" r="0.5" fill="rgb()" fill-opacity="0.35" />
+    # </svg>
+    # """
     # table = f"<table><thead><{th}>Retrosynthetic Routes</th></thead><tbody>"
-    table = """
-    <table class="table table-striped table-hover caption-top">
-    <caption><h3>Retrosynthetic Routes Report</h3></caption>
-    <tbody>"""
+    table = """<table class="table table-striped table-hover caption-top">"""
+    if not integration:
+        table += "<caption><h3>Retrosynthetic Routes Report</h3></caption><tbody>"
+    else:
+        table += "<tbody>"
 
     # Gather path data
     table += f"<tr>{td}{font_normal}Target Molecule: {str(tree.nodes[1].curr_retron)}{font_close}</td></tr>"
@@ -296,17 +299,21 @@ def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False
     table += f"<tr>{td}{font_normal}Number of visited nodes: {len(tree.visited_nodes)}{font_close}</td></tr>"
     table += f"<tr>{td}{font_normal}Found paths: {len(paths)}{font_close}</td></tr>"
     table += f"<tr>{td}{font_normal}Time: {round(tree.curr_time, 4)}{font_close} seconds</td></tr>"
-    table += f"""
-    <tr>{td}
-                 <div>
-    {box_mark.replace("rgb()", "rgb(152, 238, 255)")}
-    Target Molecule
-    {box_mark.replace("rgb()", "rgb(240, 171, 144)")}
-    Molecule Not In Stock
-    {box_mark.replace("rgb()", "rgb(155, 250, 179)")}
-    Molecule In Stock
-    </div>
-    </td></tr>
+    table += f"""\
+    <tr>{td} \
+            <svg width="30" height="30" viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg"> \
+            <circle cx="0.5" cy="0.5" r="0.5" fill="rgb(152, 238, 255)" fill-opacity="0.35" /></svg> \
+            Target Molecule \
+             \
+            <svg width="30" height="30" viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg"> \
+            <circle cx="0.5" cy="0.5" r="0.5" fill="rgb(240, 171, 144)" fill-opacity="0.35" /></svg> \
+            Molecule Not In Stock \
+             \
+            <svg width="30" height="30" viewBox="0 0 1 1" xmlns="http://www.w3.org/2000/svg"> \
+            <circle cx="0.5" cy="0.5" r="0.5" fill="rgb(155, 250, 179)" fill-opacity="0.35" /></svg> \
+            Molecule In Stock \
+             \
+    </td></tr> \
     """
 
     for path in paths:
@@ -327,11 +334,12 @@ def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False
         table += f"<tr>{td}{svg}</td></tr>"
         table += f"<tr>{td}{reactions}</td></tr>"
     table += "</tbody>"
-    # Save output
-    if html_path:
-        output = html_path
-    else:
-        output = tree._output
+
+    # Save or display output
+    if not html_path:
+        return table if integration else template_begin + table + template_end
+
+    output = html_path
     with open(output, "w") as html_file:
         html_file.write(template_begin)
         html_file.write(table)
