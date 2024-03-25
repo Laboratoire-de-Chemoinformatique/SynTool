@@ -161,7 +161,7 @@ class RuleExtractionConfig(ConfigABC):
     include_func_groups: bool = False
     func_groups_list: List[Union[MoleculeContainer, QueryContainer]] = field(default_factory=list)
     include_rings: bool = False
-    keep_leaving_groups: bool = True
+    keep_leaving_groups: bool = False
     keep_incoming_groups: bool = False
     keep_reagents: bool = False
     environment_atom_count: int = 1

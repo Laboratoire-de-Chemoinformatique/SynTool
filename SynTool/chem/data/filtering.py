@@ -84,14 +84,10 @@ class CompeteProductsChecker:
                     if fingerprint_tanimoto > self.fingerprint_tanimoto_threshold:
                         try:
                             # Find the maximum common substructure (MCS) and compute its size
-                            clique_size = len(
-                                next(mol.get_mcs_mapping(other_mol, limit=100))
-                            )
+                            clique_size = len(next(mol.get_mcs_mapping(other_mol, limit=100)))
 
                             # Calculate MCS similarity based on MCS size
-                            mcs_tanimoto = clique_size / (
-                                len(mol) + len(other_mol) - clique_size
-                            )
+                            mcs_tanimoto = clique_size / (len(mol) + len(other_mol) - clique_size)
 
                             # If MCS similarity is also high enough, mark the reaction as having compete products
                             if mcs_tanimoto > self.mcs_tanimoto_threshold:
@@ -237,6 +233,7 @@ class RingsChangeChecker:
         :param reaction: input reaction
         :return: True or False
         """
+
         reaction.kekule()
         reaction.thiele()
         r_rings, r_arom_rings = self._calc_rings(reaction.reactants)
@@ -277,9 +274,7 @@ class StrangeCarbonsChecker:
 
     def __call__(self, reaction: ReactionContainer) -> bool:
         for molecule in reaction.reactants + reaction.products:
-            atoms_types = {
-                a.atomic_symbol for _, a in molecule.atoms()
-            }  # atoms types in molecule
+            atoms_types = {a.atomic_symbol for _, a in molecule.atoms()}  # atoms types in molecule
             if len(atoms_types) == 1 and atoms_types.pop() == "C":
                 if len(molecule) == 1:  # methane
                     return True
@@ -345,12 +340,12 @@ class WrongCHBreakingChecker:
         :return: True if incorrect C-C bond formation is found, False otherwise.
         """
 
-        copy_reaction = reaction.copy()
-
-        copy_reaction.kekule()
-        if copy_reaction.check_valence():
+        reaction.kekule()
+        if reaction.check_valence():
             return False
-        copy_reaction.thiele()
+        reaction.thiele()
+
+        copy_reaction = reaction.copy()
         copy_reaction.explicify_hydrogens()
         cgr = ~copy_reaction
         reduced_cgr = cgr.augmented_substructure(cgr.center_atoms, deep=1)
@@ -766,29 +761,6 @@ class ReactionCheckConfig(ConfigABC):
 def tanimoto_kernel(x, y):
     """
     Calculate the Tanimoto coefficient between each element of arrays x and y.
-
-    Parameters
-    ----------
-    x : array-like
-        A 2D array of features.
-    y : array-like
-        A 2D array of features.
-
-    Notes
-    -----
-    Features in arrays x and y should be equal in number and ordered in the same way.
-
-    Returns
-    -------
-    ndarray
-        A 2D array containing pairwise Tanimoto coefficients.
-
-    Examples
-    --------
-    >>> x = np.array([[1, 2], [3, 4]])
-    >>> y = np.array([[5, 6], [7, 8]])
-    >>> tanimoto_kernel(x, y)
-    array([[...]])
     """
     x = x.astype(np.float64)
     y = y.astype(np.float64)
@@ -797,9 +769,7 @@ def tanimoto_kernel(x, y):
     y2 = np.sum(y**2, axis=1)
 
     denominator = np.array([x2] * len(y2)).T + np.array([y2] * len(x2)) - x_dot
-    result = np.divide(
-        x_dot, denominator, out=np.zeros_like(x_dot), where=denominator != 0
-    )
+    result = np.divide(x_dot, denominator, out=np.zeros_like(x_dot), where=denominator != 0)
 
     return result
 
@@ -812,11 +782,8 @@ def remove_file_if_exists(directory: Path, file_names):  # TODO not used
             logging.warning(f"Removed {file_path}")
 
 
-def filter_reaction(
-    reaction: ReactionContainer,
-    config: ReactionCheckConfig,
-    checkers: list,
-):
+def filter_reaction(reaction: ReactionContainer, config: ReactionCheckConfig, checkers: list):
+
     is_filtered = False
     if config.remove_small_molecules:
         new_reaction = remove_small_molecules(reaction, number_of_atoms=config.small_molecules_max_size)
@@ -848,7 +815,8 @@ def filter_reaction(
                     new_reaction.meta["filtration_log"] = checker.__class__.__name__
                     is_filtered = True
             except:
-                continue
+                is_filtered = True
+
 
 
     return is_filtered, new_reaction
@@ -858,8 +826,11 @@ def filter_reaction(
 def process_batch(batch, config: ReactionCheckConfig, checkers):
     results = []
     for index, reaction in batch:
-        is_filtered, processed_reaction = filter_reaction(reaction, config, checkers)
-        results.append((index, is_filtered, processed_reaction))
+        try: # TODO CGRtools.exceptions.MappingError: atoms with number {52} not equal
+            is_filtered, processed_reaction = filter_reaction(reaction, config, checkers)
+            results.append((index, is_filtered, processed_reaction))
+        except:
+            results.append((index, True, reaction))
     return results
 
 

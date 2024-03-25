@@ -65,9 +65,7 @@ def create_policy_dataset(
     train_dataset, val_dataset = random_split(
         full_dataset, [train_size, val_size], torch.Generator().manual_seed(42)
     )
-    print(
-        f"Training set size: {len(train_dataset)}, validation set size: {len(val_dataset)}"
-    )
+    print(f"Training set size: {len(train_dataset)}, validation set size: {len(val_dataset)}")
 
     datamodule = LightningDataset(
         train_dataset,
@@ -123,18 +121,20 @@ def run_policy_training(
     )
 
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    with DisableLogger(), HiddenPrints():
-        trainer = Trainer(
-            accelerator=accelerator,
-            devices=[0],
-            max_epochs=config.num_epoch,
-            callbacks=[lr_monitor],
-            gradient_clip_val=1.0,
-            enable_progress_bar=False
-        )
+    trainer = Trainer(
+        accelerator=accelerator,
+        devices=[0],
+        max_epochs=config.num_epoch,
+        logger=False,
+        gradient_clip_val=1.0,
+        enable_checkpointing=True,
+        enable_progress_bar=True
+    )
 
-        trainer.fit(network, datamodule)
-        ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)
-        trainer.save_checkpoint(weights_path)
+    trainer.fit(network, datamodule)
+    ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)
+    trainer.save_checkpoint(weights_path)
 
     print(f'Policy network balanced accuracy: {ba}')
+
+

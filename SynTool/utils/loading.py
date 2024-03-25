@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import pandas as pd
 
-from CGRtools import SMILESRead
+from CGRtools import SMILESRead, smiles
 from CGRtools.reactor import Reactor
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
@@ -34,7 +34,7 @@ def load_reaction_rules(file):
     return reaction_rules
 
 
-def standardize_building_blocks(input_file, output_file):
+def standardize_building_blocks(input_file, output_file):  # TODO implement with reader/writer
     """
     Canonicalizes custom building blocks.
 
@@ -42,20 +42,14 @@ def standardize_building_blocks(input_file, output_file):
     :param output_file: The path to the txt file that stores the canonicalazied building blocks
     """
 
-    parser = SMILESRead.create_parser(ignore=True)
-
-    with open(input_file, "r") as file:
-        mols = file.readlines()
-
-    for n, mol in tqdm(enumerate(mols), total=len(mols)):
-        try:
-            mol = parser(str(mol))
-            mol.canonicalize()
-        except:
-            continue
-    mols = [i.strip() for i in mols]
-
-    pd.DataFrame(mols).to_csv(output_file, header=False, index=False)
+    with open(input_file, "r") as inp_file, open(output_file, "w") as out_file:
+        for smi in tqdm(inp_file):
+            mol = smiles(smi)
+            try:
+                mol.canonicalize()
+            except:
+                continue
+            out_file.write(f'{str(mol)}\n')
 
     return output_file
 
