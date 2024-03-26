@@ -27,11 +27,7 @@ class ValueFunction:
         :type weights_path: Path
         """
 
-        value_net = ValueNetwork.load_from_checkpoint(
-            weights_path,
-            map_location=torch.device("cpu")
-        )
-
+        value_net = ValueNetwork.load_from_checkpoint(weights_path, map_location=torch.device("cpu"))
         self.value_network = value_net.eval()
 
     def predict_value(self, retrons: list) -> float:
@@ -49,11 +45,6 @@ class ValueFunction:
             with torch.no_grad():
                 value_pred = self.value_network.forward(pyg_graph)[0].item()
         else:
-            try:
-                logging.debug(f"Molecule {str(molecule)} was not preprocessed. Giving value equal to -1e6.")
-            except:
-                logging.debug(f"There is a molecule for which SMILES cannot be generated")
-
             value_pred = -1e6
 
         return value_pred

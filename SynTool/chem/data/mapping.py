@@ -21,7 +21,7 @@ def remove_reagents_and_map(rea: ReactionContainer, keep_reagent: bool = False) 
     :return: ReactionContainer or None
     """
     try:
-        rea.reset_mapping()
+        rea.reset_mapping() # TODO rea - is not meaningful variable name
     except MappingError:
         rea.reset_mapping()  # Successive reset_mapping works
     if not keep_reagent:

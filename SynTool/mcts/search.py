@@ -8,7 +8,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from SynTool.interfaces.visualisation import to_table, extract_routes
+from SynTool.interfaces.visualisation import generate_results_html, extract_routes
 from SynTool.mcts.tree import Tree, TreeConfig
 from SynTool.mcts.evaluation import ValueFunction
 from SynTool.mcts.expansion import PolicyFunction
@@ -29,7 +29,7 @@ def extract_tree_stats(tree, target):
     newick_tree, newick_meta = tree.newickify(visits_threshold=0)
     newick_meta_line = ";".join([f"{nid},{v[0]},{v[1]},{v[2]}" for nid, v in newick_meta.items()])
     return {
-        "target_smiles": str(target),
+        "target_smiles": str(target.meta['init_smiles']),
         "tree_size": len(tree),
         "search_time": round(tree.curr_time, 1),
         "found_paths": len(tree.winning_nodes),
@@ -80,8 +80,7 @@ def tree_search(  # TODO found paths in csv and n_solved are not the same
     retropaths_folder.mkdir(exist_ok=True)
 
     # stats header
-    stats_header = ["target_smiles", "tree_size", "search_time",
-                    "found_paths", "newick_tree", "newick_meta"]
+    stats_header = ["target_smiles", "tree_size", "search_time", "found_paths", "newick_tree", "newick_meta"]
 
     # config
     policy_function = PolicyFunction(policy_config=policy_config)
@@ -121,13 +120,12 @@ def tree_search(  # TODO found paths in csv and n_solved are not the same
 
             # retropaths
             retropaths_file = retropaths_folder.joinpath(f"retropaths_target_{ti}.html")
-            to_table(tree, retropaths_file, extended=True)
+            generate_results_html(tree, retropaths_file, extended=True)
 
             # stats
             statswriter.writerow(extract_tree_stats(tree, target))
             csvfile.flush()
 
-            #
             with open(paths_file, 'w') as f:
                 json.dump(extracted_paths, f)
 

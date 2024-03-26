@@ -41,9 +41,9 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
         super().__init__(None, None, None)
 
         if extracted_retrons:
-            self.data, self.slices = self.prepare_from_extracted_retrons(extracted_retrons)
+            self.data, self.slices = self.graphs_from_extracted_retrons(extracted_retrons)
 
-    def prepare_pyg(self, molecule, label):
+    def mol_to_graph(self, molecule, label):
         """
         It takes a molecule as input, and converts the molecule to a PyTorch geometric graph,
         assigns the reward value (label) to the graph, and returns the graph.
@@ -61,7 +61,7 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
             else:
                 return None
 
-    def prepare_from_extracted_retrons(self, extracted_retrons):
+    def graphs_from_extracted_retrons(self, extracted_retrons):
         """
         The function prepares processed data from a given file path by reading SMILES data, converting it to
         PyTorch geometric graph format, and returning the processed data and slices.
@@ -74,7 +74,7 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
         processed_data = []
         for smi, label in extracted_retrons.items():
             mol = smiles(smi)
-            pyg = self.prepare_pyg(mol, label)
+            pyg = self.mol_to_graph(mol, label)
             if pyg:
                 processed_data.append(pyg)
         data, slices = self.collate(processed_data)
@@ -218,52 +218,6 @@ class FilteringPolicyDataset(InMemoryDataset):
 
         return data, slices
 
-    def prepare_data_no_ray(self):
-        #######
-        # /!\ Possible alternatives to ray, has to be checked once pytorch updated
-        #######
-
-        global reaction_rules
-        reaction_rules = load_reaction_rules(self.reaction_rules_path)
-
-        with Manager() as m, Pool() as p:
-            to_process = m.Queue()
-
-            processed_data = []
-            # print(f'{len(mols_batches)} batches were created with {len(mols_batches[0])} molecules each')
-            mols_batch = []
-            with open(self.molecules_path, "r") as inp_data:
-                for molecule in tqdm(inp_data.read().splitlines()):
-                    mols_batch.append(molecule)
-                    if len(mols_batch) == self.batch_size:  # * self.num_cpus:
-                        for mol in mols_batch:
-                            to_process.put(mol)
-                        mols_batch = []
-                        workers_results = m.list()
-
-                        workers = [p.apply_async(preprocess_filtering_policy_molecules, (to_process, workers_results)) for _ in range(40)]
-                        print([res.get() for res in workers])
-                        # # for i in range(40):
-                        # #     w = Process(target=preprocess_policy_molecules, args=(to_process, workers_results))
-                        # #     w.start()
-                        # #     workers.append(w)
-                        # # for w in workers:
-                        # #     w.join()
-                        # results = [graph for res in ray.get(results_ids) if res for graph in res]
-                        # processed_data.extend(list(workers_results))
-                        # mols_batch = []
-
-        for pyg in processed_data:
-            pyg.y_rules = pyg.y_rules.to_dense()
-            pyg.y_priority = pyg.y_priority.to_dense()
-
-        data, slices = self.collate(processed_data)
-        if self.output_path:
-            makedirs(os.path.dirname(self.output_path))
-            torch.save((data, slices), self.output_path)
-
-        return data, slices
-
 
 def reaction_rules_appliance(molecule, reaction_rules):
     """
@@ -354,43 +308,6 @@ def preprocess_filtering_policy_molecules(to_process: Queue, reaction_rules: Lis
             pyg_graphs.append(pyg_graph)
         except Empty:
             break
-    return pyg_graphs
-
-
-def preprocess_policy_molecules_no_ray(to_process: Queue, workers_results):
-    #######
-    # /!\ Possible alternatives to ray, has to be checked once pytorch updated
-    #######
-
-    pyg_graphs = []
-    while True:
-        try:
-            molecule_str = to_process.get(timeout=1)
-            molecule = smiles(molecule_str)
-            if not isinstance(molecule, MoleculeContainer):
-                continue
-
-            # reaction reaction_rules application
-            applied_rules, priority_rules = reaction_rules_appliance(molecule, reaction_rules)
-            y_rules = torch.sparse_coo_tensor([applied_rules], torch.ones(len(applied_rules)), (len(reaction_rules),),
-                                              dtype=torch.uint8)
-            y_priority = torch.sparse_coo_tensor([priority_rules], torch.ones(len(priority_rules)),
-                                                 (len(reaction_rules),), dtype=torch.uint8)
-
-            y_rules = torch.unsqueeze(y_rules, 0)
-            y_priority = torch.unsqueeze(y_priority, 0)
-
-            pyg_graph = mol_to_pyg(molecule)
-            if pyg_graph:
-                pyg_graph.y_rules = y_rules
-                pyg_graph.y_priority = y_priority
-            else:
-                continue
-
-            pyg_graphs.append(pyg_graph)
-        except Empty:
-            break
-    workers_results.extend(pyg_graphs) #[pyg for pyg in pyg_graphs if pyg])
     return pyg_graphs
 
 

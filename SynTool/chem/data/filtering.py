@@ -783,7 +783,7 @@ def remove_file_if_exists(directory: Path, file_names):  # TODO not used
 
 
 def filter_reaction(reaction: ReactionContainer, config: ReactionCheckConfig, checkers: list):
-
+    # TODO may be better check_reaction ?
     is_filtered = False
     if config.remove_small_molecules:
         new_reaction = remove_small_molecules(reaction, number_of_atoms=config.small_molecules_max_size)

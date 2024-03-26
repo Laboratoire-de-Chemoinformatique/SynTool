@@ -9,7 +9,7 @@ from CGRtools.exceptions import InvalidAromaticRing
 
 class Reaction(ReactionContainer):
     """
-    Reaction class can be used for a general representation of reaction for different chemoinformatics Python packages
+    Reaction class can be used for a general representation of reaction
     """
 
     def __init__(self, *args, **kwargs):

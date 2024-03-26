@@ -68,7 +68,7 @@ def extract_routes(tree, extended=False):
     return paths_block
 
 
-def path_graph(tree, node: int) -> str:
+def get_route_svg(tree, node: int) -> str:
     """
     Visualizes reaction path
 
@@ -220,7 +220,7 @@ def path_graph(tree, node: int) -> str:
     return "\n".join(svg)
 
 
-def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False):
+def generate_results_html(tree: Tree, html_path: path_type, aam: bool = False, extended=False):
     """
     Write an HTML page with the synthesis paths in SVG format and corresponding reactions in SMILES format
 
@@ -310,7 +310,7 @@ def to_table(tree: Tree, html_path: path_type, aam: bool = False, extended=False
     """
 
     for path in paths:
-        svg = path_graph(tree, path)  # Get SVG
+        svg = get_route_svg(tree, path)  # Get SVG
         full_path = tree.synthesis_path(path)  # Get Path
         # Write SMILES of all reactions in synthesis path
         step = 1

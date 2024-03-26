@@ -591,13 +591,8 @@ class Tree:
 
         nodes = self.path_to_node(node_id)
 
-        tmp = [
-            Reaction(
-                [x.molecule for x in after.new_retrons],
-                [before.curr_retron.molecule],
-            )
-            for before, after in zip(nodes, nodes[1:])
-        ]
+        tmp = [Reaction([x.molecule for x in after.new_retrons], [before.curr_retron.molecule])
+               for before, after in zip(nodes, nodes[1:])]
 
         for r in tmp:
             r.clean2d()

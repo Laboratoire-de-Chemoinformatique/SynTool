@@ -196,9 +196,7 @@ def extract_rules(
         return list(distinct_rules)
 
 
-def create_rule(
-    config: RuleExtractionConfig, reaction: ReactionContainer
-) -> ReactionContainer:
+def create_rule(config: RuleExtractionConfig, reaction: ReactionContainer) -> ReactionContainer:
     """
     Creates a reaction rule from a given reaction based on the specified configuration.
 
@@ -361,9 +359,7 @@ def add_ring_structures(cgr, rule_atoms):
     return rule_atoms
 
 
-def add_leaving_incoming_groups(
-    reaction, rule_atoms, keep_leaving_groups, keep_incoming_groups
-):
+def add_leaving_incoming_groups(reaction, rule_atoms, keep_leaving_groups, keep_incoming_groups):
     """
     Identifies and includes leaving and incoming groups to the rule atoms based on specified flags.
 
@@ -434,40 +430,28 @@ def clean_molecules(
     for rule_molecule in rule_molecules:
         for reaction_molecule in reaction_molecules:
             if set(rule_molecule.atoms_numbers) <= set(reaction_molecule.atoms_numbers):
-                query_reaction_molecule = reaction_molecule.substructure(
-                    reaction_molecule, as_query=True
-                )
-                query_rule_molecule = query_reaction_molecule.substructure(
-                    rule_molecule
-                )
+                query_reaction_molecule = reaction_molecule.substructure(reaction_molecule, as_query=True)
+                query_rule_molecule = query_reaction_molecule.substructure(rule_molecule)
 
                 # Clean environment atoms
                 if not all(
-                    atom_retention_details["environment"].values()
-                ):  # if everything True, we keep all marks
-                    local_environment_atoms = (
-                        set(rule_molecule.atoms_numbers) - reaction_center_atoms
-                    )
+                    atom_retention_details["environment"].values()):  # if everything True, we keep all marks
+                    local_environment_atoms = (set(rule_molecule.atoms_numbers) - reaction_center_atoms)
                     for atom_number in local_environment_atoms:
                         query_rule_molecule = clean_atom(
                             query_rule_molecule,
                             atom_retention_details["environment"],
-                            atom_number,
-                        )
+                            atom_number)
 
                 # Clean reaction center atoms
                 if not all(
-                    atom_retention_details["reaction_center"].values()
-                ):  # if everything True, we keep all marks
-                    local_reaction_center_atoms = (
-                        set(rule_molecule.atoms_numbers) & reaction_center_atoms
-                    )
+                    atom_retention_details["reaction_center"].values()):  # if everything True, we keep all marks
+                    local_reaction_center_atoms = (set(rule_molecule.atoms_numbers) & reaction_center_atoms)
                     for atom_number in local_reaction_center_atoms:
                         query_rule_molecule = clean_atom(
                             query_rule_molecule,
                             atom_retention_details["reaction_center"],
-                            atom_number,
-                        )
+                            atom_number)
 
                 cleaned_rule_molecules.append(query_rule_molecule)
                 break
@@ -478,8 +462,7 @@ def clean_molecules(
 def clean_atom(
     query_molecule: QueryContainer,
     attributes_to_keep: Dict[str, bool],
-    atom_number: int,
-) -> QueryContainer:
+    atom_number: int) -> QueryContainer:
     """
     Removes specified information from a given atom in a query molecule.
 
@@ -508,9 +491,7 @@ def clean_atom(
     return query_molecule
 
 
-def create_substructures_and_reagents(
-    reaction, rule_atoms, as_query_container, keep_reagents
-):
+def create_substructures_and_reagents(reaction, rule_atoms, as_query_container, keep_reagents):
     """
     Creates substructures for reactants and products, and optionally includes reagents, based on specified parameters.
 

@@ -62,9 +62,7 @@ def create_policy_dataset(
     train_size = int(training_data_ratio * len(full_dataset))
     val_size = len(full_dataset) - train_size
 
-    train_dataset, val_dataset = random_split(
-        full_dataset, [train_size, val_size], torch.Generator().manual_seed(42)
-    )
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], torch.Generator().manual_seed(42))
     print(f"Training set size: {len(train_dataset)}, validation set size: {len(val_dataset)}")
 
     datamodule = LightningDataset(

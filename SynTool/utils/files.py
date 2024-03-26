@@ -11,6 +11,60 @@ from SynTool.chem.utils import to_reaction_smiles_record
 from SynTool.utils import path_type
 
 
+class FileHandler:
+    def __init__(self, filename: path_type, **kwargs):
+        """
+        General class to handle chemical files.
+
+        :param filename: the path and name of the file
+        :type filename: path_type
+
+        :return: None
+        """
+        self._file = None
+        # filename = str(Path(filename).resolve(strict=True)) #TODO Tagir please correct bug in ReactionWriter following your modification
+        _, ext = splitext(filename)
+        file_types = {
+            '.smi': "SMI",
+            '.smiles': "SMI",
+            '.rdf': "RDF",
+            '.sdf': 'SDF',
+        }
+        try:
+            self._file_type = file_types[ext]
+        except KeyError:
+            raise ValueError("I don't know the file extension,", ext)
+
+    def close(self):
+        self._file.close()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+class Reader(FileHandler):
+    def __init__(self, filename: path_type, **kwargs):
+        """
+        General class to read chemical files.
+
+        :param filename: the path and name of the file
+        :type filename: path_type
+
+        :return: None
+        """
+        super().__init__(filename, **kwargs)
+
+    def __enter__(self):
+        return self._file
+
+    def __iter__(self):
+        return iter(self._file)
+
+    def __next__(self):
+        return next(self._file)
+
+    def __len__(self):
+        return len(self._file)
+
 class SMILESRead:
     def __init__(self, filename: path_type, **kwargs):
         """
@@ -56,62 +110,6 @@ class SMILESRead:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-
-class FileHandler:
-    def __init__(self, filename: path_type, **kwargs):
-        """
-        General class to handle chemical files.
-
-        :param filename: the path and name of the file
-        :type filename: path_type
-
-        :return: None
-        """
-        self._file = None
-        # filename = str(Path(filename).resolve(strict=True)) #TODO Tagir please correct bug in ReactionWriter following your modification
-        _, ext = splitext(filename)
-        file_types = {
-            '.smi': "SMI",
-            '.smiles': "SMI",
-            '.rdf': "RDF",
-            '.sdf': 'SDF',
-        }
-        try:
-            self._file_type = file_types[ext]
-        except KeyError:
-            raise ValueError("I don't know the file extension,", ext)
-
-    def close(self):
-        self._file.close()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-
-class Reader(FileHandler):
-    def __init__(self, filename: path_type, **kwargs):
-        """
-        General class to read chemical files.
-
-        :param filename: the path and name of the file
-        :type filename: path_type
-
-        :return: None
-        """
-        super().__init__(filename, **kwargs)
-
-    def __enter__(self):
-        return self._file
-
-    def __iter__(self):
-        return iter(self._file)
-
-    def __next__(self):
-        return next(self._file)
-
-    def __len__(self):
-        return len(self._file)
 
 
 class Writer(FileHandler):

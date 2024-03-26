@@ -8,8 +8,6 @@ import pickle
 from time import time
 from tqdm import tqdm
 
-import pandas as pd
-
 from CGRtools import SMILESRead, smiles
 from CGRtools.reactor import Reactor
 from werkzeug.datastructures import FileStorage
@@ -133,7 +131,4 @@ def load_policy_net(model_class, policy_network_path):
     """
 
     map_location = device("cpu")
-    # return model_class.load_from_checkpoint(policy_network_path, map_location, n_rules=n_rules,
-    #                                         vector_dim=vector_dim, batch_size=1)
-
     return model_class.load_from_checkpoint(policy_network_path, map_location, batch_size=1)
