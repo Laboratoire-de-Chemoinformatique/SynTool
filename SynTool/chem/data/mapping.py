@@ -22,7 +22,7 @@ def remove_reagents_and_map(rea: ReactionContainer, keep_reagent: bool = False) 
     """
     try:
         rea.reset_mapping() # TODO rea - is not meaningful variable name
-    except MappingError:
+    except:
         rea.reset_mapping()  # Successive reset_mapping works
     if not keep_reagent:
         try:
@@ -75,10 +75,10 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
             continue
         try:
             rea_mapped = remove_reagents_and_map(rea, keep_reagent)
-        except MappingError:
+        except: # TODO I removed MappingError because it is not always encountered
             try:
                 rea_mapped = remove_reagents_and_map(smiles(str(rea)), keep_reagent)
-            except MappingError:
+            except:
                 mapping_errors += 1
                 continue
         if rea_mapped:

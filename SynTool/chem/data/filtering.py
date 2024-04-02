@@ -786,7 +786,7 @@ def filter_reaction(reaction: ReactionContainer, config: ReactionCheckConfig, ch
     # TODO may be better check_reaction ?
     is_filtered = False
     if config.remove_small_molecules:
-        new_reaction = remove_small_molecules(reaction, number_of_atoms=config.small_molecules_max_size)
+        new_reaction = remove_small_molecules(reaction, number_of_atoms=config.small_molecules_max_size) # TODO here the reaction is changed
     else:
         new_reaction = reaction.copy()
 
@@ -860,8 +860,7 @@ def filter_reactions(
     result_reactions_file_name: str = "reaction_data_filtered.smi",
     append_results: bool = False,
     num_cpus: int = 1,
-    batch_size: int = 100,
-) -> None:
+    batch_size: int = 100) -> None:
     """
     Processes a database of chemical reactions, applying checks based on the provided configuration,
     and writes the results to specified files. All configurations are provided by the ReactionCheckConfig object.
@@ -879,10 +878,9 @@ def filter_reactions(
     checkers = config.create_checkers()
 
     ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
-    max_concurrent_batches = num_cpus  # Limit the number of concurrent batches
+    max_concurrent_batches = num_cpus  # limit the number of concurrent batches
 
-    with ReactionReader(reaction_database_path) as reactions, \
-         ReactionWriter(result_reactions_file_name, append_results) as result_file:
+    with ReactionReader(reaction_database_path) as reactions, ReactionWriter(result_reactions_file_name, append_results) as result_file:
 
         pbar = tqdm(reactions, leave=True)  # TODO fix progress bars
 

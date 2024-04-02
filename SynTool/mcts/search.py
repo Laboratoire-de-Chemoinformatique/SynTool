@@ -29,7 +29,7 @@ def extract_tree_stats(tree, target):
     newick_tree, newick_meta = tree.newickify(visits_threshold=0)
     newick_meta_line = ";".join([f"{nid},{v[0]},{v[1]},{v[2]}" for nid, v in newick_meta.items()])
     return {
-        "target_smiles": str(target.meta['init_smiles']),
+        "target_smiles": target.meta['init_smiles'],
         "tree_size": len(tree),
         "search_time": round(tree.curr_time, 1),
         "found_paths": len(tree.winning_nodes),
@@ -106,8 +106,7 @@ def tree_search(  # TODO found paths in csv and n_solved are not the same
                     reaction_rules_path=reaction_rules_path,
                     building_blocks_path=building_blocks_path,
                     policy_function=policy_function,
-                    value_function=value_function,
-                )
+                    value_function=value_function)
                 _ = list(tree)
 
             except:
