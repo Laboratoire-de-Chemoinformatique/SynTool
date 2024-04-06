@@ -1,47 +1,43 @@
-from pathlib import Path
-from os.path import splitext
-from typing import Union
+"""
+Module containing functions for reactions mapping.
+"""
+
 from tqdm import tqdm
-
+from os.path import splitext
+from pathlib import Path
 from chython import smiles, RDFRead, RDFWrite, ReactionContainer
-from chython.exceptions import MappingError, IncorrectSmiles
-
-from SynTool.utils import path_type
+from chython.exceptions import IncorrectSmiles
 
 
-def remove_reagents_and_map(rea: ReactionContainer, keep_reagent: bool = False) -> Union[ReactionContainer, None]:
+def remove_reagents_and_map(reaction: ReactionContainer, keep_reagent: bool = False) -> ReactionContainer:
     """
     Maps atoms of the reaction using chytorch.
 
-    :param rea: reaction to map
-    :type rea: ReactionContainer
-    :param keep_reagent: whenever to remove reagent or not
-    :type keep_reagent: bool
+    :param reaction: Reaction to be mapped.
+    :param keep_reagent: Whenever to remove reagent or not.
 
-    :return: ReactionContainer or None
+    :return: Mapped reaction or None.
     """
+
     try:
-        rea.reset_mapping() # TODO rea - is not meaningful variable name
+        reaction.reset_mapping()
     except:
-        rea.reset_mapping()  # Successive reset_mapping works
+        reaction.reset_mapping()  # successive reset_mapping works
     if not keep_reagent:
         try:
-            rea.remove_reagents()
+            reaction.remove_reagents()
         except:
             return None
-    return rea
+    return reaction
 
 
-def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_type, keep_reagent: bool = False) -> None:
+def remove_reagents_and_map_from_file(input_file: str, output_file: str, keep_reagent: bool = False) -> None:
     """
     Reads a file of reactions and maps atoms of the reactions using chytorch.
 
-    :param input_file: the path and name of the input file
-    :type input_file: path_type
-    :param output_file: the path and name of the output file
-    :type output_file: path_type
-    :param keep_reagent: whenever to remove reagent or not
-    :type keep_reagent: bool
+    :param input_file: The path and name of the input file.
+    :param output_file: The path and name of the output file.
+    :param keep_reagent: Whenever to remove reagent or not.
 
     :return: None
     """
@@ -52,8 +48,7 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
     elif input_ext == ".rdf":
         input_file = RDFRead(input_file, indexable=True)
     else:
-        raise ValueError("File extension not recognized. File:", input_file,
-                         "- Please use smi or rdf file")
+        raise ValueError("File extension not recognized. File:", input_file, "- Please use smi or rdf file")
     enumerator = input_file if input_ext == ".rdf" else input_file.readlines()
 
     _, out_ext = splitext(output_file)
@@ -62,27 +57,26 @@ def remove_reagents_and_map_from_file(input_file: path_type, output_file: path_t
     elif out_ext == ".rdf":
         output_file = RDFWrite(output_file)
     else:
-        raise ValueError("File extension not recognized. File:", output_file,
-                         "- Please use smi or rdf file")
+        raise ValueError("File extension not recognized. File:", output_file, "- Please use smi or rdf file")
 
     mapping_errors = 0
     parsing_errors = 0
     for rea_raw in tqdm(enumerator):
         try:
-            rea = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
+            reaction = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
         except IncorrectSmiles:
             parsing_errors += 1
             continue
         try:
-            rea_mapped = remove_reagents_and_map(rea, keep_reagent)
-        except: # TODO I removed MappingError because it is not always encountered
+            rea_mapped = remove_reagents_and_map(reaction, keep_reagent)
+        except:
             try:
-                rea_mapped = remove_reagents_and_map(smiles(str(rea)), keep_reagent)
+                rea_mapped = remove_reagents_and_map(smiles(str(reaction)), keep_reagent)
             except:
                 mapping_errors += 1
                 continue
         if rea_mapped:
-            rea_output = format(rea, "m") + "\n" if out_ext == ".smi" else rea
+            rea_output = format(reaction, "m") + "\n" if out_ext == ".smi" else reaction
             output_file.write(rea_output)
         else:
             mapping_errors += 1

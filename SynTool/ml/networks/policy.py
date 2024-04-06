@@ -1,19 +1,25 @@
-from abc import ABC
+"""
+Module containing main class for policy network.
+"""
+
 import torch
-from pytorch_lightning import LightningModule
 from torch.nn import Linear
 from torch.nn.functional import binary_cross_entropy_with_logits, cross_entropy, one_hot
 from torchmetrics.functional.classification import recall, specificity, f1_score
-
+from pytorch_lightning import LightningModule
 from SynTool.ml.networks.modules import MCTSNetwork
+from abc import ABC
+from torch import Tensor
+from torch_geometric.data.batch import Batch
+from typing import Dict
 
 
 class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
     """
-    Policy value network
+    Policy network.
     """
 
-    def __init__(self, n_rules, vector_dim, policy_type="filtering", *args, **kwargs):
+    def __init__(self, n_rules: int, vector_dim: int, policy_type: str = "filtering", *args, **kwargs):
         """
         Initializes a policy network with the given number of reaction rules (output dimension) and vector graph
         embedding dimension, and creates linear layers for predicting the regular and priority reaction rules.
@@ -26,15 +32,17 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
         self.policy_type = policy_type
         self.n_rules = n_rules
         self.y_predictor = Linear(vector_dim, n_rules)
+
         if self.policy_type == "filtering":
             self.priority_predictor = Linear(vector_dim, n_rules)
 
-    def forward(self, batch):
+    def forward(self, batch: Batch) -> Tensor:
         """
-        The forward function takes a molecular graph, applies a graph convolution and sigmoid layers to predict
+        Takes a molecular graph, applies a graph convolution and sigmoid layers to predict
         regular and priority reaction rules.
 
         :param batch: The input batch of molecular graphs.
+
         :return: Returns the vector of probabilities (given by sigmoid) of successful application of regular and
         priority reaction rules.
         """
@@ -48,12 +56,13 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
             y = torch.softmax(y, dim=-1)
             return y
 
-    def _get_loss(self, batch):
+    def _get_loss(self, batch: Batch) -> Dict[str, Tensor]:
         """
         Calculates the loss and various classification metrics for a given batch for reaction rules prediction.
 
         :param batch: The batch of molecular graphs.
-        :return: a dictionary with loss value and balanced accuracy of reaction rules prediction.
+
+        :return: A dictionary with loss value and balanced accuracy of reaction rules prediction.
         """
         true_y = batch.y_rules.long()
         x = self.embedder(batch, self.batch_size)
@@ -62,22 +71,18 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
         if self.policy_type == "ranking":
             true_one_hot = one_hot(true_y, num_classes=self.n_rules)
             loss = cross_entropy(pred_y, true_one_hot.float())
-            ba_y = (
-                           recall(pred_y, true_y, task="multiclass", num_classes=self.n_rules) +
-                           specificity(pred_y, true_y, task="multiclass", num_classes=self.n_rules)
-                   ) / 2
+            ba_y = (recall(pred_y, true_y, task="multiclass", num_classes=self.n_rules) +
+                    specificity(pred_y, true_y, task="multiclass", num_classes=self.n_rules)) / 2
             f1_y = f1_score(pred_y, true_y, task="multiclass", num_classes=self.n_rules)
-            metrics = {
-                'loss': loss,
-                'balanced_accuracy_y': ba_y,
-                'f1_score_y': f1_y
-            }
+
+            metrics = {'loss': loss, 'balanced_accuracy_y': ba_y, 'f1_score_y': f1_y}
+
         elif self.policy_type == "filtering":
             loss_y = binary_cross_entropy_with_logits(pred_y, true_y.float())
-            ba_y = (
-                           recall(pred_y, true_y, task="multilabel", num_labels=self.n_rules) +
-                           specificity(pred_y, true_y, task="multilabel", num_labels=self.n_rules)
-                   ) / 2
+
+            ba_y = (recall(pred_y, true_y, task="multilabel", num_labels=self.n_rules) +
+                    specificity(pred_y, true_y, task="multilabel", num_labels=self.n_rules)) / 2
+
             f1_y = f1_score(pred_y, true_y, task="multilabel", num_labels=self.n_rules)
 
             true_priority = batch.y_priority.float()
@@ -88,19 +93,12 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
 
             true_priority = true_priority.long()
 
-            ba_priority = (
-                                  recall(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules) +
-                                  specificity(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules)
-                          ) / 2
+            ba_priority = (recall(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules) +
+                           specificity(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules)) / 2
+
             f1_priority = f1_score(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules)
-            metrics = {
-                'loss': loss,
-                'balanced_accuracy_y': ba_y,
-                'f1_score_y': f1_y,
-                'balanced_accuracy_priority': ba_priority,
-                'f1_score_priority': f1_priority
-            }
-        else:
-            raise ValueError(f"Invalid mode: {self.policy_type}")
+
+            metrics = {'loss': loss, 'balanced_accuracy_y': ba_y, 'f1_score_y': f1_y,
+                       'balanced_accuracy_priority': ba_priority, 'f1_score_priority': f1_priority}
 
         return metrics

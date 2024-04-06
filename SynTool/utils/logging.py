@@ -1,3 +1,7 @@
+"""
+Module containing classes for muting the redundant logging from complementary packages and tools.
+"""
+
 import os
 import sys
 import logging
@@ -5,8 +9,8 @@ import logging
 
 class DisableLogger:
     """
-    This function mute redundant logging information. Adopted from
-    https://stackoverflow.com/questions/2266646/how-to-disable-logging-on-the-standard-error-stream
+    This class mute redundant logging information. Adopted from
+    https://stackoverflow.com/questions/2266646/how-to-disable-logging-on-the-standard-error-stream.
     """
 
     def __enter__(self):
@@ -18,8 +22,8 @@ class DisableLogger:
 
 class HiddenPrints:
     """
-    This function mute redundant printing information. Adopted from
-    https://stackoverflow.com/questions/8391411/how-to-block-calls-to-print
+    This class mute redundant printing information. Adopted from
+    https://stackoverflow.com/questions/8391411/how-to-block-calls-to-print.
     """
 
     def __enter__(self):

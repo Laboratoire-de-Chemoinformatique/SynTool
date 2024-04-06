@@ -1,69 +1,62 @@
 """
-Module containing functions for running tree search for the set of target molecules
+Module containing functions for running tree search for the set of target molecules.
 """
 
 import csv
 import json
 from pathlib import Path
-
 from tqdm import tqdm
-
 from SynTool.interfaces.visualisation import generate_results_html, extract_routes
 from SynTool.mcts.tree import Tree, TreeConfig
 from SynTool.mcts.evaluation import ValueFunction
 from SynTool.mcts.expansion import PolicyFunction
-from SynTool.utils import path_type
 from SynTool.utils.files import MoleculeReader
 from SynTool.utils.config import PolicyNetworkConfig
 
 
 def extract_tree_stats(tree, target):
     """
-    Collects various statistics from a tree and returns them in a dictionary format
+    Collects various statistics from a tree and returns them in a dictionary format.
 
-    :param tree: The retro tree.
-    :param target: The target molecule or compound that you want to search for in the tree. It is
-    expected to be a string representing the SMILES notation of the target molecule
-    :return: A dictionary with the calculated statistics
+    :param tree: The built search tree.
+    :param target: The target molecule associated with the tree.
+
+    :return: A dictionary with the calculated statistics.
     """
+
     newick_tree, newick_meta = tree.newickify(visits_threshold=0)
     newick_meta_line = ";".join([f"{nid},{v[0]},{v[1]},{v[2]}" for nid, v in newick_meta.items()])
-    return {
-        "target_smiles": target.meta['init_smiles'],
-        "tree_size": len(tree),
-        "search_time": round(tree.curr_time, 1),
-        "found_paths": len(tree.winning_nodes),
-        "newick_tree": newick_tree,
-        "newick_meta": newick_meta_line,
-    }
+
+    return {"target_smiles": target.meta['init_smiles'],
+            "tree_size": len(tree),
+           "search_time": round(tree.curr_time, 1),
+           "found_paths": len(tree.winning_nodes),
+           "newick_tree": newick_tree,
+           "newick_meta": newick_meta_line}
 
 
-def tree_search(  # TODO found paths in csv and n_solved are not the same
-        targets_path: path_type,
+def tree_search(
+        targets_path: str,
         tree_config: TreeConfig,
         policy_config: PolicyNetworkConfig,
-        reaction_rules_path: path_type,
-        building_blocks_path: path_type,
-        policy_weights_path: path_type = None,  # TODO not used
-        value_weights_path: path_type = None,
-        results_root: path_type = "search_results"
-):
+        reaction_rules_path: str,
+        building_blocks_path: str,
+        value_weights_path: str = None,
+        results_root: str = "search_results") -> None:
+
     """
-    Performs a tree search on a set of target molecules using specified configuration and rules,
+    Performs a tree search on a set of target molecules using specified configuration and reaction rules,
     logging the results and statistics.
 
+    :param targets_path: The path to the file containing the target molecules (in SDF or SMILES format).
     :param tree_config: The config object containing the configuration for the tree search.
     :param policy_config: The config object containing the configuration for the policy.
     :param reaction_rules_path: The path to the file containing reaction rules.
     :param building_blocks_path: The path to the file containing building blocks.
-    :param targets_path: The path to the file containing the target molecules (in SDF or SMILES format).
     :param value_weights_path: The path to the file containing value weights (optional).
-    :param results_root: The path to the directory where the results of the tree search will be saved. Defaults to 'search_results/'.
-    :param retropaths_files_name: The base name for the files that will be generated to store the retro paths. Defaults to 'retropath'. #TODO arg dont exist
+    :param results_root: The name of the folder where the results of the tree search will be saved.
 
-    This function configures and executes a tree search algorithm, leveraging reaction rules and building blocks
-    to find synthetic pathways for given target molecules. The results, including paths and statistics, are
-    saved in the specified directory. Logging is used to record the process and any issues encountered.
+    :return: None.
     """
 
     targets_file = Path(targets_path)
@@ -107,6 +100,7 @@ def tree_search(  # TODO found paths in csv and n_solved are not the same
                     building_blocks_path=building_blocks_path,
                     policy_function=policy_function,
                     value_function=value_function)
+
                 _ = list(tree)
 
             except:

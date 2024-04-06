@@ -1,18 +1,19 @@
-import logging
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterable, Tuple, Dict, Any, Optional
-from tqdm.auto import tqdm
+"""
+Module containing classes abd functions for reactions filtering.
+"""
 
-import numpy as np
 import ray
 import yaml
+import logging
+import numpy as np
+from dataclasses import dataclass
+from tqdm.auto import tqdm
 from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContainer
 from StructureFingerprint import MorganFingerprint
-
 from SynTool.utils.files import ReactionReader, ReactionWriter
 from SynTool.chem.utils import remove_small_molecules, rebalance_reaction, remove_reagents
 from SynTool.utils.config import ConfigABC, convert_config_to_dict
+from typing import Iterable, Tuple, Dict, Any, Optional, List
 
 
 @dataclass
@@ -21,52 +22,45 @@ class CompeteProductsConfig(ConfigABC):
     mcs_tanimoto_threshold: float = 0.6
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
+    def from_dict(config_dict: Dict[str, Any]) -> "CompeteProductsConfig":
         """Create an instance of CompeteProductsConfig from a dictionary."""
         return CompeteProductsConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str):
+    def from_yaml(file_path: str) -> "CompeteProductsConfig":
         """Deserialize a YAML file into a CompeteProductsConfig object."""
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
         return CompeteProductsConfig.from_dict(config_dict)
 
-    def _validate_params(self, params: Dict[str, Any]):
+    def _validate_params(self, params: Dict[str, Any]) -> None:
         """Validate configuration parameters."""
-        if not isinstance(params.get("fingerprint_tanimoto_threshold"), float) \
-                or not (0 <= params["fingerprint_tanimoto_threshold"] <= 1):
+        if not isinstance(params.get("fingerprint_tanimoto_threshold"), float) or not (0 <= params["fingerprint_tanimoto_threshold"] <= 1):
             raise ValueError("Invalid 'fingerprint_tanimoto_threshold'; expected a float between 0 and 1")
 
-        if not isinstance(params.get("mcs_tanimoto_threshold"), float) \
-                or not (0 <= params["mcs_tanimoto_threshold"] <= 1):
+        if not isinstance(params.get("mcs_tanimoto_threshold"), float) or not (0 <= params["mcs_tanimoto_threshold"] <= 1):
             raise ValueError("Invalid 'mcs_tanimoto_threshold'; expected a float between 0 and 1")
 
 
 class CompeteProductsChecker:
     """Checks if there are compete reactions."""
 
-    def __init__(
-        self,
-        fingerprint_tanimoto_threshold: float = 0.3,
-        mcs_tanimoto_threshold: float = 0.6,
-    ):
+    def __init__(self, fingerprint_tanimoto_threshold: float = 0.3, mcs_tanimoto_threshold: float = 0.6):
         self.fingerprint_tanimoto_threshold = fingerprint_tanimoto_threshold
         self.mcs_tanimoto_threshold = mcs_tanimoto_threshold
 
     @staticmethod
-    def from_config(config: CompeteProductsConfig):
+    def from_config(config: CompeteProductsConfig) -> "CompeteProductsChecker":
         """Creates an instance of CompeteProductsChecker from a configuration object."""
-        return CompeteProductsChecker(
-            config.fingerprint_tanimoto_threshold, config.mcs_tanimoto_threshold
-        )
+        return CompeteProductsChecker(config.fingerprint_tanimoto_threshold, config.mcs_tanimoto_threshold)
 
     def __call__(self, reaction: ReactionContainer) -> bool:
         """
-        Returns True if the reaction has competing products, else False
+        Checks if the reaction has competing products, else False.
 
-        :param reaction: input reaction
-        :return: True or False
+        :param reaction: Input reaction.
+
+        :return: Returns True if the reaction has competing products, else False.
         """
         mf = MorganFingerprint()
         is_compete = False
@@ -105,26 +99,23 @@ class DynamicBondsConfig(ConfigABC):
     max_bonds_number: int = 6
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
+    def from_dict(config_dict: Dict[str, Any]) -> "DynamicBondsConfig":
         """Create an instance of DynamicBondsConfig from a dictionary."""
         return DynamicBondsConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str):
+    def from_yaml(file_path: str) -> "DynamicBondsConfig":
         """Deserialize a YAML file into a DynamicBondsConfig object."""
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
         return DynamicBondsConfig.from_dict(config_dict)
 
-    def _validate_params(self, params: Dict[str, Any]):
+    def _validate_params(self, params: Dict[str, Any]) -> None:
         """Validate configuration parameters."""
-        if not isinstance(params.get("min_bonds_number"), int) \
-                or params["min_bonds_number"] < 0:
-            raise ValueError(
-                "Invalid 'min_bonds_number'; expected a non-negative integer")
+        if not isinstance(params.get("min_bonds_number"), int) or params["min_bonds_number"] < 0:
+            raise ValueError("Invalid 'min_bonds_number'; expected a non-negative integer")
 
-        if not isinstance(params.get("max_bonds_number"), int) \
-                or params["max_bonds_number"] < 0:
+        if not isinstance(params.get("max_bonds_number"), int) or params["max_bonds_number"] < 0:
             raise ValueError("Invalid 'max_bonds_number'; expected a non-negative integer")
 
         if params["min_bonds_number"] > params["max_bonds_number"]:
@@ -153,18 +144,18 @@ class SmallMoleculesConfig(ConfigABC):
     limit: int = 6
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
-        """Create an instance of SmallMoleculesConfig from a dictionary."""
+    def from_dict(config_dict: Dict[str, Any]) -> "SmallMoleculesConfig":
+        """Creates an instance of SmallMoleculesConfig from a dictionary."""
         return SmallMoleculesConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str):
+    def from_yaml(file_path: str) -> "SmallMoleculesConfig":
         """Deserialize a YAML file into a SmallMoleculesConfig object."""
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
         return SmallMoleculesConfig.from_dict(config_dict)
 
-    def _validate_params(self, params: Dict[str, Any]):
+    def _validate_params(self, params: Dict[str, Any]) -> None:
         """Validate configuration parameters."""
         if not isinstance(params.get("limit"), int) or params["limit"] < 1:
             raise ValueError("Invalid 'limit'; expected a positive integer")
@@ -177,7 +168,7 @@ class SmallMoleculesChecker:
         self.limit = limit
 
     @staticmethod
-    def from_config(config: SmallMoleculesConfig):
+    def from_config(config: SmallMoleculesConfig) -> "SmallMoleculesChecker":
         """Creates an instance of SmallMoleculesChecker from a configuration object."""
         return SmallMoleculesChecker(config.limit)
 
@@ -199,10 +190,10 @@ class CGRConnectedComponentsConfig:
 
 
 class CGRConnectedComponentsChecker:
-    """Allows to check if CGR contains unrelated components (without reagents)."""
+    """Checks if CGR contains unrelated components (without reagents)."""
 
     @staticmethod
-    def from_config(config: CGRConnectedComponentsConfig):  # TODO config class not used
+    def from_config(config: CGRConnectedComponentsConfig) -> "CGRConnectedComponentsChecker":  # TODO config class not used
         """Creates an instance of CGRConnectedComponentsChecker from a configuration object."""
         return CGRConnectedComponentsChecker()
 
@@ -218,10 +209,10 @@ class RingsChangeConfig:
 
 
 class RingsChangeChecker:
-    """Allows to check if there is changing rings number in the reaction."""
+    """Checks if there is changing rings number in the reaction."""
 
     @staticmethod
-    def from_config(config: RingsChangeConfig):  # TODO config class not used
+    def from_config(config: RingsChangeConfig) -> "RingsChangeChecker":  # TODO config class not used
         """Creates an instance of RingsChecker from a configuration object."""
         return RingsChangeChecker()
 
@@ -230,8 +221,9 @@ class RingsChangeChecker:
         Returns True if there are valence mistakes in the reaction or there is a reaction with mismatch numbers of all
         rings or aromatic rings in reactants and products (reaction in rings)
 
-        :param reaction: input reaction
-        :return: True or False
+        :param reaction: Input reaction.
+
+        :return:  Returns True if there are valence mistakes in the reaction.
         """
 
         reaction.kekule()
@@ -246,10 +238,11 @@ class RingsChangeChecker:
     @staticmethod
     def _calc_rings(molecules: Iterable) -> Tuple[int, int]:
         """
-        Calculates number of all rings and number of aromatic rings in molecules
+        Calculates number of all rings and number of aromatic rings in molecules.
 
-        :param molecules: set of molecules
-        :return: number of all rings and number of aromatic rings in molecules
+        :param molecules: Set of molecules.
+
+        :return: Number of all rings and number of aromatic rings in molecules
         """
         rings, arom_rings = 0, 0
         for mol in molecules:
@@ -268,7 +261,7 @@ class StrangeCarbonsChecker:
     """Checks if there are 'strange' carbons in the reaction."""
 
     @staticmethod
-    def from_config(config: StrangeCarbonsConfig):  # TODO config class not used
+    def from_config(config: StrangeCarbonsConfig) -> "StrangeCarbonsChecker":  # TODO config class not used
         """Creates an instance of StrangeCarbonsChecker from a configuration object."""
         return StrangeCarbonsChecker()
 
@@ -294,7 +287,7 @@ class NoReactionChecker:
     """Checks if there is no reaction in the provided reaction container."""
 
     @staticmethod
-    def from_config(config: NoReactionConfig):  # TODO config class not used
+    def from_config(config: NoReactionConfig) -> "NoReactionChecker":  # TODO config class not used
         """Creates an instance of NoReactionChecker from a configuration object."""
         return NoReactionChecker()
 
@@ -312,7 +305,7 @@ class MultiCenterChecker:
     """Checks if there is a multicenter reaction."""
 
     @staticmethod
-    def from_config(config: MultiCenterConfig):  # TODO config class not used
+    def from_config(config: MultiCenterConfig) -> "MultiCenterChecker":  # TODO config class not used
         return MultiCenterChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -329,7 +322,7 @@ class WrongCHBreakingChecker:
     """Checks for incorrect C-C bond formation from breaking a C-H bond."""
 
     @staticmethod
-    def from_config(config: WrongCHBreakingConfig):  # TODO config class not used
+    def from_config(config: WrongCHBreakingConfig) -> "WrongCHBreakingChecker":  # TODO config class not used
         return WrongCHBreakingChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -337,6 +330,7 @@ class WrongCHBreakingChecker:
         Determines if a reaction involves incorrect C-C bond formation from breaking a C-H bond.
 
         :param reaction: The reaction to be checked.
+
         :return: True if incorrect C-C bond formation is found, False otherwise.
         """
 
@@ -356,7 +350,9 @@ class WrongCHBreakingChecker:
     def is_wrong_c_h_breaking(cgr: CGRContainer) -> bool:
         """
         Checks for incorrect C-C bond formation from breaking a C-H bond in a CGR.
+
         :param cgr: The CGR with explicified hydrogens.
+
         :return: True if incorrect C-C bond formation is found, False otherwise.
         """
         for atom_id in cgr.center_atoms:
@@ -367,31 +363,18 @@ class WrongCHBreakingChecker:
                 for neighbour_id, bond in cgr._bonds[atom_id].items():
                     neighbour = cgr.atom(neighbour_id)
 
-                    if (
-                        bond.order
-                        and not bond.p_order
-                        and neighbour.atomic_symbol == "H"
-                    ):
+                    if bond.order and not bond.p_order and neighbour.atomic_symbol == "H":
                         is_c_h_breaking = True
                         c_with_h_id = atom_id
 
-                    elif (
-                        not bond.order
-                        and bond.p_order
-                        and neighbour.atomic_symbol == "C"
-                    ):
+                    elif not bond.order and bond.p_order and neighbour.atomic_symbol == "C":
                         is_c_c_formation = True
                         another_c_id = neighbour_id
 
                 if is_c_h_breaking and is_c_c_formation:
                     # Check for presence of heteroatoms in the first environment of 2 bonding carbons
-                    if any(
-                        cgr.atom(neighbour_id).atomic_symbol not in ("C", "H")
-                        for neighbour_id in cgr._bonds[c_with_h_id]
-                    ) or any(
-                        cgr.atom(neighbour_id).atomic_symbol not in ("C", "H")
-                        for neighbour_id in cgr._bonds[another_c_id]
-                    ):
+                    if any(cgr.atom(neighbour_id).atomic_symbol not in ("C", "H") for neighbour_id in cgr._bonds[c_with_h_id]
+                    ) or any(cgr.atom(neighbour_id).atomic_symbol not in ("C", "H") for neighbour_id in cgr._bonds[another_c_id]):
                         return False
                     return True
 
@@ -407,15 +390,16 @@ class CCsp3BreakingChecker:
     """Checks if there is C(sp3)-C bond breaking."""
 
     @staticmethod
-    def from_config(config: CCsp3BreakingConfig):  # TODO config class not used
+    def from_config(config: CCsp3BreakingConfig) -> "CCsp3BreakingChecker":  # TODO config class not used
         return CCsp3BreakingChecker()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
         """
-        Returns True if there is C(sp3)-C bonds breaking, else False
+        Returns True if there is C(sp3)-C bonds breaking, else False.
 
-        :param reaction: input reaction
-        :return: True or False
+        :param reaction: Input reaction
+
+        :return: Returns True if there is C(sp3)-C bonds breaking, else False.
         """
         cgr = ~reaction
         reaction_center = cgr.augmented_substructure(cgr.center_atoms, deep=1)
@@ -448,10 +432,11 @@ class CCRingBreakingChecker:
 
     def __call__(self, reaction: ReactionContainer) -> bool:
         """
-        Returns True if the reaction involves ring C-C bond breaking, else False
+        Returns True if the reaction involves ring C-C bond breaking, else False.
 
-        :param reaction: input reaction
-        :return: True or False
+        :param reaction: Input reaction
+
+        :return: Returns True if the reaction involves ring C-C bond breaking, else False.
         """
         cgr = ~reaction
 
@@ -500,23 +485,21 @@ class CCRingBreakingChecker:
 @dataclass
 class ReactionCheckConfig(ConfigABC):
     """
-    Configuration class for reaction checks, inheriting from ConfigABC.
-
-    This class manages configuration settings for various reaction checkers, including paths, file formats,
+    Configuration class for reaction filtering.
+    This class manages configuration settings for various reaction checkers/filters, including paths, file formats,
     and checker-specific parameters.
 
-    Attributes:
-        dynamic_bonds_config: Configuration for dynamic bonds checking.
-        small_molecules_config: Configuration for small molecules checking.
-        strange_carbons_config: Configuration for strange carbons checking.
-        compete_products_config: Configuration for competing products checking.
-        cgr_connected_components_config: Configuration for CGR connected components checking.
-        rings_change_config: Configuration for rings change checking.
-        no_reaction_config: Configuration for no reaction checking.
-        multi_center_config: Configuration for multi-center checking.
-        wrong_ch_breaking_config: Configuration for wrong C-H breaking checking.
-        cc_sp3_breaking_config: Configuration for CC sp3 breaking checking.
-        cc_ring_breaking_config: Configuration for CC ring breaking checking.
+    :attribute dynamic_bonds_config: Configuration for dynamic bonds checking.
+    :attribute small_molecules_config: Configuration for small molecules checking.
+    :attribute strange_carbons_config: Configuration for strange carbons checking.
+    :attribute compete_products_config: Configuration for competing products checking.
+    :attribute cgr_connected_components_config: Configuration for CGR connected components checking.
+    :attribute rings_change_config: Configuration for rings change checking.
+    :attribute no_reaction_config: Configuration for no reaction checking.
+    :attribute multi_center_config: Configuration for multi-center checking.
+    :attribute wrong_ch_breaking_config: Configuration for wrong C-H breaking checking.
+    :attribute cc_sp3_breaking_config: Configuration for CC sp3 breaking checking.
+    :attribute cc_ring_breaking_config: Configuration for CC ring breaking checking.
     """
 
     # Configuration for reaction checkers
@@ -544,105 +527,65 @@ class ReactionCheckConfig(ConfigABC):
         Converts the configuration into a dictionary.
         """
         config_dict = {
-            "dynamic_bonds_config": convert_config_to_dict(
-                self.dynamic_bonds_config, DynamicBondsConfig
-            ),
-            "small_molecules_config": convert_config_to_dict(
-                self.small_molecules_config, SmallMoleculesConfig
-            ),
-            "compete_products_config": convert_config_to_dict(
-                self.compete_products_config, CompeteProductsConfig
-            ),
-            "cgr_connected_components_config": {}
-            if self.cgr_connected_components_config is not None
-            else None,
+            "dynamic_bonds_config": convert_config_to_dict(self.dynamic_bonds_config, DynamicBondsConfig),
+            "small_molecules_config": convert_config_to_dict(self.small_molecules_config, SmallMoleculesConfig),
+            "compete_products_config": convert_config_to_dict(self.compete_products_config, CompeteProductsConfig),
+            "cgr_connected_components_config": {} if self.cgr_connected_components_config is not None else None,
             "rings_change_config": {} if self.rings_change_config is not None else None,
-            "strange_carbons_config": {}
-            if self.strange_carbons_config is not None
-            else None,
+            "strange_carbons_config": {} if self.strange_carbons_config is not None else None,
             "no_reaction_config": {} if self.no_reaction_config is not None else None,
             "multi_center_config": {} if self.multi_center_config is not None else None,
-            "wrong_ch_breaking_config": {}
-            if self.wrong_ch_breaking_config is not None
-            else None,
-            "cc_sp3_breaking_config": {}
-            if self.cc_sp3_breaking_config is not None
-            else None,
-            "cc_ring_breaking_config": {}
-            if self.cc_ring_breaking_config is not None
-            else None,
+            "wrong_ch_breaking_config": {} if self.wrong_ch_breaking_config is not None else None,
+            "cc_sp3_breaking_config": {} if self.cc_sp3_breaking_config is not None else None,
+            "cc_ring_breaking_config": {} if self.cc_ring_breaking_config is not None else None,
             "rebalance_reaction": self.rebalance_reaction,
             "remove_reagents": self.remove_reagents,
             "reagents_max_size": self.reagents_max_size,
             "remove_small_molecules": self.remove_small_molecules,
-            "small_molecules_max_size": self.small_molecules_max_size,
-        }
+            "small_molecules_max_size": self.small_molecules_max_size}
 
         filtered_config_dict = {k: v for k, v in config_dict.items() if v is not None}
 
         return filtered_config_dict
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
+    def from_dict(config_dict: Dict[str, Any]) -> "ReactionCheckConfig":
         """
         Create an instance of ReactionCheckConfig from a dictionary.
         """
         # Instantiate configuration objects if their corresponding dictionary is present
-        dynamic_bonds_config = (
-            DynamicBondsConfig(**config_dict["dynamic_bonds_config"])
-            if "dynamic_bonds_config" in config_dict
-            else None
-        )
-        small_molecules_config = (
-            SmallMoleculesConfig(**config_dict["small_molecules_config"])
-            if "small_molecules_config" in config_dict
-            else None
-        )
-        compete_products_config = (
-            CompeteProductsConfig(**config_dict["compete_products_config"])
-            if "compete_products_config" in config_dict
-            else None
-        )
-        cgr_connected_components_config = (
-            CGRConnectedComponentsConfig()
-            if "cgr_connected_components_config" in config_dict
-            else None
-        )
-        rings_change_config = (
-            RingsChangeConfig()
-            if "rings_change_config" in config_dict
-            else None
-        )
-        strange_carbons_config = (
-            StrangeCarbonsConfig()
-            if "strange_carbons_config" in config_dict
-            else None
-        )
-        no_reaction_config = (
-            NoReactionConfig()
-            if "no_reaction_config" in config_dict
-            else None
-        )
-        multi_center_config = (
-            MultiCenterConfig()
-            if "multi_center_config" in config_dict
-            else None
-        )
-        wrong_ch_breaking_config = (
-            WrongCHBreakingConfig()
-            if "wrong_ch_breaking_config" in config_dict
-            else None
-        )
-        cc_sp3_breaking_config = (
-            CCsp3BreakingConfig()
-            if "cc_sp3_breaking_config" in config_dict
-            else None
-        )
-        cc_ring_breaking_config = (
-            CCRingBreakingConfig()
-            if "cc_ring_breaking_config" in config_dict
-            else None
-        )
+        dynamic_bonds_config = (DynamicBondsConfig(**config_dict["dynamic_bonds_config"])
+                                if "dynamic_bonds_config" in config_dict else None)
+
+        small_molecules_config = (SmallMoleculesConfig(**config_dict["small_molecules_config"])
+            if "small_molecules_config" in config_dict else None)
+
+        compete_products_config = (CompeteProductsConfig(**config_dict["compete_products_config"])
+            if "compete_products_config" in config_dict else None)
+
+        cgr_connected_components_config = (CGRConnectedComponentsConfig()
+            if "cgr_connected_components_config" in config_dict else None)
+
+        rings_change_config = (RingsChangeConfig()
+            if "rings_change_config" in config_dict else None)
+
+        strange_carbons_config = (StrangeCarbonsConfig()
+            if "strange_carbons_config" in config_dict else None)
+
+        no_reaction_config = (NoReactionConfig()
+            if "no_reaction_config" in config_dict else None)
+
+        multi_center_config = (MultiCenterConfig()
+            if "multi_center_config" in config_dict else None)
+
+        wrong_ch_breaking_config = (WrongCHBreakingConfig()
+            if "wrong_ch_breaking_config" in config_dict else None)
+
+        cc_sp3_breaking_config = (CCsp3BreakingConfig()
+            if "cc_sp3_breaking_config" in config_dict else None)
+
+        cc_ring_breaking_config = (CCRingBreakingConfig()
+            if "cc_ring_breaking_config" in config_dict else None)
 
         # Extract other simple configuration parameters
         rebalance_reaction = config_dict.get("rebalance_reaction", False)
@@ -651,27 +594,25 @@ class ReactionCheckConfig(ConfigABC):
         remove_small_molecules = config_dict.get("remove_small_molecules", False)
         small_molecules_max_size = config_dict.get("small_molecules_max_size", 6)
 
-        return ReactionCheckConfig(
-            dynamic_bonds_config=dynamic_bonds_config,
-            small_molecules_config=small_molecules_config,
-            compete_products_config=compete_products_config,
-            cgr_connected_components_config=cgr_connected_components_config,
-            rings_change_config=rings_change_config,
-            strange_carbons_config=strange_carbons_config,
-            no_reaction_config=no_reaction_config,
-            multi_center_config=multi_center_config,
-            wrong_ch_breaking_config=wrong_ch_breaking_config,
-            cc_sp3_breaking_config=cc_sp3_breaking_config,
-            cc_ring_breaking_config=cc_ring_breaking_config,
-            rebalance_reaction=rebalance_reaction,
-            remove_reagents=remove_reagents,
-            reagents_max_size=reagents_max_size,
-            remove_small_molecules=remove_small_molecules,
-            small_molecules_max_size=small_molecules_max_size,
-        )
+        return ReactionCheckConfig(dynamic_bonds_config=dynamic_bonds_config,
+                                   small_molecules_config=small_molecules_config,
+                                   compete_products_config=compete_products_config,
+                                   cgr_connected_components_config=cgr_connected_components_config,
+                                   rings_change_config=rings_change_config,
+                                   strange_carbons_config=strange_carbons_config,
+                                   no_reaction_config=no_reaction_config,
+                                   multi_center_config=multi_center_config,
+                                   wrong_ch_breaking_config=wrong_ch_breaking_config,
+                                   cc_sp3_breaking_config=cc_sp3_breaking_config,
+                                   cc_ring_breaking_config=cc_ring_breaking_config,
+                                   rebalance_reaction=rebalance_reaction,
+                                   remove_reagents=remove_reagents,
+                                   reagents_max_size=reagents_max_size,
+                                   remove_small_molecules=remove_small_molecules,
+                                   small_molecules_max_size=small_molecules_max_size)
 
     @staticmethod
-    def from_yaml(file_path):
+    def from_yaml(file_path: str) -> "ReactionCheckConfig":
         """
         Deserializes a YAML file into a ReactionCheckConfig object.
         """
@@ -699,74 +640,50 @@ class ReactionCheckConfig(ConfigABC):
         checker_instances = []
 
         if self.dynamic_bonds_config is not None:
-            checker_instances.append(
-                DynamicBondsChecker.from_config(self.dynamic_bonds_config)
-            )
+            checker_instances.append(DynamicBondsChecker.from_config(self.dynamic_bonds_config))
 
         if self.small_molecules_config is not None:
-            checker_instances.append(
-                SmallMoleculesChecker.from_config(self.small_molecules_config)
-            )
+            checker_instances.append(SmallMoleculesChecker.from_config(self.small_molecules_config))
 
         if self.strange_carbons_config is not None:
-            checker_instances.append(
-                StrangeCarbonsChecker.from_config(self.strange_carbons_config)
-            )
+            checker_instances.append(StrangeCarbonsChecker.from_config(self.strange_carbons_config))
 
         if self.compete_products_config is not None:
-            checker_instances.append(
-                CompeteProductsChecker.from_config(self.compete_products_config)
-            )
+            checker_instances.append(CompeteProductsChecker.from_config(self.compete_products_config))
 
         if self.cgr_connected_components_config is not None:
-            checker_instances.append(
-                CGRConnectedComponentsChecker.from_config(
-                    self.cgr_connected_components_config
-                )
-            )
+            checker_instances.append(CGRConnectedComponentsChecker.from_config(self.cgr_connected_components_config))
 
         if self.rings_change_config is not None:
-            checker_instances.append(
-                RingsChangeChecker.from_config(self.rings_change_config)
-            )
+            checker_instances.append(RingsChangeChecker.from_config(self.rings_change_config))
 
         if self.no_reaction_config is not None:
-            checker_instances.append(
-                NoReactionChecker.from_config(self.no_reaction_config)
-            )
+            checker_instances.append(NoReactionChecker.from_config(self.no_reaction_config))
 
         if self.multi_center_config is not None:
-            checker_instances.append(
-                MultiCenterChecker.from_config(self.multi_center_config)
-            )
+            checker_instances.append(MultiCenterChecker.from_config(self.multi_center_config))
 
         if self.wrong_ch_breaking_config is not None:
-            checker_instances.append(
-                WrongCHBreakingChecker.from_config(self.wrong_ch_breaking_config)
-            )
+            checker_instances.append(WrongCHBreakingChecker.from_config(self.wrong_ch_breaking_config))
 
         if self.cc_sp3_breaking_config is not None:
-            checker_instances.append(
-                CCsp3BreakingChecker.from_config(self.cc_sp3_breaking_config)
-            )
+            checker_instances.append(CCsp3BreakingChecker.from_config(self.cc_sp3_breaking_config))
 
         if self.cc_ring_breaking_config is not None:
-            checker_instances.append(
-                CCRingBreakingChecker.from_config(self.cc_ring_breaking_config)
-            )
+            checker_instances.append(CCRingBreakingChecker.from_config(self.cc_ring_breaking_config))
 
         return checker_instances
 
 
-def tanimoto_kernel(x, y):
+def tanimoto_kernel(x: MorganFingerprint, y: MorganFingerprint) -> float:
     """
     Calculate the Tanimoto coefficient between each element of arrays x and y.
     """
     x = x.astype(np.float64)
     y = y.astype(np.float64)
     x_dot = np.dot(x, y.T)
-    x2 = np.sum(x**2, axis=1)
-    y2 = np.sum(y**2, axis=1)
+    x2 = np.sum(x ** 2, axis=1)
+    y2 = np.sum(y ** 2, axis=1)
 
     denominator = np.array([x2] * len(y2)).T + np.array([y2] * len(x2)) - x_dot
     result = np.divide(x_dot, denominator, out=np.zeros_like(x_dot), where=denominator != 0)
@@ -774,15 +691,19 @@ def tanimoto_kernel(x, y):
     return result
 
 
-def remove_file_if_exists(directory: Path, file_names):  # TODO not used
-    for file_name in file_names:
-        file_path = directory / file_name
-        if file_path.is_file():
-            file_path.unlink()
-            logging.warning(f"Removed {file_path}")
+def filter_reaction(reaction: ReactionContainer,
+                    config: ReactionCheckConfig, checkers: list) -> Tuple[bool, ReactionContainer]:
+    """
+    Checks the input reaction. Returns True if reaction is detected as erroneous and returns reaction itself,
+    which sometimes is modified and does not necessarily correspond to the initial reaction.
 
+    :param reaction: Reaction to be checked.
+    :param config: Reaction filtration configuration.
+    :param checkers: The list of reaction filters/checkers.
 
-def filter_reaction(reaction: ReactionContainer, config: ReactionCheckConfig, checkers: list):
+    :return: False and reaction if reaction is correct and True and reaction if reaction is filtered (erronous).
+    """
+
     # TODO may be better check_reaction ?
     is_filtered = False
     if config.remove_small_molecules:
@@ -794,11 +715,7 @@ def filter_reaction(reaction: ReactionContainer, config: ReactionCheckConfig, ch
         is_filtered = True
 
     if config.remove_reagents and not is_filtered:
-        new_reaction = remove_reagents(
-            new_reaction,
-            keep_reagents=True,
-            reagents_max_size=config.reagents_max_size,
-        )
+        new_reaction = remove_reagents(new_reaction, keep_reagents=True, reagents_max_size=config.reagents_max_size)
 
     if new_reaction is None:
         is_filtered = True
@@ -823,7 +740,21 @@ def filter_reaction(reaction: ReactionContainer, config: ReactionCheckConfig, ch
 
 
 @ray.remote
-def process_batch(batch, config: ReactionCheckConfig, checkers):
+def process_batch(batch: List[Tuple[int, ReactionContainer]],
+                  config: ReactionCheckConfig, checkers: list) -> List[Tuple[int, bool, ReactionContainer]]:
+    """
+    Processes a batch of reactions to extract reaction rules based on the given configuration.
+    This function operates as a remote task in a distributed system using Ray.
+
+    :param batch: A list where each element is a tuple containing an index (int) and a ReactionContainer object.
+    The index is typically used to keep track of the reaction's position in a larger dataset.
+    :param config: Reaction filtration configuration.
+    :param checkers: The list of reaction filters/checkers.
+
+    :return: The list of tuples where each tuple include the reaction index, is ir filtered or not (True/False)
+    and reaction itself.
+    """
+
     results = []
     for index, reaction in batch:
         try: # TODO CGRtools.exceptions.MappingError: atoms with number {52} not equal
@@ -834,12 +765,25 @@ def process_batch(batch, config: ReactionCheckConfig, checkers):
     return results
 
 
-def process_completed_batches(futures, result_file, pbar, treated: int = 0, passed_filters: int = 0):
+def process_completed_batches(futures: Dict, result_file: str, pbar: tqdm,
+                              treated: int = 0, passed_filters: int = 0) -> Tuple[int, int]:
+
+    """
+    Processes completed batches of reactions.
+
+    :param futures: A dictionary of futures representing ongoing batch processing tasks.
+    :param result_file: The path to the file where filtered reactions will be stored.
+    :param treated: The number of processed reactions.
+    :param passed_filters: The number of reactions passed all filters (correct reactions).
+
+    :return: The numbers of checked and correct reactions.
+    """
+
     done, _ = ray.wait(list(futures.keys()), num_returns=1)
     completed_batch = ray.get(done[0])
 
     # Write results of the completed batch to file
-    now_treated = 0
+    now_treated = 0 # TODO treated - is not very meaningful variable name
     for index, is_filtered, reaction in completed_batch:
         now_treated += 1
         if not is_filtered:
@@ -854,25 +798,24 @@ def process_completed_batches(futures, result_file, pbar, treated: int = 0, pass
     return treated, passed_filters
 
 
-def filter_reactions(
-    config: ReactionCheckConfig,
-    reaction_database_path: str,
-    result_reactions_file_name: str = "reaction_data_filtered.smi",
-    append_results: bool = False,
-    num_cpus: int = 1,
-    batch_size: int = 100) -> None:
-    """
-    Processes a database of chemical reactions, applying checks based on the provided configuration,
-    and writes the results to specified files. All configurations are provided by the ReactionCheckConfig object.
+def filter_reactions(config: ReactionCheckConfig,
+                     reaction_database_path: str,
+                     result_reactions_file_name: str = "reaction_data_filtered.smi",
+                     append_results: bool = False,
+                     num_cpus: int = 1,
+                     batch_size: int = 100) -> None:
 
-    :param config: ReactionCheckConfig object containing all configuration settings.
-    :param reaction_database_path: Path to the reaction database file.
-    :param result_reactions_file_name: Name for the file containing cleaned reactions.
+    """
+    Processes reaction data, applying reaction filters based on the provided configuration, and writes the results
+    to specified files.
+
+    :param config: ReactionCheckConfig object containing all filtration configuration settings.
+    :param reaction_database_path: Path to the reaction data file.
+    :param result_reactions_file_name: Name for the file that will contain filtered reactions.
     :param append_results: Flag indicating whether to append results to existing files.
     :param num_cpus: Number of CPUs to use for processing.
     :param batch_size: Size of the batch for processing reactions.
-    :return: None. The function writes the processed reactions to specified RDF and pickle files.
-             Unique reactions are written if save_only_unique is True.
+    :return: None. The function writes the processed reactions to specified RDF/smi files.
     """
 
     checkers = config.create_checkers()

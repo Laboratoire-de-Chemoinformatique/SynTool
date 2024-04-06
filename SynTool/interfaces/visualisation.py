@@ -1,27 +1,34 @@
 """
-Module containing functions for analysis and visualization of the built search tree
+Module containing functions for analysis and visualization of the built tree.
 """
 
 from itertools import count, islice
+from CGRtools.containers.molecule import MoleculeContainer
+from SynTool.mcts.tree import Tree
+from typing import Dict, List, Any
 
-from CGRtools.containers import MoleculeContainer
+def get_child_nodes(tree: Tree, molecule: MoleculeContainer,
+                    graph: Dict[MoleculeContainer, List[MoleculeContainer]]) -> Dict[str, Any]:
+    """
+    Extracts the child nodes of the given molecule.
 
-from SynTool import Tree
-from SynTool.utils import path_type
+    :param tree: The built tree.
+    :param molecule:  # TODO
+    :param graph: # TODO
 
+    :return: The dict with extracted child nodes.
+    """
 
-def get_child_nodes(tree, molecule, graph):
     nodes = []
     try:
         graph[molecule]
     except KeyError:
         return []
     for retron in graph[molecule]:
-        temp_obj = {
-            "smiles": str(retron),
-            "type": "mol",
-            "in_stock": str(retron) in tree.building_blocks,
-        }
+        temp_obj = {"smiles": str(retron),
+                    "type": "mol",
+                    "in_stock": str(retron) in tree.building_blocks,
+                    }
         node = get_child_nodes(tree, retron, graph)
         if node:
             temp_obj["children"] = [node]
@@ -29,13 +36,16 @@ def get_child_nodes(tree, molecule, graph):
     return {"type": "reaction", "children": nodes}
 
 
-def extract_routes(tree, extended=False):
+def extract_routes(tree: Tree, extended: bool = False) -> List[Dict[str, Any]]: # TODO extended for what - finish docstring
     """
-    The function takes the target and the dictionary of
-    successors and predecessors and returns a list of dictionaries that contain the target
-    and the list of successors
-    :return: A list of dictionaries. Each dictionary contains a target, a list of children, and a
-    boolean indicating whether the target is in building_blocks.
+    Takes the target and the dictionary of successors and predecessors and returns a list of dictionaries
+    that contain the target and the list of successors.
+
+    :param tree: The built tree.
+    :param extended:
+
+    :return: A list of dictionaries. Each dictionary contains a target, a list of children, and a boolean indicating
+    whether the target is in building_blocks.
     """
     target = tree.nodes[1].retrons_to_expand[0].molecule
     target_in_stock = tree.nodes[1].curr_retron.is_building_block(tree.building_blocks)
@@ -43,7 +53,7 @@ def extract_routes(tree, extended=False):
     paths_block = []
     winning_nodes = []
     if extended:
-        # Gather paths
+        # gather paths
         for i, node in tree.nodes.items():
             if node.is_solved():
                 winning_nodes.append(i)
@@ -68,26 +78,27 @@ def extract_routes(tree, extended=False):
     return paths_block
 
 
-def get_route_svg(tree, node: int) -> str:
+def get_route_svg(tree: Tree, node_id: int) -> str:
     """
-    Visualizes reaction path
+    Visualizes the retrosynthesis route.
 
-    :param node: node id
-    :type node: int
+    :param tree: The built tree.
+    :param node_id: The id of the node from which to visualize the route.
+
     :return: The SVG string.
     """
-    nodes = tree.path_to_node(node)
+    nodes = tree.path_to_node(node_id)
     # Set up node_id types for different box colors
-    for node in nodes:
-        for retron in node.new_retrons:
+    for node_id in nodes:
+        for retron in node_id.new_retrons:
             retron._molecule.meta["status"] = "instock" if retron.is_building_block(
                 tree.building_blocks) else "mulecule"
     nodes[0].curr_retron._molecule.meta["status"] = "target"
     # Box colors
     box_colors = {"target": "#98EEFF",  # 152, 238, 255
-        "mulecule": "#F0AB90",  # 240, 171, 144
-        "instock": "#9BFAB3",  # 155, 250, 179
-    }
+                  "mulecule": "#F0AB90",  # 240, 171, 144
+                  "instock": "#9BFAB3",  # 155, 250, 179
+                 }
 
     # first column is target
     # second column are first new retrons_to_expand
@@ -220,16 +231,16 @@ def get_route_svg(tree, node: int) -> str:
     return "\n".join(svg)
 
 
-def generate_results_html(tree: Tree, html_path: path_type, aam: bool = False, extended=False):
+def generate_results_html(tree: Tree, html_path: str, aam: bool = False, extended: bool = False) -> None:
     """
-    Write an HTML page with the synthesis paths in SVG format and corresponding reactions in SMILES format
+    Writes an HTML page with the synthesis routes in SVG format and corresponding reactions in SMILES format.
 
-    :param tree:  # TODO
+    :param tree: The built tree.
     :param extended:  # TODO
-    :param html_path: Path to save the HTML molecules_path
-    :type html_path: str (optional)
-    :param aam: depict atom-to-atom mapping
-    :type aam: bool (optional)
+    :param html_path: The path to the file where to store resulting HTML.
+    :param aam: If True, depict atom-to-atom mapping.
+
+    :return: None.
     """
     if aam:
         MoleculeContainer.depict_settings(aam=True)

@@ -1,5 +1,5 @@
 """
-Module for the preparation and training of a policy network used in the expansion of nodes in Monte Carlo Tree Search (MCTS).
+Module for the preparation and training of a policy network used in the expansion of nodes in tree search.
 This module includes functions for creating training datasets and running the training process for the policy network.
 """
 
@@ -8,38 +8,35 @@ from pathlib import Path
 
 import torch
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
 
 from SynTool.ml.networks.policy import PolicyNetwork
 from SynTool.utils.config import PolicyNetworkConfig
 from SynTool.ml.training.preprocessing import RankingPolicyDataset, FilteringPolicyDataset
-from SynTool.utils.logging import DisableLogger, HiddenPrints
+from SynTool.utils.logging import DisableLogger
 
 warnings.filterwarnings("ignore")
 
 
-def create_policy_dataset(
-    reaction_rules_path: str,
-    molecules_or_reactions_path: str,
-    output_path: str,
-    dataset_type: str = "filtering",
-    batch_size: int = 100,
-    num_cpus: int = 1,
-    training_data_ratio: float = 0.8,
-):
+def create_policy_dataset(reaction_rules_path: str,
+                          molecules_or_reactions_path: str,
+                          output_path: str,
+                          dataset_type: str = "filtering",
+                          batch_size: int = 100,
+                          num_cpus: int = 1,
+                          training_data_ratio: float = 0.8):
     """
-    Generic function to create a training dataset for a policy network.
+    Create a training dataset for a policy network.
 
-    :param dataset_type: Type of the dataset to be created ('ranking' or 'filtering').
     :param reaction_rules_path: Path to the reaction rules file.
-    :param molecules_or_reactions_path: Path to the molecules or reactions file.
+    :param molecules_or_reactions_path: Path to the molecules or reactions file used to create the training set.
     :param output_path: Path to store the processed dataset.
-    :param batch_size: Size of each data batch.
-    :param num_cpus: Number of CPUs to use for data processing.
+    :param dataset_type: Type of the dataset to be created ('ranking' or 'filtering').
+    :param batch_size: The size of batch of molecules/reactions.
     :param training_data_ratio: Ratio of training data to total data.
+    :param num_cpus: Number of CPUs to use for data processing.
+
     :return: A `LightningDataset` object containing training and validation datasets.
     """
     with DisableLogger():
@@ -48,14 +45,13 @@ def create_policy_dataset(
                 reaction_rules_path=reaction_rules_path,
                 molecules_path=molecules_or_reactions_path,
                 output_path=output_path,
-                num_cpus=num_cpus,
-            )
+                num_cpus=num_cpus)
+
         elif dataset_type == "ranking":
             full_dataset = RankingPolicyDataset(
                 reaction_rules_path=reaction_rules_path,
                 reactions_path=molecules_or_reactions_path,
-                output_path=output_path,
-            )
+                output_path=output_path)
         else:
             raise ValueError("Invalid dataset type. Must be 'ranking' or 'filtering'.")
 
@@ -70,17 +66,16 @@ def create_policy_dataset(
         val_dataset,
         batch_size=batch_size,
         pin_memory=True,
-        drop_last=True,
-    )
+        drop_last=True)
+
     return datamodule
 
 
-def run_policy_training(
-    datamodule: LightningDataset,
-    config: PolicyNetworkConfig,
-    results_path: str,
-    accelerator: str = "gpu",
-):
+def run_policy_training(datamodule: LightningDataset,
+                        config: PolicyNetworkConfig,
+                        results_path: str,
+                        accelerator: str = "gpu") -> None:
+
     """
     Trains a policy network using a given datamodule and training configuration.
 
@@ -88,20 +83,9 @@ def run_policy_training(
      loading, processing, and preparing the training data for the model.
     :param config: The dictionary that contains various configuration settings for the policy training process.
     :param results_path: Path to store the training results and logs.
-    :param accelerator: The type of hardware accelerator to use for training (e.g., 'gpu', 'cpu').
-                                     Defaults to "gpu".
-    :param devices: A list of device indices to use for training. Defaults to [0].
-    :param silent: If True (the default) all logging information will be not printed
+    :param accelerator: The type of hardware accelerator to use for training (e.g., 'gpu', 'cpu'). Defaults to "gpu".
 
-    This function sets up the environment for training a policy network. It includes creating directories
-    for storing logs and weights, initializing the network with the specified configuration, and setting up
-    training callbacks like LearningRateMonitor and ModelCheckpoint. The Trainer from PyTorch Lightning is
-    used to manage the training process. If 'silent' is set to True, the function suppresses the standard
-    output and logging information during training.
-
-    The function creates three subdirectories within the specified 'results_path':
-        - 'logs/' for storing training logs.
-        - 'weights/' for saving model checkpoints.
+    :return: None.
     """
     results_path = Path(results_path)
     results_path.mkdir(exist_ok=True)
@@ -115,10 +99,8 @@ def run_policy_training(
         dropout=config.dropout,
         num_conv_layers=config.num_conv_layers,
         learning_rate=config.learning_rate,
-        policy_type=config.policy_type,
-    )
+        policy_type=config.policy_type)
 
-    lr_monitor = LearningRateMonitor(logging_interval="epoch")
     trainer = Trainer(
         accelerator=accelerator,
         devices=[0],
@@ -126,8 +108,7 @@ def run_policy_training(
         logger=False,
         gradient_clip_val=1.0,
         enable_checkpointing=True,
-        enable_progress_bar=True
-    )
+        enable_progress_bar=True)
 
     trainer.fit(network, datamodule)
     ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)

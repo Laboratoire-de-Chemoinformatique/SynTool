@@ -1,28 +1,32 @@
 """
-Module containing functions for loading retrosynthetic models and files
+Module containing functions for loading reaction rules, building blocks and retrosynthetic models.
 """
 
 import functools
 import logging
 import pickle
 from time import time
-from tqdm import tqdm
-
-from CGRtools import SMILESRead, smiles
-from CGRtools.reactor import Reactor
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from torch import device
+from CGRtools.reactor.reactor import Reactor
+from CGRtools import SMILESRead
+from SynTool.ml.networks.value import ValueNetwork
+from SynTool.ml.networks.policy import PolicyNetwork
+from abc import ABCMeta
+from typing import List, Set
 
 
 @functools.lru_cache(maxsize=None)
-def load_reaction_rules(file):
+def load_reaction_rules(file: str) -> List[Reactor]:
     """
-    The function loads reaction rules from a pickle file and converts them into a list of Reactor objects if necessary
+    Loads the reaction rules from a pickle file and converts them into a list of Reactor objects if necessary.
 
-    :param file: The path to the pickle file that stores the reaction rules
-    :return: A list of reaction rules
+    :param file: The path to the pickle file that stores the reaction rules.
+
+    :return: A list of reaction rules as Reactor objects.
     """
+
     with open(file, "rb") as f:
         reaction_rules = pickle.load(f)
 
@@ -32,37 +36,18 @@ def load_reaction_rules(file):
     return reaction_rules
 
 
-def standardize_building_blocks(input_file, output_file):  # TODO implement with reader/writer
-    """
-    Canonicalizes custom building blocks.
-
-    :param input_file: The path to the txt file that stores the original building blocks
-    :param output_file: The path to the txt file that stores the canonicalazied building blocks
-    """
-
-    with open(input_file, "r") as inp_file, open(output_file, "w") as out_file:
-        for smi in tqdm(inp_file):
-            mol = smiles(smi)
-            try:
-                mol.canonicalize()
-            except:
-                continue
-            out_file.write(f'{str(mol)}\n')
-
-    return output_file
-
-
 @functools.lru_cache(maxsize=None)
-def load_building_blocks(file: str, canonicalize: bool = False):
+def load_building_blocks(file: str, canonicalize: bool = False) -> Set[str]:
     """
     Loads building blocks data from a file, either in text, SMILES, or pickle format, and returns a frozen set of
     building blocks.
 
-    :param file: The path to the file containing the building blocks data
-    :param canonicalize: The `canonicalize` parameter determines whether the loaded building blocks should be
-    canonicalized or not
-    :return: The frozen set loaded building blocks
+    :param file: The path to the file containing the building blocks.
+    :param canonicalize: If True, canonicalizes the SMILES of the building blocks.
+
+    :return: The frozen set loaded building blocks.
     """
+
     if not file:
         logging.warning("No external In-Stock data was loaded")
         return None
@@ -106,29 +91,30 @@ def load_building_blocks(file: str, canonicalize: bool = False):
     return bb
 
 
-def load_value_net(model_class, value_network_path):
+def load_value_net(model_class: ABCMeta, value_network_path: str) -> ValueNetwork:
     """
-     Loads a model from an external path or an internal path
+    Loads the value network.
 
-     :param value_network_path:
-     :param model_class: The model class you want to load
-     :type model_class: pl.LightningModule
-     model will be loaded from the external path
-     """
+    :param value_network_path: The path to the file storing value network weights.
+    :param model_class: The model class to be loaded.
+
+    :return: The loaded value network.
+    """
 
     map_location = device("cpu")
     return model_class.load_from_checkpoint(value_network_path, map_location)
 
 
-def load_policy_net(model_class, policy_network_path):
+def load_policy_net(model_class: ABCMeta, policy_network_path: str) -> PolicyNetwork:
     """
-    Loads a model from an external path or an internal path
+    Loads the policy network.
 
-    :param policy_network_path:
-    :param model_class: The model class you want to load
-    :type model_class: pl.LightningModule
-    model will be loaded from the external path
+    :param policy_network_path: The path to the file storing policy network weights.
+    :param model_class: The model class to be loaded.
+
+    :return: The loaded policy network.
     """
 
     map_location = device("cpu")
     return model_class.load_from_checkpoint(policy_network_path, map_location, batch_size=1)
+

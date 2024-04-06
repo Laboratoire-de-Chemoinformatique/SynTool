@@ -1,5 +1,5 @@
 """
-Module containing hardcoded transformation reaction rules
+Module containing hardcoded transformation reaction rules.
 """
 
 from CGRtools import QueryContainer, ReactionContainer
@@ -10,7 +10,7 @@ rules = []
 
 def prepare():
     """
-    Creates and returns three query containers and appends a reaction container to the "rules" list
+    Creates and returns three query containers and appends a reaction container to the "rules" list.
     """
     q_ = QueryContainer()
     p_ = QueryContainer()

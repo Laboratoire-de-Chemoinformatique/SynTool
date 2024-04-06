@@ -20,6 +20,7 @@ from SynTool.mcts.evaluation import ValueFunction
 from SynTool.mcts.expansion import PolicyFunction
 from SynTool.mcts.node import Node
 from SynTool.utils.config import TreeConfig
+from typing import Iterator, List, Tuple, Union
 
 
 class Tree:
@@ -27,30 +28,22 @@ class Tree:
     Tree class with attributes and methods for Monte-Carlo tree search
     """
 
-    def __init__(
-        self,
-        target: MoleculeContainer,
-        tree_config: TreeConfig,
-        reaction_rules_path: str,
-        building_blocks_path: str,
-        policy_function: PolicyFunction,
-        value_function: ValueFunction = None,
-    ):
+    def __init__(self,
+                 target: MoleculeContainer,
+                 tree_config: TreeConfig,
+                 reaction_rules_path: str,
+                 building_blocks_path: str,
+                 policy_function: PolicyFunction,
+                 value_function: ValueFunction = None):
         """
-        The function initializes a tree object with optional parameters for tree search for target molecule.
+        Initializes a tree object with optional parameters for tree search for target molecule.
 
-        :param target: a target molecule for retrosynthesis paths search
-        :type target: MoleculeContainer
-        :param tree_config: a tree configuration file for retrosynthesis paths search
-        :type tree_config: TreeConfig
-        :param reaction_rules_path: a path for reaction rules file
-        :type reaction_rules_path: str
-        :param building_blocks_path: a path for building blocks file
-        :type building_blocks_path: str
-        :param policy_function: a policy function object
-        :type policy_function: PolicyFunction
-        :param value_function: a value function object
-        :type value_function: ValueFunction
+        :param target: A target molecule for retrosynthesis routes search.
+        :param tree_config: A tree configuration.
+        :param reaction_rules_path: A path for reaction rules file.
+        :param building_blocks_path: A path for building blocks file.
+        :param policy_function: A loaded policy function.
+        :param value_function: A loaded value function. If None, the rollout is used as a default for node evaluation.
         """
 
         # config parameters
@@ -104,32 +97,33 @@ class Tree:
 
     def __len__(self) -> int:
         """
-        Returns the current size (number of nodes) of a Tree.
+        Returns the current size (the number of nodes) in the tree.
         """
 
         return self.curr_tree_size - 1
 
-    def __iter__(self) -> "Tree":  # TODO what is annotation "Tree" -> Tree ?
+    def __iter__(self) -> "Tree":
         """
         The function is defining an iterator for a Tree object. Also needed for the bar progress display.
         """
 
         if not self._tqdm:
             self._start_time = time()
-            self._tqdm = tqdm(
-                total=self.config.max_iterations, disable=self.config.silent
-            )
+            self._tqdm = tqdm(total=self.config.max_iterations, disable=self.config.silent)
         return self
 
     def __repr__(self) -> str:
         """
-        Returns a string representation of a Tree object (target smiles, tree size, and the number of found paths).
+        Returns a string representation of the tree (target SMILES, tree size, and the number of found paths).
         """
         return self.report()
 
-    def __next__(self):  # TODO what is return - function annotation ? tuple (bool, [node id])
+    def __next__(self) -> [bool, List[int]]:
         """
-        The __next__ function is used to do one iteration of the tree building.
+        The __next__ method is used to do one iteration of the tree building.
+
+        :return: Returns True if the route was found and the node id of the last node in the route.
+        Otherwise, returns False and the id of the last visited node.
         """
 
         if self.nodes[1].curr_retron.is_building_block(self.building_blocks, self.config.min_mol_size):
@@ -158,23 +152,19 @@ class Tree:
 
             if self.nodes_visit[node_id]:  # already visited
                 if not self.children[node_id]:  # dead node
-                    logging.debug(
-                        f"Tree search: bumped into node {node_id} which is dead"
-                    )
+                    logging.debug(f"Tree search: bumped into node {node_id} which is dead")
                     self._update_visits(node_id)
                     explore_path = False
                 else:
                     node_id = self._select_node(node_id)  # select the child node
                     curr_depth += 1
             else:
-                if self.nodes[node_id].is_solved():  # found path!
+                if self.nodes[node_id].is_solved():  # found path
                     self._update_visits(node_id)  # this prevents expanding of bb node_id
                     self.winning_nodes.append(node_id)
                     return True, [node_id]
 
-                elif (
-                    curr_depth < self.config.max_depth
-                ):  # expand node if depth limit is not reached
+                elif curr_depth < self.config.max_depth:  # expand node if depth limit is not reached
                     self._expand_node(node_id)
                     if not self.children[node_id]:  # node was not expanded
                         logging.debug(f"Tree search: node {node_id} was not expanded")
@@ -184,32 +174,16 @@ class Tree:
 
                         if self.config.search_strategy == "evaluation_first":
                             # recalculate node value based on children synthesisability and backpropagation
-                            child_values = [
-                                self.nodes_init_value[child_id]
-                                for child_id in self.children[node_id]
-                            ]
+                            child_values = [self.nodes_init_value[child_id] for child_id in self.children[node_id]]
 
                             if self.config.evaluation_agg == "max":
                                 value_to_backprop = max(child_values)
 
                             elif self.config.evaluation_agg == "average":
-                                value_to_backprop = sum(child_values) / len(
-                                    self.children[node_id]
-                                )
+                                value_to_backprop = sum(child_values) / len(self.children[node_id])
 
-                            else:
-                                raise ValueError(
-                                    f"Invalid evaluation aggregation mode: {self.config.evaluation_agg} "
-                                    f"Allowed values are 'max', 'average'"
-                                )
                         elif self.config.search_strategy == "expansion_first":
                             value_to_backprop = self._get_node_value(node_id)
-
-                        else:
-                            raise ValueError(
-                                f"Invalid search_strategy: {self.config.search_strategy}: "
-                                f"Allowed values are 'expansion_first', 'evaluation_first'"
-                            )
 
                     # backpropagation
                     self._backpropagate(node_id, value_to_backprop)
@@ -236,39 +210,32 @@ class Tree:
 
     def _ucb(self, node_id: int) -> float:
         """
-        The function calculates the Upper Confidence Bound (UCB) for a given node.
+        Calculates the Upper Confidence Bound (UCB) statistics for a given node.
 
-        :param node_id: The `node_id` parameter is an integer that represents the ID of a node in a tree
-        :type node_id: int
+        :param node_id: The id of the node.
+
+        :return: The calculated UCB.
         """
 
         prob = self.nodes_prob[node_id]  # Predicted by policy network score
         visit = self.nodes_visit[node_id]
 
         if self.config.ucb_type == "puct":
-            u = (
-                self.config.c_ucb * prob * sqrt(self.nodes_visit[self.parents[node_id]])
-            ) / (visit + 1)
+            u = (self.config.c_ucb * prob * sqrt(self.nodes_visit[self.parents[node_id]])) / (visit + 1)
             return self.nodes_total_value[node_id] + u
         elif self.config.ucb_type == "uct":
-            u = (
-                self.config.c_ucb
-                * sqrt(self.nodes_visit[self.parents[node_id]])
-                / (visit + 1)
-            )
+            u = (self.config.c_ucb * sqrt(self.nodes_visit[self.parents[node_id]]) / (visit + 1))
             return self.nodes_total_value[node_id] + u
         elif self.config.ucb_type == "value":
             return self.nodes_init_value[node_id] / (visit + 1)
-        else:
-            raise ValueError(f"I don't know this UCB type: {self.config.ucb_type}")
 
     def _select_node(self, node_id: int) -> int:
         """
-        This function selects a node based on its UCB value and returns the ID of the node with the highest value of
-        the UCB function.
+        Selects a node based on its UCB value and returns the id of the node with the highest UCB.
 
-        :param node_id: The `node_id` parameter is an integer that represents the ID of a node
-        :type node_id: int
+        :param node_id: The id of the node.
+
+        :return: The id of the node with the highest UCB.
         """
 
         if self.config.epsilon > 0:
@@ -287,18 +254,17 @@ class Tree:
 
     def _expand_node(self, node_id: int) -> None:
         """
-        The function expands a given node by generating new retrons with policy (expansion) policy.
+        Expands the node by generating new retrons with policy (expansion) function.
 
-        :param node_id: The `node_id` parameter is an integer that represents the ID of the current node
-        :type node_id: int
+        :param node_id: The id the node to be expanded.
+
+        :return: None.
         """
         curr_node = self.nodes[node_id]
         prev_retrons = curr_node.curr_retron.prev_retrons
 
         tmp_retrons = set()
-        for prob, rule, rule_id in self.policy_function.predict_reaction_rules(
-            curr_node.curr_retron, self.reaction_rules
-        ):
+        for prob, rule, rule_id in self.policy_function.predict_reaction_rules(curr_node.curr_retron, self.reaction_rules):
             for products in apply_reaction_rule(curr_node.curr_retron.molecule, rule):
                 # check repeated products
                 if not products or not set(products) - tmp_retrons:
@@ -309,25 +275,13 @@ class Tree:
                     molecule.meta["reactor_id"] = rule_id
 
                 new_retrons = tuple(Retron(mol) for mol in products)
-                scaled_prob = prob * len(
-                    list(filter(lambda x: len(x) > self.config.min_mol_size, products))
-                )
+                scaled_prob = prob * len(list(filter(lambda x: len(x) > self.config.min_mol_size, products)))
 
                 if set(prev_retrons).isdisjoint(new_retrons):
-                    retrons_to_expand = (
-                        *curr_node.next_retrons,
-                        *(
-                            x
-                            for x in new_retrons
-                            if not x.is_building_block(
-                                self.building_blocks, self.config.min_mol_size
-                            )
-                        ),
-                    )
+                    retrons_to_expand = (*curr_node.next_retrons, *(x for x in new_retrons if not x.is_building_block(
+                                         self.building_blocks, self.config.min_mol_size)))
 
-                    child_node = Node(
-                        retrons_to_expand=retrons_to_expand, new_retrons=new_retrons
-                    )
+                    child_node = Node(retrons_to_expand=retrons_to_expand, new_retrons=new_retrons)
 
                     for new_retron in new_retrons:
                         new_retron.prev_retrons = [new_retron, *prev_retrons]
@@ -336,14 +290,14 @@ class Tree:
 
     def _add_node(self, node_id: int, new_node: Node, policy_prob: float = None) -> None:
         """
-        This function adds a new node to a tree with its predicted policy probability.
+        Adds a new node to the tree with probability of reaction rules predicted by policy function and applied to the
+        parent node of the new node.
 
-        :param node_id: ID of the parent node
-        :type node_id: int
-        :param new_node: The `new_node` is an instance of the`Node` class
-        :type new_node: Node
-        :param policy_prob: The `policy_prob` a float value that represents the probability associated with a new node.
-        :type policy_prob: float
+        :param node_id: The id of the parent node.
+        :param new_node: The new node to be added.
+        :param policy_prob: The probability of reaction rules predicted by policy function for thr parent node.
+
+        :return: None.
         """
 
         new_node_id = self.curr_tree_size
@@ -361,21 +315,17 @@ class Tree:
             node_value = self._get_node_value(new_node_id)
         elif self.config.search_strategy == "expansion_first":
             node_value = self.config.init_node_value
-        else:
-            raise ValueError(
-                f"Invalid search_strategy: {self.config.search_strategy}: "
-                f"Allowed values are 'expansion_first', 'evaluation_first'"
-            )
 
         self.nodes_init_value[new_node_id] = node_value
         self.nodes_total_value[new_node_id] = node_value
 
     def _get_node_value(self, node_id: int) -> float:
         """
-        This function calculates the value for the given node.
+        Calculates the value for the given node (for example with rollout or value network).
 
-        :param node_id: ID of the given node
-        :type node_id: int
+        :param node_id: The id of the node to be evaluated.
+
+        :return: The estimated value of the node.
         """
 
         node = self.nodes[node_id]
@@ -384,30 +334,21 @@ class Tree:
             node_value = uniform()
 
         elif self.config.evaluation_type == "rollout":
-            node_value = min(
-                (
-                    self._rollout_node(retron, current_depth=self.nodes_depth[node_id])
-                    for retron in node.retrons_to_expand
-                ),
-                default=1.0,
-            )
+            node_value = min((self._rollout_node(retron, current_depth=self.nodes_depth[node_id])
+                              for retron in node.retrons_to_expand), default=1.0)
 
         elif self.config.evaluation_type == "gcn":
             node_value = self.value_function.predict_value(node.new_retrons)
-
-        else:
-            raise ValueError(
-                f"I don't know this evaluation mode: {self.config.evaluation_type}"
-            )
 
         return node_value
 
     def _update_visits(self, node_id: int) -> None:
         """
-        The function updates the number of visits from a given node to a root node.
+        Updates the number of visits from the current node to the root node.
 
-        :param node_id: The ID of a current node
-        :type node_id: int
+        :param node_id: The id of the current node.
+
+        :return: None.
         """
 
         while node_id:
@@ -416,45 +357,40 @@ class Tree:
 
     def _backpropagate(self, node_id: int, value: float) -> None:
         """
-        The function backpropagates a value through a tree of a given node specified by node_id.
+        Backpropagates the value through the tree from the current.
 
-        :param node_id: The ID of a given node from which to backpropagate value
-        :type node_id: int
-        :param value: The value to backpropagate
-        :type value: float
+        :param node_id: The id of the node from which to backpropagate the value.
+        :param value: The value to backpropagate.
+
+        :return: None.
         """
         while node_id:
             if self.config.backprop_type == "muzero":
                 self.nodes_total_value[node_id] = (
-                    self.nodes_total_value[node_id] * self.nodes_visit[node_id] + value
-                ) / (self.nodes_visit[node_id] + 1)
+                self.nodes_total_value[node_id] * self.nodes_visit[node_id] + value) / (self.nodes_visit[node_id] + 1)
             elif self.config.backprop_type == "cumulative":
                 self.nodes_total_value[node_id] += value
-            else:
-                raise ValueError(
-                    f"I don't know this backpropagation type: {self.config.backprop_type}"
-                )
             node_id = self.parents[node_id]
 
     def _rollout_node(self, retron: Retron, current_depth: int = None) -> float:
         """
-        The function `_rollout_node` performs a rollout simulation from a given node in a tree.
+        Performs a rollout simulation from a given node in the tree.
         Given the current retron, find the first successful reaction and return the new retrons.
 
-        If the retron is a building_block, return 1.0, else check the first successful reaction;
+        If the retron is a building_block, return 1.0, else check the first successful reaction.
 
-        If the reaction is not successful, return -1.0;
+        If the reaction is not successful, return -1.0.
 
         If the reaction is successful, but the generated retrons are not the building_blocks and the retrons
-        cannot be generated without exceeding current_depth threshold, return -0.5;
+        cannot be generated without exceeding current_depth threshold, return -0.5.
 
         If the reaction is successful, but the retrons are not the building_blocks and the retrons
-        cannot be generated, return -1.0;
+        cannot be generated, return -1.0.
 
-        :param retron: A Retron object
-        :type retron: Retron
-        :param current_depth: The current depth of the tree
-        :type current_depth: int
+        :param retron: The retron to be evaluated.
+        :param current_depth: The current depth of the tree.
+
+        :return: The reward (value) assigned to the retron.
         """
 
         max_depth = self.config.max_depth - current_depth
@@ -464,8 +400,7 @@ class Tree:
             return 1.0
 
         if max_depth == 0:
-            logging.debug("Rollout: tried to perform rollout on the leaf node")
-            return -0.5
+            print('max depth reached in the beginning')
 
         # retron simulating
         occurred_retrons = set()
@@ -477,10 +412,6 @@ class Tree:
             # Check products of the reaction if you can find them in in-building_blocks data
             # If not, then add missed products to retrons_to_expand and try to decompose them
             if len(history) >= max_depth:
-                logging.debug(
-                    f"Rollout: max depth of rollout is reached with these "
-                    f"retrons to expand: {retrons_to_expand} {history}",
-                )
                 reward = -0.5
                 return reward
 
@@ -490,9 +421,7 @@ class Tree:
 
             # Pick the first successful reaction while iterating through reactors
             reaction_rule_applied = False
-            for prob, rule, rule_id in self.policy_function.predict_reaction_rules(
-                current_retron, self.reaction_rules
-            ):
+            for prob, rule, rule_id in self.policy_function.predict_reaction_rules(current_retron, self.reaction_rules):
                 for products in apply_reaction_rule(current_retron.molecule, rule):
                     if products:
                         reaction_rule_applied = True
@@ -503,58 +432,46 @@ class Tree:
                     break
 
             if not reaction_rule_applied:
-                logging.debug(
-                    f"Rollout: no reaction rule was applied for the "
-                    f"molecule {current_retron} on rollout depth {rollout_depth}"
-                )
                 reward = -1.0
                 return reward
 
-            products = tuple(Retron(product) for product in products)  # TODO /!\ Is it ok how products is defined above (line 496) ? Seems to
-            # TODO /!\ consider only last iterable of apply_reaction_rule
+            products = tuple(Retron(product) for product in products)
             history[rollout_depth]["products"] = products
 
             # check loops
             if any(x in occurred_retrons for x in products) and products:
-                # Sometimes manual can create a loop, when
-                logging.debug("Rollout: rollout got in the loop: %s", history)
+                # sometimes manual can create a loop, when
                 # print('occurred_retrons')
                 reward = -1.0
                 return reward
 
             if occurred_retrons.isdisjoint(products):
-                # Added number of atoms check
-                retrons_to_expand.extend(
-                    [
-                        x
-                        for x in products
-                        if not x.is_building_block(
-                            self.building_blocks, self.config.min_mol_size
-                        )
-                    ]
-                )
+                # added number of atoms check
+                retrons_to_expand.extend([x for x in products
+                                          if not x.is_building_block(self.building_blocks, self.config.min_mol_size)])
                 rollout_depth += 1
 
         reward = 1.0
         return reward
+
 
     def report(self) -> str:
         """
         Returns the string representation of the tree.
         """
 
-        return (
-            f"Tree for: {str(self.nodes[1].retrons_to_expand[0])}\n"
-            f"Number of nodes: {len(self)}\nNumber of visited nodes: {len(self.visited_nodes)}\n"
-            f"Found paths: {len(self.winning_nodes)}\nTime: {round(self.curr_time, 1)} seconds"
-        )
+        return (f"Tree for: {str(self.nodes[1].retrons_to_expand[0])}\n"
+                f"Number of nodes: {len(self)}\nNumber of visited nodes: {len(self.visited_nodes)}\n"
+                f"Found paths: {len(self.winning_nodes)}\nTime: {round(self.curr_time, 1)} seconds")
 
     def path_score(self, node_id: int) -> float:
         """
-        The function calculates the score of a given path from the node with node_id to the root node.
+        Calculates the score of a given route from the current node to the root node.
+        The score depends on cumulated node values nad the route length.
 
-        :param node_id: The ID of a given node
-        :type node_id: int
+        :param node_id: The id of the current given node.
+
+        :return: The route score.
         """
 
         cumulated_nodes_value, path_length = 0, 0
@@ -566,12 +483,13 @@ class Tree:
 
         return cumulated_nodes_value / (path_length ** 2)
 
-    def path_to_node(self, node_id: int) -> list:
+    def path_to_node(self, node_id: int) -> List[Node, ]:
         """
-        The function returns the path (list of IDs of nodes) to from a node specified by node_id to the root node.
+        Returns the route (list of id of nodes) to from the node current node to the root node.
 
-        :param node_id: The ID of a given node
-        :type node_id: int
+        :param node_id: The id of the current node.
+
+        :return: The list of nodes.
         """
 
         nodes = []
@@ -580,19 +498,19 @@ class Tree:
             node_id = self.parents[node_id]
         return [self.nodes[node_id] for node_id in reversed(nodes)]
 
-    def synthesis_path(self, node_id: int) -> Tuple[Reaction, ...]:
+    def synthesis_path(self, node_id: int) -> Tuple[Reaction,]:
         """
-        Given a node_id, return a tuple of Reactions that represent the synthesis path from the
-        node specified with node_id to the root node
+        Given a node_id, return a tuple of reactions that represent the retrosynthesis path from the current node.
 
-        :param node_id: The ID of a given node
-        :type node_id: int
+        :param node_id: The id of the current node.
+
+        :return: The tuple of extracted reactions representing the synthesis route.
         """
 
         nodes = self.path_to_node(node_id)
 
         tmp = [Reaction([x.molecule for x in after.new_retrons], [before.curr_retron.molecule])
-               for before, after in zip(nodes, nodes[1:])]
+               for before, after in zip(nodes, nodes[1:])]  # TODO tmp variable name is not meaningful
 
         for r in tmp:
             r.clean2d()
@@ -600,21 +518,22 @@ class Tree:
 
     def newickify(self, visits_threshold: int = 0, root_node_id: int = 1):  # TODO what is return here ?
         """
-        Adopted from https://stackoverflow.com/questions/50003007/how-to-convert-python-dictionary-to-newick-form-format
-        :param visits_threshold: the minimum number of visits for the given node  # TODO is this explanation correct ?
-        :type visits_threshold: int
-        :param root_node_id: The ID of a root node
-        :type root_node_id: int
+        Adopted from https://stackoverflow.com/questions/50003007/how-to-convert-python-dictionary-to-newick-form-format.
+
+        :param visits_threshold: The minimum number of visits for the given node  # TODO is this explanation correct ?
+        :param root_node_id: The id of the root node.
+
+        :return: The newick string and meta dict.
         """
         visited_nodes = set()
 
         def newick_render_node(current_node_id: int) -> str:
             """
-            Recursively generates a Newick string representation of a tree
+            Recursively generates a Newick string representation of the tree.
 
-            :param current_node_id: The identifier of the current node in the tree
-            :type current_node_id: The identifier of the current node in the tree
-            :return: A string representation of a node in a Newick format
+            :param current_node_id: The id of the current node.
+
+            :return: A string representation of a node in a Newick format.
             """
             assert (
                 current_node_id not in visited_nodes

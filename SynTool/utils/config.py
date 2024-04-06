@@ -1,14 +1,13 @@
 """
-Module containing training and planning configuration dictionaries
+Module containing configuration classes.
 """
 
-from abc import ABC, abstractmethod
-from typing import List, Union
 import yaml
-from CGRtools.containers import MoleculeContainer, QueryContainer
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict
+from CGRtools.containers import MoleculeContainer, QueryContainer
+from typing import Any, Dict, List, Union
+from abc import ABC, abstractmethod
 
 
 @dataclass
@@ -25,6 +24,12 @@ class ConfigABC(ABC):
         """
         pass
 
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the configuration into a dictionary.
+        """
+        return {k: str(v) if isinstance(v, Path) else v for k, v in self.__dict__.items()}
+
     @staticmethod
     @abstractmethod
     def from_yaml(file_path: str):
@@ -33,6 +38,15 @@ class ConfigABC(ABC):
         """
         pass
 
+    def to_yaml(self, file_path: str):
+        """
+        Serializes the configuration to a YAML file.
+
+        :param file_path: The path to the output YAML file.
+        """
+        with open(file_path, "w") as file:
+            yaml.dump(self.to_dict(), file)
+
     @abstractmethod
     def _validate_params(self, params: Dict[str, Any]):
         """
@@ -40,25 +54,12 @@ class ConfigABC(ABC):
         """
         pass
 
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the configuration into a dictionary.
-        """
-        return {k: str(v) if isinstance(v, Path) else v for k, v in self.__dict__.items()}
-
-    def to_yaml(self, file_path: str):
-        """
-        Serialize the configuration to a YAML file.
-
-        Args:
-            file_path: Path where the YAML file will be saved.
-        """
-        with open(file_path, "w") as file:
-            yaml.dump(self.to_dict(), file)
-
     def __post_init__(self):
-        # Call _validate_params method after initialization
-        params = self.to_dict()  # Convert the current instance to a dictionary
+        """
+        Validates the configuration parameters.
+        """
+        # call _validate_params method after initialization
+        params = self.to_dict()
         self._validate_params(params)
 
 
@@ -66,12 +67,6 @@ class ConfigABC(ABC):
 class ReactionStandardizationConfig(ConfigABC):
     """
     Configuration class for standardizing reactions.
-
-    :ivar ignore_mapping:
-    :ivar skip_errors:
-    :ivar keep_unbalanced_ions:
-    :ivar keep_reagents:
-    :ivar action_on_isotopes:
     """
 
     ignore_mapping: bool = True
@@ -85,31 +80,16 @@ class ReactionStandardizationConfig(ConfigABC):
         self._validate_params(self.to_dict())
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
-        """
-        Creates an ReactionStandardizationConfig instance from a dictionary of configuration parameters.
-
-        :ivar config_dict: A dictionary containing configuration parameters.
-        :return: An instance of ReactionStandardizationConfig.
-        """
+    def from_dict(config_dict: Dict[str, Any]) -> "ReactionStandardizationConfig":
         return ReactionStandardizationConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str):
-        """
-        Deserializes a YAML file into an ReactionStandardizationConfig object.
-
-        :ivar file_path: Path to the YAML file containing configuration parameters.
-        :return: An instance of ReactionStandardizationConfig.
-        """
+    def from_yaml(file_path: str) -> "ReactionStandardizationConfig":
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
         return ReactionStandardizationConfig.from_dict(config_dict)
 
-    def _validate_params(self, params: Dict[str, Any]):
-        """
-        Validate the parameters of the configuration.
-        """
+    def _validate_params(self, params: Dict[str, Any]) -> None:
         if not isinstance(params["ignore_mapping"], bool):
             raise ValueError("ignore_mapping must be a boolean.")
 
@@ -129,7 +109,7 @@ class ReactionStandardizationConfig(ConfigABC):
 @dataclass
 class RuleExtractionConfig(ConfigABC):
     """
-    Configuration class for extracting reaction rules, inheriting from ConfigABC.
+    Configuration class for extracting reaction rules.
 
     :ivar multicenter_rules: If True, extracts a single rule encompassing all centers.
                              If False, extracts separate reaction rules for each reaction center in a multicenter reaction.
@@ -150,8 +130,7 @@ class RuleExtractionConfig(ConfigABC):
     :ivar min_popularity: Minimum number of times a rule must be applied to be considered for further analysis.
     :ivar keep_metadata: If True, retains metadata associated with the reaction in the extracted rule.
     :ivar single_reactant_only: If True, includes only reaction rules with a single reactant molecule.
-    :ivar atom_info_retention: Controls the amount of information about each atom to retain ('none',
-                                'reaction_center', or 'all').
+    :ivar atom_info_retention: Controls the amount of information about each atom to retain ('none', 'reaction_center', or 'all').
     """
 
     multicenter_rules: bool = True
@@ -200,31 +179,18 @@ class RuleExtractionConfig(ConfigABC):
                 )
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
-        """
-        Creates an ExtractRuleConfig instance from a dictionary of configuration parameters.
-
-        :ivar config_dict: A dictionary containing configuration parameters.
-        :return: An instance of ExtractRuleConfig.
-        """
+    def from_dict(config_dict: Dict[str, Any]) -> "RuleExtractionConfig":
         return RuleExtractionConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str):
-        """
-        Deserializes a YAML file into an ExtractRuleConfig object.
+    def from_yaml(file_path: str) -> "RuleExtractionConfig":
 
-        :ivar file_path: Path to the YAML file containing configuration parameters.
-        :return: An instance of ExtractRuleConfig.
-        """
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
         return RuleExtractionConfig.from_dict(config_dict)
 
-    def _validate_params(self, params: Dict[str, Any]):
-        """
-        Validate the parameters of the configuration.
-        """
+    def _validate_params(self, params: Dict[str, Any]) -> None:
+
         if not isinstance(params["multicenter_rules"], bool):
             raise ValueError("multicenter_rules must be a boolean.")
 
@@ -242,8 +208,7 @@ class RuleExtractionConfig(ConfigABC):
 
         if params["func_groups_list"] is not None and not all(
             isinstance(group, (MoleculeContainer, QueryContainer))
-            for group in params["func_groups_list"]
-        ):
+            for group in params["func_groups_list"]):
             raise ValueError(
                 "func_groups_list must be a list of MoleculeContainer or QueryContainer objects."
             )
@@ -279,20 +244,13 @@ class RuleExtractionConfig(ConfigABC):
             required_keys = {"reaction_center", "environment"}
             if not required_keys.issubset(params["atom_info_retention"]):
                 missing_keys = required_keys - set(params["atom_info_retention"].keys())
-                raise ValueError(
-                    f"atom_info_retention missing required keys: {missing_keys}"
-                )
+                raise ValueError(f"atom_info_retention missing required keys: {missing_keys}")
 
             for key, value in params["atom_info_retention"].items():
                 if key not in required_keys:
                     raise ValueError(f"Unexpected key in atom_info_retention: {key}")
 
-                expected_subkeys = {
-                    "neighbors",
-                    "hybridization",
-                    "implicit_hydrogens",
-                    "ring_sizes",
-                }
+                expected_subkeys = {"neighbors", "hybridization", "implicit_hydrogens", "ring_sizes"}
                 if not isinstance(value, dict) or not expected_subkeys.issubset(value):
                     missing_subkeys = expected_subkeys - set(value.keys())
                     raise ValueError(
@@ -301,15 +259,13 @@ class RuleExtractionConfig(ConfigABC):
 
                 for subkey, subvalue in value.items():
                     if not isinstance(subvalue, bool):
-                        raise ValueError(
-                            f"Value for {subkey} in {key} of atom_info_retention must be boolean."
-                        )
+                        raise ValueError(f"Value for {subkey} in {key} of atom_info_retention must be boolean.")
 
 
 @dataclass
 class TreeConfig(ConfigABC):
     """
-    Configuration class for the tree-based search algorithm, inheriting from ConfigABC.
+    Configuration class for the tree search algorithm.
 
     :ivar max_iterations: The number of iterations to run the algorithm for, defaults to 100.
     :ivar max_tree_size: The maximum number of nodes in the tree, defaults to 10000.
@@ -350,60 +306,31 @@ class TreeConfig(ConfigABC):
     silent: bool = False
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]):
-        """
-        Creates a TreeConfig instance from a dictionary of configuration parameters.
-
-        Args:
-            config_dict: A dictionary containing configuration parameters.
-
-        Returns:
-            An instance of TreeConfig.
-        """
+    def from_dict(config_dict: Dict[str, Any]) -> "TreeConfig":
         return TreeConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str):
-        """
-        Deserializes a YAML file into a TreeConfig object.
-
-        Args:
-            file_path: Path to the YAML file containing configuration parameters.
-
-        Returns:
-            An instance of TreeConfig.
-        """
+    def from_yaml(file_path: str) -> "TreeConfig":
         with open(file_path, "r") as file:
             config_dict = yaml.safe_load(file)
         return TreeConfig.from_dict(config_dict)
 
     def _validate_params(self, params):
         if params["ucb_type"] not in ["puct", "uct", "value"]:
-            raise ValueError(
-                "Invalid ucb_type. Allowed values are 'puct', 'uct', 'value'."
-            )
+            raise ValueError("Invalid ucb_type. Allowed values are 'puct', 'uct', 'value'.")
         if params["backprop_type"] not in ["muzero", "cumulative"]:
-            raise ValueError(
-                "Invalid backprop_type. Allowed values are 'muzero', 'cumulative'."
-            )
+            raise ValueError("Invalid backprop_type. Allowed values are 'muzero', 'cumulative'.")
         if params["evaluation_type"] not in ["random", "rollout", "gcn"]:
-            raise ValueError(
-                "Invalid evaluation_type. Allowed values are 'random', 'rollout', 'gcn'."
-            )
+            raise ValueError("Invalid evaluation_type. Allowed values are 'random', 'rollout', 'gcn'.")
         if params["evaluation_agg"] not in ["max", "average"]:
-            raise ValueError(
-                "Invalid evaluation_agg. Allowed values are 'max', 'average'."
-            )
+            raise ValueError("Invalid evaluation_agg. Allowed values are 'max', 'average'.")
         if not isinstance(params["c_ucb"], float):
             raise TypeError("c_ucb must be a float.")
         if not isinstance(params["max_depth"], int) or params["max_depth"] < 1:
             raise ValueError("max_depth must be a positive integer.")
         if not isinstance(params["max_tree_size"], int) or params["max_tree_size"] < 1:
             raise ValueError("max_tree_size must be a positive integer.")
-        if (
-            not isinstance(params["max_iterations"], int)
-            or params["max_iterations"] < 1
-        ):
+        if not isinstance(params["max_iterations"], int) or params["max_iterations"] < 1:
             raise ValueError("max_iterations must be a positive integer.")
         if not isinstance(params["max_time"], int) or params["max_time"] < 1:
             raise ValueError("max_time must be a positive integer.")
@@ -421,15 +348,15 @@ class TreeConfig(ConfigABC):
 @dataclass
 class PolicyNetworkConfig(ConfigABC):
     """
-    Configuration class for the policy network, inheriting from ConfigABC.
+    Configuration class for the policy network.
 
-    :ivar vector_dim: dimension of the input vectors.
-    :ivar batch_size: number of samples per batch.
-    :ivar dropout: dropout rate for regularization.
-    :ivar learning_rate: learning rate for the optimizer.
-    :ivar num_conv_layers: number of convolutional layers in the network.
-    :ivar num_epoch: number of training epochs.
-    :ivar policy_type: mode of operation, either 'filtering' or 'ranking'.
+    :ivar vector_dim: Dimension of the input vectors.
+    :ivar batch_size: Number of samples per batch.
+    :ivar dropout: Dropout rate for regularization.
+    :ivar learning_rate: Learning rate for the optimizer.
+    :ivar num_conv_layers: Number of convolutional layers in the network.
+    :ivar num_epoch: Number of training epochs.
+    :ivar policy_type: Mode of operation, either 'filtering' or 'ranking'.
     """
 
     policy_type: str = "ranking"
@@ -448,22 +375,10 @@ class PolicyNetworkConfig(ConfigABC):
 
     @staticmethod
     def from_dict(config_dict: Dict[str, Any]) -> 'PolicyNetworkConfig':
-        """
-        Creates a PolicyNetworkConfig instance from a dictionary of configuration parameters.
-
-        :param config_dict: A dictionary containing configuration parameters.
-        :return: An instance of PolicyNetworkConfig.
-        """
         return PolicyNetworkConfig(**config_dict)
 
     @staticmethod
     def from_yaml(file_path: str) -> 'PolicyNetworkConfig':
-        """
-        Deserializes a YAML file into a PolicyNetworkConfig object.
-
-        :param file_path: Path to the YAML file containing configuration parameters.
-        :return: An instance of PolicyNetworkConfig.
-        """
         with open(file_path, 'r') as file:
             config_dict = yaml.safe_load(file)
         return PolicyNetworkConfig.from_dict(config_dict)
@@ -504,7 +419,7 @@ class PolicyNetworkConfig(ConfigABC):
 @dataclass
 class ValueNetworkConfig(ConfigABC):
     """
-    Configuration class for the value network, inheriting from ConfigABC.
+    Configuration class for the value network.
 
     :ivar vector_dim: Dimension of the input vectors.
     :ivar batch_size: Number of samples per batch.
@@ -524,42 +439,20 @@ class ValueNetworkConfig(ConfigABC):
 
     @staticmethod
     def from_dict(config_dict: Dict[str, Any]) -> 'ValueNetworkConfig':
-        """
-        Creates a ValueNetworkConfig instance from a dictionary of configuration parameters.
-
-        :ivar config_dict: A dictionary containing configuration parameters.
-        :return: An instance of ValueNetworkConfig.
-        """
         return ValueNetworkConfig(**config_dict)
 
     @staticmethod
     def from_yaml(file_path: str) -> 'ValueNetworkConfig':
-        """
-        Deserializes a YAML file into a ValueNetworkConfig object.
-
-        :ivar file_path: Path to the YAML file containing configuration parameters.
-        :return: An instance of ValueNetworkConfig.
-        """
         with open(file_path, 'r') as file:
             config_dict = yaml.safe_load(file)
         return ValueNetworkConfig.from_dict(config_dict)
 
     def to_yaml(self, file_path: str):
-        """
-        Serializes the configuration to a YAML file.
-
-        :ivar file_path: Path to the YAML file for serialization.
-        """
         with open(file_path, 'w') as file:
             yaml.dump(self.to_dict(), file)
 
     def _validate_params(self, params: Dict[str, Any]):
-        """
-        Validates the configuration parameters.
 
-        :ivar params: A dictionary of parameters to validate.
-        :raises ValueError: If any parameter is invalid.
-        """
         if not isinstance(params['vector_dim'], int) or params['vector_dim'] <= 0:
             raise ValueError("vector_dim must be a positive integer.")
 
@@ -582,10 +475,10 @@ class ValueNetworkConfig(ConfigABC):
 @dataclass
 class ReinforcementConfig(ConfigABC):
     """
-    Configuration class for the reinforcement network training, inheriting from ConfigABC.
+    Configuration class for the reinforcement network training.
 
-    :ivar batch_size: the number of samples per batch.
-    :ivar num_simulations: the number of num_simulations.
+    :ivar batch_size: The number of targets per batch in the planning simulation step.
+    :ivar num_simulations: The number of planning simulations.
     """
 
     batch_size: int = 100
@@ -593,22 +486,10 @@ class ReinforcementConfig(ConfigABC):
 
     @staticmethod
     def from_dict(config_dict: Dict[str, Any]) -> 'ReinforcementConfig':
-        """
-        Creates a ReinforcementConfig instance from a dictionary of configuration parameters.
-
-        :param config_dict: A dictionary containing configuration parameters.
-        :return: An instance of ReinforcementConfig.
-        """
         return ReinforcementConfig(**config_dict)
 
     @staticmethod
     def from_yaml(file_path: str) -> 'ReinforcementConfig':
-        """
-        Deserializes a YAML file into a ReinforcementConfig object.
-
-        :param file_path: Path to the YAML file containing configuration parameters.
-        :return: An instance of ReinforcementConfig.
-        """
         with open(file_path, 'r') as file:
             config_dict = yaml.safe_load(file)
         return ReinforcementConfig.from_dict(config_dict)
@@ -622,13 +503,14 @@ class ReinforcementConfig(ConfigABC):
             raise ValueError("num_simulations must be a positive integer.")
 
 
-def convert_config_to_dict(config_attr, config_type):
+def convert_config_to_dict(config_attr: ConfigABC, config_type) -> Dict:
     """
     Converts a configuration attribute to a dictionary if it's either a dictionary
     or an instance of a specified configuration type.
 
     :param config_attr: The configuration attribute to be converted.
     :param config_type: The type to check against for conversion.
+
     :return: The configuration attribute as a dictionary, or None if it's not an instance of the given type or dict.
     """
     if isinstance(config_attr, dict):

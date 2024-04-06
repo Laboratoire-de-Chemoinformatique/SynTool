@@ -1,5 +1,5 @@
 """
-Module containing hardcoded decomposition reaction rules
+Module containing hardcoded decomposition reaction rules.
 """
 
 from CGRtools import QueryContainer, ReactionContainer
@@ -10,12 +10,13 @@ rules = []
 
 def prepare():
     """
-    Creates and returns three query containers and appends a reaction container to the "rules" list
+    Creates and returns three query containers and appends a reaction container to the "rules" list.
     """
     q_ = QueryContainer()
     p1_ = QueryContainer()
     p2_ = QueryContainer()
     rules.append(ReactionContainer((q_,), (p1_, p2_)))
+
     return q_, p1_, p2_
 
 

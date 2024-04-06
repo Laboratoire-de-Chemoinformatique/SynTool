@@ -1,35 +1,29 @@
+"""
+Module containing classes and functions needed for reactions/molecules data reading/writing.
+"""
+
 from pathlib import Path
 from os.path import splitext
-from typing import Iterable, Union
-
+from typing import Iterable, Union, Any
 from CGRtools import smiles
 from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContainer, QueryContainer
 from CGRtools.files.SDFrw import SDFRead, SDFWrite
 from CGRtools.files.RDFrw import RDFRead, RDFWrite
 
-from SynTool.chem.utils import to_reaction_smiles_record
-from SynTool.utils import path_type
-
 
 class FileHandler:
-    def __init__(self, filename: path_type, **kwargs):
+    def __init__(self, filename: str, **kwargs):
         """
         General class to handle chemical files.
 
-        :param filename: the path and name of the file
-        :type filename: path_type
+        :param filename: The path and name of the file.
 
-        :return: None
+        :return: None.
         """
         self._file = None
         # filename = str(Path(filename).resolve(strict=True)) #TODO Tagir please correct bug in ReactionWriter following your modification
         _, ext = splitext(filename)
-        file_types = {
-            '.smi': "SMI",
-            '.smiles': "SMI",
-            '.rdf': "RDF",
-            '.sdf': 'SDF',
-        }
+        file_types = {'.smi': "SMI", '.smiles': "SMI", '.rdf': "RDF", '.sdf': 'SDF'}
         try:
             self._file_type = file_types[ext]
         except KeyError:
@@ -42,14 +36,13 @@ class FileHandler:
         self.close()
 
 class Reader(FileHandler):
-    def __init__(self, filename: path_type, **kwargs):
+    def __init__(self, filename: str, **kwargs):
         """
-        General class to read chemical files.
+        General class to read reactions/molecules data files.
 
-        :param filename: the path and name of the file
-        :type filename: path_type
+        :param filename: The path and name of the file.
 
-        :return: None
+        :return: None.
         """
         super().__init__(filename, **kwargs)
 
@@ -66,11 +59,13 @@ class Reader(FileHandler):
         return len(self._file)
 
 class SMILESRead:
-    def __init__(self, filename: path_type, **kwargs):
+    def __init__(self, filename: str, **kwargs):
         """
         Simplified class to read files containing a SMILES (Molecules or Reaction) string per line.
-        :param filename: the path and name of the SMILES file to parse
-        :return: None
+
+        :param filename: The path and name of the SMILES file to parse.
+
+        :return: None.
         """
         filename = str(Path(filename).resolve(strict=True))
         self._file = open(filename, "r")
@@ -90,7 +85,7 @@ class SMILESRead:
 
     def read(self):
         """
-        Parse whole SMILES file.
+        Parse the whole SMILES file.
 
         :return: List of parsed molecules or reactions.
         """
@@ -113,17 +108,14 @@ class SMILESRead:
 
 
 class Writer(FileHandler):
-    def __init__(self, filename: path_type, mapping: bool = True, **kwargs):
+    def __init__(self, filename: str, mapping: bool = True, **kwargs):
         """
         General class to write chemical files.
 
-        :param filename: the path and name of the file
-        :type filename: path_type
+        :param filename: The path and name of the file.
+        :param mapping: Whenever to save mapping or not.
 
-        :param mapping: whenever to save mapping or not
-        :type mapping: bool
-
-        :return: None
+        :return: None.
         """
         super().__init__(filename, **kwargs)
         self._mapping = mapping
@@ -133,14 +125,13 @@ class Writer(FileHandler):
 
 
 class ReactionReader(Reader):
-    def __init__(self, filename: path_type, **kwargs):
+    def __init__(self, filename: str, **kwargs):
         """
         Class to read reaction files.
 
-        :param filename: the path and name of the file
-        :type filename: path_type
+        :param filename: The path and name of the file.
 
-        :return: None
+        :return: None.
         """
         super().__init__(filename, **kwargs)
         if self._file_type == "SMI":
@@ -152,20 +143,15 @@ class ReactionReader(Reader):
 
 
 class ReactionWriter(Writer):
-    def __init__(self, filename: path_type, append_results: bool = False, mapping: bool = True, **kwargs):
+    def __init__(self, filename: str, append_results: bool = False, mapping: bool = True, **kwargs):
         """
         Class to write reaction files.
 
-        :param filename: the path and name of the file
-        :type filename: path_type
+        :param filename: The path and name of the file.
+        :param append_results: Whenever to append the new reactions (True) or to override the file (False).
+        :param mapping: Whenever to save mapping or not.
 
-        :param append_results: whenever to append the new reactions (True) or to override the file (False)
-        :type append_results: bool
-
-        :param mapping: whenever to save mapping or not
-        :type mapping: bool
-
-        :return: None
+        :return: None.
         """
         super().__init__(filename, mapping, **kwargs)
         if self._file_type == "SMI":
@@ -180,10 +166,9 @@ class ReactionWriter(Writer):
         """
         Function to write a specific reaction to the file.
 
-        :param reaction: the path and name of the file
-        :type reaction: ReactionContainer
+        :param reaction: The path and name of the file.
 
-        :return: None
+        :return: None.
         """
         if self._file_type == "SMI":
             rea_str = to_reaction_smiles_record(reaction)
@@ -193,13 +178,13 @@ class ReactionWriter(Writer):
 
 
 class MoleculeReader(Reader):
-    def __init__(self, filename: path_type, **kwargs):
+    def __init__(self, filename: str, **kwargs):
         """
         Class to read molecule files.
 
-        :param filename: the path and name of the file
+        :param filename: The path and name of the file.
 
-        :return: None
+        :return: None.
         """
         super().__init__(filename, **kwargs)
         if self._file_type == "SMI":
@@ -211,20 +196,15 @@ class MoleculeReader(Reader):
 
 
 class MoleculeWriter(Writer):
-    def __init__(self, filename: path_type, append_results: bool = False, mapping: bool = True, **kwargs):
+    def __init__(self, filename: str, append_results: bool = False, mapping: bool = True, **kwargs):
         """
         Class to write molecule files.
 
-        :param filename: the path and name of the file
-        :type filename: path_type
+        :param filename: The path and name of the file.
+        :param append_results: Whenever to append the new molecules (True) or to override the file (False).
+        :param mapping: Whenever to save mapping or not.
 
-        :param append_results: whenever to append the new molecules (True) or to override the file (False)
-        :type append_results: bool
-
-        :param mapping: whenever to save mapping or not
-        :type mapping: bool
-
-        :return: None
+        :return: None.
         """
         super().__init__(filename, mapping, **kwargs)
         if self._file_type == "SMI":
@@ -235,17 +215,37 @@ class MoleculeWriter(Writer):
         else:
             raise ValueError("File type incompatible -", filename)
 
-    def write(self, molecule):
+    def write(self, molecule: Any[MoleculeContainer, ReactionContainer, CGRContainer]):
         """
         Function to write a specific molecule to the file.
 
-        :param molecule: the path and name of the file
-        :type molecule: MoleculeContainer | CGRContainer | QueryContainer
+        :param molecule: The path and name of the file.
 
-        :return: None
+        :return: None.
         """
         if self._file_type == "SMI":
             mol_str = to_reaction_smiles_record(molecule)
             self._file.write(mol_str + "\n")
         elif self._file_type == "SDF":
             self._file.write(molecule)
+
+
+def to_reaction_smiles_record(reaction: ReactionContainer) -> str:
+    """
+    Converts the reaction to the SMILES record. Needed for reaction/molecule writers.
+
+    :param reaction: The reaction to be written.
+
+    :return: The SMILES record to be written.
+    """
+
+    if isinstance(reaction, str):
+        return reaction
+
+    reaction_record = [format(reaction, "m")]
+    sorted_meta = sorted(reaction.meta.items(), key=lambda x: x[0])
+    for _, meta_info in sorted_meta:
+        meta_info = ''  # TODO decide what to do with meta
+        meta_info = ";".join(meta_info.split("\n"))
+        reaction_record.append(str(meta_info))
+    return "".join(reaction_record)

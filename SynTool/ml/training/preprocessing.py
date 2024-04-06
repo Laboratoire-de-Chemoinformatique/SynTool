@@ -1,16 +1,15 @@
 """
-Module containing functions for preparation of the training sets for policy and value network
+Module containing functions for preparation of the training sets for policy and value network.
 """
 
 import os
-import pickle
-from abc import ABC
-from multiprocessing import Manager, Pool
-from pathlib import Path
-from typing import List
-
 import ray
 import torch
+import pickle
+from tqdm import tqdm
+from abc import ABC
+from pathlib import Path
+from typing import List
 from CGRtools import smiles
 from CGRtools.containers import MoleculeContainer
 from CGRtools.exceptions import InvalidAromaticRing
@@ -19,16 +18,17 @@ from ray.util.queue import Queue, Empty
 from torch_geometric.data import Data, InMemoryDataset
 from torch_geometric.data.makedirs import makedirs
 from torch_geometric.transforms import ToUndirected
-from tqdm import tqdm
-
 from SynTool.utils.loading import load_reaction_rules
 from SynTool.chem.utils import unite_molecules
 from SynTool.utils.files import ReactionReader
+from torch_geometric.data.data import Data
+from typing import Dict, Tuple, Any
+from torch import Tensor
 
 
 class ValueNetworkDataset(InMemoryDataset, ABC):
     """
-    Value network dataset
+    Value network dataset.
     """
 
     def __init__(self, extracted_retrons):
@@ -86,7 +86,7 @@ class RankingPolicyDataset(InMemoryDataset):
     Policy network dataset
     """
 
-    def __init__(self, reactions_path, reaction_rules_path, output_path):
+    def __init__(self, reactions_path: str, reaction_rules_path: str, output_path: str):
         """
         Initializes a policy network dataset object.
 
@@ -109,10 +109,11 @@ class RankingPolicyDataset(InMemoryDataset):
     def num_classes(self) -> int:
         return self._infer_num_classes(self._data.y_rules)
 
-    def prepare_data(self):
+    def prepare_data(self) -> Tuple[Data, Dict]:
         """
         The function prepares data by loading reaction rules, initializing Ray, preprocessing the molecules, collating
         the data, and returning the data and slices.
+
         :return: data (PyTorch geometric graphs) and slices.
         """
 
@@ -135,7 +136,7 @@ class RankingPolicyDataset(InMemoryDataset):
                     try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
                         molecule = unite_molecules(reaction.products)
                         pyg_graph = mol_to_pyg(molecule)
-                    except KeyError:
+                    except: # TODO TypeError: can't assign a NoneType to a torch.ByteTensor
                         continue
 
                     if pyg_graph is not None:
@@ -157,7 +158,7 @@ class FilteringPolicyDataset(InMemoryDataset):
     Policy network dataset
     """
 
-    def __init__(self, molecules_path, reaction_rules_path, output_path, num_cpus=1):
+    def __init__(self, molecules_path: str, reaction_rules_path :str, output_path: str, num_cpus: int = 1):
         """
         Initializes a policy network dataset object.
 
@@ -172,7 +173,7 @@ class FilteringPolicyDataset(InMemoryDataset):
         self.reaction_rules_path = reaction_rules_path
         self.output_path = output_path
         self.num_cpus = num_cpus
-        self.batch_size = 10
+        self.batch_size = 100
 
         if output_path and os.path.exists(output_path):
             self.data, self.slices = torch.load(self.output_path)
@@ -311,7 +312,7 @@ def preprocess_filtering_policy_molecules(to_process: Queue, reaction_rules: Lis
     return pyg_graphs
 
 
-def atom_to_vector(atom):
+def atom_to_vector(atom: Any) -> Tensor:
     """
     Given an atom, return a vector of length 8 with the following information:
 
@@ -377,7 +378,7 @@ def mol_to_matrix(molecule: MoleculeContainer):
     return atoms_vectors
 
 
-def mol_to_pyg(molecule: MoleculeContainer, canonicalize=True):
+def mol_to_pyg(molecule: MoleculeContainer, canonicalize: bool = True):
     """
     It takes a list of molecules and returns a list of PyTorch Geometric graphs,
     a one-hot encoded vectors of the atoms, and a matrices of the bonds.
@@ -414,6 +415,7 @@ def mol_to_pyg(molecule: MoleculeContainer, canonicalize=True):
     mol_pyg_graph = ToUndirected()(mol_pyg_graph)
 
     assert mol_pyg_graph.is_undirected()
+
     return mol_pyg_graph
 
 
