@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>User guide &#8212; SynTool 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reaction mapping" href="reaction_mapping.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="user-guide">
+<h1>User guide<a class="headerlink" href="#user-guide" title="Link to this heading">¶</a></h1>
+<p>This page lists some practical recommendations about using SynTool for data curation, retrosynthetic models training and retrosynthesis planning.</p>
+<section id="basic-recommendations">
+<h2>Basic recommendations<a class="headerlink" href="#basic-recommendations" title="Link to this heading">¶</a></h2>
+<p><strong>1. Reaction data filtration - 1</strong></p>
+<p><em>Always do reaction data filtration.</em></p>
+<p>Reaction data filtration is a crucial step in reaction data curation pipeline. Reaction filtration ensures the correctness of the extracted reaction rules
+and is needed for correct execution of the programming code (some erroneous reactions may crash the current version of the SynTool code).
+Thus, it is recommended to do a reaction data filtration before the extraction of reaction rules and training retrosynthetic models.</p>
+<p><strong>2. Reaction data filtration - 2</strong></p>
+<p><em>Input and output reaction representation may be different after filtration</em></p>
+<p>The current version of reaction data filtration protocol in SynTool include some function for additional standardization of input reactons.
+This is why sometimes the output reaction SMILES, after it passed all the filters, may not exactly to the input reaction SMILES.</p>
+<p><strong>3. Data curation parallelization</strong></p>
+<p><em>Do not use more than 4-8 CPU</em></p>
+<p>The current version of SynTool is not perfectly optimal in terms of memory usage with many CPUs (this problem will be fixed in future versions).
+This is why it is recommended to set no more than 4 CPU for steps related to the data curation.</p>
+<p><strong>4. Search strategies in retrosynthesis planning</strong></p>
+<p><em>“Evaluation first” search strategy is not compatible with the rollout evaluation.</em></p>
+<p>In SynTool, there are two main search strategies implemented - “Expansion first” and “Evaluation first” strategy.
+These are the strategies for navigating the search tree. “Expansion first” prioritizes the expansion of new nodes and
+assigns to each new node the default value. “Evaluation first” prioritizes the evaluation of each new node first.
+Notice, that the usage of “Evaluation first” strategy with the current implementation of rollout function in SynTool is
+not reasonable in terms of the total search time because of time-consuming execution of the rollout function. Also, the
+current implementation of the rollout function may mislead the search in case of “Evaluation first” strategy do tue the limited
+explanation of the tree in rollout simulations. Therefore, the current recommendation is to use “Evaluation first” strategy with
+value network evaluation only.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SynTool</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-recommendations">Basic recommendations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="reaction_mapping.html" title="next chapter">Reaction mapping</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, University of Strasbourg / Hokkaido University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/user_guide.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

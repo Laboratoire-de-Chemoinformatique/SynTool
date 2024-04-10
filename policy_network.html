@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Policy network &#8212; SynTool 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Value network" href="value_network.html" />
+    <link rel="prev" title="Reaction rules extraction" href="reaction_rules_extraction.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="policy-network">
+<h1>Policy network<a class="headerlink" href="#policy-network" title="Link to this heading">¶</a></h1>
+<p>This page explains how to do a policy network training in SynTool.</p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>The tree nodes in MCTS are expanded by an expansion function approximated by a policy neural network.
+The policy network is composed of two parts: molecular representation and prediction parts. The first part is
+responsible for creating a numerical representation of molecule structure (Graph Convolution Network (GCN) blocks
+and summation over atoms). The prediction part depends on the type of policy network: filtering or ranking policy
+network. All the reaction rules predicted by the policy neural network are sorted by probability and the top 50 of
+them are selected to be applied to the current intermediate product in the MCTS expansion step.</p>
+<p><strong>Ranking policy network</strong>. The ranking policy network is trained on a reaction dataset as a multi-class classification. Each reaction corresponds
+to a vector in which the position of the positive class corresponds to a reaction rule extracted from that reaction.
+All other extracted reaction rules are assigned as negative classes. The size of the class vector corresponds to the
+total number of reaction rules. This approach biases the ranking policy network to prioritize reaction rules that are
+likely to produce reactions similar to real ones.</p>
+<p><strong>Filtering policy network</strong>. In a filtering policy network, the prediction part is formed from two linear layers with a sigmoid activation function
+that assigns the probabilities for the “regular”, as well as “priority” reaction rules, which include such
+transformations as cyclization. These two vectors are then combined with a coefficient α ranging from 0 to 1.
+This approach ensures that the priority reaction rules receive the highest score, followed by other regular reaction
+rules. The multi-class regular and priority vectors for training the filtering policy network are obtained by applying
+all reaction rules to the set of training molecules (these molecules can be extracted from any database). If the
+reaction rule is successfully applied and creates a new precursor, it will be assigned a positive class in the regular
+reaction rules vector, otherwise a negative class. In addition, if the reaction rule splits the molecule into two or
+more structures with several heavy atoms of more than 6 or opens a cycle, the priority vector gets a positive class,
+otherwise negative.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
+<p>The network architecture and training hyperparameters can be adjusted in the training configuration file below.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">vector_dim</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+<span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0005</span>
+<span class="nt">num_conv_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">num_epoch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+</pre></div>
+</div>
+<p><strong>Configuration parameters</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>vector_dim</cite> - the dimension of the hidden layers.</p></li>
+<li><p><cite>batch_size</cite> - the size of the batch of input molecular graphs.</p></li>
+<li><p><cite>dropout</cite> - the dropout value.</p></li>
+<li><p><cite>learning_rate</cite> - the learning rate.</p></li>
+<li><p><cite>num_conv_layers</cite> - the number of convolutional layers.</p></li>
+<li><p><cite>num_epoch</cite> - the number of training epochs.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="cli">
+<h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
+<p>Ranking and filtering policy network training can be performed with the below commands.</p>
+<p><strong>Ranking policy network</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>supervised_ranking_policy_training<span class="w"> </span>--config<span class="w"> </span>policy.yaml<span class="w"> </span>--reaction_data<span class="w"> </span>reaction_data_filtered.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--results_dir<span class="w"> </span>ranking_policy_network
+</pre></div>
+</div>
+<dl class="simple">
+<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
+<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
+<li><p><cite>–reaction_data</cite> is the path to the file with reactions for ranking policy training.</p></li>
+<li><p><cite>–reaction_rules</cite> is the path to the file with extracted reaction rules.</p></li>
+<li><p><cite>–results_dir</cite> is the path to the directory where the trained policy network will be stored.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Filtering policy network</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>supervised_filtering_policy_training<span class="w"> </span>--config<span class="w"> </span>policy.yaml<span class="w"> </span>--molecules_data<span class="w"> </span>molecules_data.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--results_dir<span class="w"> </span>filtering_policy_network
+</pre></div>
+</div>
+<dl class="simple">
+<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
+<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
+<li><p><cite>–reaction_data</cite> is the path to the file with molecules for filtering policy training.</p></li>
+<li><p><cite>–reaction_rules</cite> is the path to the file with extracted reaction rules.</p></li>
+<li><p><cite>–results_dir</cite> is the path to the directory where the trained policy network will be stored.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SynTool</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Policy network</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="reaction_rules_extraction.html" title="previous chapter">Reaction rules extraction</a></li>
+      <li>Next: <a href="value_network.html" title="next chapter">Value network</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, University of Strasbourg / Hokkaido University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/policy_network.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

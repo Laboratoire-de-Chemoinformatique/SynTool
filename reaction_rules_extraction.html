@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Reaction rules extraction &#8212; SynTool 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Policy network" href="policy_network.html" />
+    <link rel="prev" title="Reaction filtration" href="reaction_filtration.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="reaction-rules-extraction">
+<h1>Reaction rules extraction<a class="headerlink" href="#reaction-rules-extraction" title="Link to this heading">¶</a></h1>
+<p>This page explains how to do a reaction rules extraction in SynTool.</p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>The protocol for extraction of reaction rules from reactions in SynTool involves the following steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Substructure Extraction - for each reactant and product in a given reaction, substructures containing the atoms of the reaction center and their immediate environment are extracted.</p></li>
+<li><p>Substructure Exchange -the reactant and product substructures are then exchanged.</p></li>
+<li><p>Reagents Handling -if the reaction includes reagents, they are not incorporated into the retro-rule.</p></li>
+<li><p>Label Preservation - all labels related to the atoms of the reaction center, such as hybridization, the number of neighbors, and the ring sizes in which the atoms participate, are preserved. For atoms in the first environment, only the sizes of rings are preserved.</p></li>
+</ul>
+</div></blockquote>
+<p>A reaction rule extracted by this protocol is applied to the product of the original reaction. If it successfully
+generates the reactants of the reaction, the reaction rule is considered valid.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
+<p>The ExtractRuleConfig class in SynTool allows for the fine-tuning of the reaction rules extraction protocol:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">environment_atom_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">min_popularity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="nt">multicenter_rules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">as_query_container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">reverse_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">include_func_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="nt">func_groups_list</span><span class="p">:</span>
+<span class="nt">include_rings</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="nt">keep_leaving_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">keep_incoming_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="nt">keep_reagents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="nt">keep_metadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="nt">single_reactant_only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">atom_info_retention</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">reaction_center</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">neighbors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">hybridization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">implicit_hydrogens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">    </span><span class="nt">ring_sizes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">  </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">neighbors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">hybridization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">    </span><span class="nt">implicit_hydrogens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">    </span><span class="nt">ring_sizes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+</pre></div>
+</div>
+<p><strong>Configuration parameters</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>multicenter_rules</cite> - determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False). The default is True.</p></li>
+<li><p><cite>as_query_container</cite> - when set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching. The default is True.</p></li>
+<li><p><cite>reverse_rule</cite> - if True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis. The default is True.</p></li>
+<li><p><cite>reactor_validation</cite> - activates the validation of each generated rule in a chemical reactor to confirm the accurate generation of products from reactants when set to True. The default is True.</p></li>
+<li><p><cite>include_func_groups</cite> - if True, specific functional groups are included in the reaction rule in addition to the reaction center and its environment. The default is False.</p></li>
+<li><p><cite>func_groups_list</cite> - specifies a list of functional groups to be included when include_func_groups is True.</p></li>
+<li><p><cite>include_rings</cite> - includes ring structures in the reaction rules connected to the reaction center atoms if set to True. The default is False.</p></li>
+<li><p><cite>keep_leaving_groups</cite> - keeps the leaving groups in the extracted reaction rule when set to True. The default is False.</p></li>
+<li><p><cite>keep_incoming_groups</cite> - retains incoming groups in the extracted reaction rule if set to True. The default is False.</p></li>
+<li><p><cite>keep_reagents</cite> - includes reagents in the extracted reaction rule when True. The default is False.</p></li>
+<li><p><cite>environment_atom_count</cite> - sets the number of layers of atoms around the reaction center to be included in the rule. A value of 0 includes only the reaction center, 1 includes the first surrounding layer, and so on. The default is 1.</p></li>
+<li><p><cite>min_popularity</cite> - establishes the minimum number of times a rule must be applied to be included in further analysis. The default is 3.</p></li>
+<li><p><cite>keep_metadata</cite> - preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.</p></li>
+<li><p><cite>single_reactant_only</cite> - limits the extracted rules to those with only a single reactant molecule if True. The default is True.</p></li>
+<li><p><cite>atom_info_retention</cite> - dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="cli">
+<h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
+<p>Reaction rules extraction can be performed with the below command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>rule_extracting<span class="w"> </span>--config<span class="w"> </span>extraction.yaml<span class="w"> </span>--input<span class="w"> </span>reaction_data_filtered.smi<span class="w"> </span>--output<span class="w"> </span>reaction_rules.pickle
+</pre></div>
+</div>
+<dl class="simple">
+<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
+<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
+<li><p><cite>–input</cite> is the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
+<li><p><cite>–output</cite> is the path to the file (.pickle) where extracted reactions rules to be stored.</p></li>
+</ul>
+</dd>
+</dl>
+<p>The extension of the input reaction data file will be automatically parsed and for reading/writing reactions.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SynTool</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction rules extraction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="reaction_filtration.html" title="previous chapter">Reaction filtration</a></li>
+      <li>Next: <a href="policy_network.html" title="next chapter">Policy network</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, University of Strasbourg / Hokkaido University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/reaction_rules_extraction.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
