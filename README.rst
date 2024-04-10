@@ -116,5 +116,5 @@ Run retrosynthetic planning
 Documentation
 -----------
 
-The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/Syntool/>`_
+The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_
 

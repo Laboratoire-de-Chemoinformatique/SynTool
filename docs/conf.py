@@ -44,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'SynTool'
-copyright = '2023, University of Strasbourg'
+copyright = '2023, University of Strasbourg / Hokkaido University'
 author = 'TA / DZ'
 
 # The version info for the project you're documenting, acts as replacement for
