@@ -790,7 +790,7 @@ def process_completed_batches(futures: Dict, result_file: str, pbar: tqdm,
             result_file.write(reaction)
             passed_filters += 1
 
-    # Remove completed future and update progress bar
+    # remove completed future and update progress bar
     del futures[done[0]]
     pbar.update(now_treated)
     treated += now_treated
@@ -799,7 +799,7 @@ def process_completed_batches(futures: Dict, result_file: str, pbar: tqdm,
 
 
 def filter_reactions(config: ReactionCheckConfig,
-                     reaction_database_path: str,
+                     reaction_data_path: str,
                      result_reactions_file_name: str = "reaction_data_filtered.smi",
                      append_results: bool = False,
                      num_cpus: int = 1,
@@ -810,7 +810,7 @@ def filter_reactions(config: ReactionCheckConfig,
     to specified files.
 
     :param config: ReactionCheckConfig object containing all filtration configuration settings.
-    :param reaction_database_path: Path to the reaction data file.
+    :param reaction_data_path: Path to the reaction data file.
     :param result_reactions_file_name: Name for the file that will contain filtered reactions.
     :param append_results: Flag indicating whether to append results to existing files.
     :param num_cpus: Number of CPUs to use for processing.
@@ -823,13 +823,13 @@ def filter_reactions(config: ReactionCheckConfig,
     ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
     max_concurrent_batches = num_cpus  # limit the number of concurrent batches
 
-    with ReactionReader(reaction_database_path) as reactions, ReactionWriter(result_reactions_file_name, append_results) as result_file:
+    with ReactionReader(reaction_data_path) as reactions, ReactionWriter(result_reactions_file_name, append_results) as result_file:
 
-        pbar = tqdm(reactions, leave=True)  # TODO fix progress bars
+        pbar = tqdm(reactions, leave=True, desc="Number of reactions processed: ", bar_format='{desc}{n} [{elapsed}]')
 
-        futures = {}
+        futures = {} # TODO not meaningful variable name
         batch = []
-        treated = filtered = 0
+        treated = filtered = 0 # TODO not meaningful variable name
         for index, reaction in enumerate(reactions):
             reaction.meta["reaction_index"] = index
             batch.append((index, reaction))

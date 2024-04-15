@@ -168,17 +168,30 @@ def tune_value_network(datamodule, value_config: ValueNetworkConfig):
 
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
-    with DisableLogger() as DL, HiddenPrints() as HP:
-        trainer = Trainer(accelerator="gpu",
-                          devices=[0],
-                          max_epochs=value_config.num_epoch,
-                          callbacks=[lr_monitor],
-                          gradient_clip_val=1.0,
-                          enable_progress_bar=False)
+    # with DisableLogger() as DL, HiddenPrints() as HP:
+    #     trainer = Trainer(accelerator="gpu",
+    #                       devices=[0],
+    #                       max_epochs=value_config.num_epoch,
+    #                       callbacks=[lr_monitor],
+    #                       gradient_clip_val=1.0,
+    #                       enable_progress_bar=False)
+    #
+    #     trainer.fit(value_network, datamodule)
+    #     val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
+    #     trainer.save_checkpoint(current_weights)
 
-        trainer.fit(value_network, datamodule)
-        val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
-        trainer.save_checkpoint(current_weights)
+
+    trainer = Trainer(accelerator="gpu",
+                      devices=[0],
+                      max_epochs=value_config.num_epoch,
+                      callbacks=[lr_monitor],
+                      gradient_clip_val=1.0,
+                      enable_progress_bar=True)
+
+    trainer.fit(value_network, datamodule)
+    val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
+    trainer.save_checkpoint(current_weights)
+
     #
     print(f"Value network balanced accuracy: {val_score['val_balanced_accuracy']}")
 
@@ -250,7 +263,7 @@ def run_reinforcement_tuning(targets_path: str,
                              reinforce_config: ReinforcementConfig,
                              reaction_rules_path: str,
                              building_blocks_path: str,
-                             results_root=None):
+                             results_root: str = None):
     """
     Performs self-tuning simulations with alternating planning and training stages
 

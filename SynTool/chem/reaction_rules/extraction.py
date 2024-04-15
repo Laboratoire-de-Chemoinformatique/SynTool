@@ -564,7 +564,8 @@ def extract_rules_from_reactions(config: RuleExtractionConfig, reaction_file: st
 
     rules_file_name, _ = splitext(rules_file_name)
     with ReactionReader(reaction_file) as reactions:
-        pbar = tqdm(reactions, disable=False)
+        pbar = tqdm(reactions, disable=False, desc="Number of reactions processed: ",
+                    bar_format='{desc}{n} [{elapsed}]')
 
         futures = {}
         batch = []

@@ -73,18 +73,15 @@ def building_blocks_cli(input_file: str, output_file: str) -> None:
 
 
 @syntool.command(name="reaction_mapping")
-@click.option("--config", "config_path", required=True, type=click.Path(exists=True),
-              help="Path to the configuration file for reactions mapping.")
 @click.option("--input", "input_file", required=True, type=click.Path(exists=True),
               help="Path to the file with reactions to be mapped.")
 @click.option("--output", "output_file", default=Path("reaction_data_standardized.smi"), type=click.Path(),
               help="Path to the file where mapped reactions will be stored.")
-def reaction_mapping_cli(config_path: str, input_file: str, output_file: str) -> None:
+def reaction_mapping_cli(input_file: str, output_file: str) -> None:
     """
     Reaction data mapping.
     """
-    stand_config = ReactionStandardizationConfig.from_yaml(config_path)
-    remove_reagents_and_map_from_file(input_file=input_file, output_file=output_file, keep_reagent=stand_config.keep_reagents)
+    remove_reagents_and_map_from_file(input_file=input_file, output_file=output_file, keep_reagent=False)
 
 
 @syntool.command(name="reaction_standardizing")
@@ -126,7 +123,7 @@ def reaction_filtering_cli(config_path: str, input_file: str, output_file: str,
     Filters erroneous reactions.
     """
     reaction_check_config = ReactionCheckConfig().from_yaml(config_path)
-    filter_reactions(config=reaction_check_config, reaction_database_path=input_file,
+    filter_reactions(config=reaction_check_config, reaction_data_path=input_file,
                      result_reactions_file_name=output_file, append_results=append_results,
                      num_cpus=num_cpus, batch_size=batch_size)
 
@@ -192,7 +189,7 @@ def supervised_ranking_policy_training_cli(config_path: str, reaction_data: str,
               help="Path to the directory where the trained policy network will be stored.")
 @click.option("--num_cpus", default=8, type=int,
               help="The number of CPUs to use for training set preparation.")
-def supervised_filtering_policy_training_cli(config_path: str, molecules_data: str, reaction_rules: str,
+def supervised_filtering_policy_training_cli(config_path: str, molecule_data: str, reaction_rules: str,
                                              results_dir: str, num_cpus: int):
     """
     Filtering policy network training.
@@ -202,7 +199,7 @@ def supervised_filtering_policy_training_cli(config_path: str, molecules_data: s
 
     policy_dataset_file = os.path.join(results_dir, 'policy_dataset.ckpt')
     datamodule = create_policy_dataset(reaction_rules_path=reaction_rules,
-                                       molecules_or_reactions_path=molecules_data,
+                                       molecules_or_reactions_path=molecule_data,
                                        output_path=policy_dataset_file,
                                        dataset_type='filtering',
                                        batch_size=policy_config.batch_size,
@@ -229,7 +226,7 @@ def supervised_filtering_policy_training_cli(config_path: str, molecules_data: s
 def reinforcement_value_network_training_cli(config_path: str, targets: str, reaction_rules: str, building_blocks: str,
                                              policy_network: str, value_network: str, results_dir: str):
     """
-    Value network reinforcement training .
+    Value network reinforcement training.
     """
 
     with open(config_path, "r") as file:
@@ -282,7 +279,7 @@ def planning_cli(config_path: str, targets: str, reaction_rules: str, building_b
     tree_config = TreeConfig.from_dict({**config['tree'], **config['node_evaluation']})
     policy_config = PolicyNetworkConfig.from_dict({**config['node_expansion'], **{'weights_path': policy_network}})
 
-    tree_search(targets_path=targets,
+    tree_search(targets=targets,
                 tree_config=tree_config,
                 policy_config=policy_config,
                 reaction_rules_path=reaction_rules,

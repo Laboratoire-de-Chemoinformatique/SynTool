@@ -80,7 +80,7 @@ Run training from scratch
     syntool building_blocks --input tests/building_blocks.smi --output tests/building_blocks_2.smi
 
     # reaction data mapping
-    syntool reaction_mapping --config configs/standardization.yaml --input tests/uspto_original.smi --output tests/uspto_mapped.smi
+    syntool reaction_mapping --input tests/uspto_original.smi --output tests/uspto_mapped.smi
 
     # reaction data standardizing
     syntool reaction_standardizing --config configs/standardization.yaml --input tests/uspto_mapped.smi --output tests/uspto_standardized.smi
@@ -93,6 +93,9 @@ Run training from scratch
 
     # supervised ranking policy training
     syntool supervised_ranking_policy_training --config configs/policy.yaml --reaction_data tests/uspto_filtered.smi --reaction_rules tests/reaction_rules.pickle --results_dir tests/ranking_policy_network
+
+    # supervised filtering policy training
+    syntool supervised_filtering_policy_training --config configs/policy.yaml --molecule_data tests/uspto_filtered.smi --reaction_rules tests/reaction_rules.pickle --results_dir tests/ranking_policy_network
 
     # reinforcement value network training
     syntool reinforcement_value_network_training --config configs/reinforcement.yaml --targets targets.smi --reaction_rules tests/reaction_rules.pickle --building_blocks tests/building_blocks.smi --policy_network tests/ranking_policy_network/weights/policy_network.ckpt --results_dir tests/value_network

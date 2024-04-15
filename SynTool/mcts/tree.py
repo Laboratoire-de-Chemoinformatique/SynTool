@@ -29,7 +29,7 @@ class Tree:
     """
 
     def __init__(self,
-                 target: MoleculeContainer,
+                 target: Union[MoleculeContainer, str],
                  tree_config: TreeConfig,
                  reaction_rules_path: str,
                  building_blocks_path: str,

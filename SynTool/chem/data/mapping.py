@@ -39,7 +39,7 @@ def remove_reagents_and_map_from_file(input_file: str, output_file: str, keep_re
     :param output_file: The path and name of the output file.
     :param keep_reagent: Whenever to remove reagent or not.
 
-    :return: None
+    :return: None.
     """
     input_file = str(Path(input_file).resolve(strict=True))
     _, input_ext = splitext(input_file)
@@ -61,23 +61,23 @@ def remove_reagents_and_map_from_file(input_file: str, output_file: str, keep_re
 
     mapping_errors = 0
     parsing_errors = 0
-    for rea_raw in tqdm(enumerator):
+    for reaction_smi in tqdm(enumerator, desc="Number of reactions processed: ", bar_format='{desc}{n} [{elapsed}]'):
         try:
-            reaction = smiles(rea_raw.strip('\n')) if input_ext == ".smi" else rea_raw
+            reaction = smiles(reaction_smi.strip('\n')) if input_ext == ".smi" else reaction_smi
         except IncorrectSmiles:
             parsing_errors += 1
             continue
         try:
-            rea_mapped = remove_reagents_and_map(reaction, keep_reagent)
+            reaction_mapped = remove_reagents_and_map(reaction, keep_reagent)
         except:
             try:
-                rea_mapped = remove_reagents_and_map(smiles(str(reaction)), keep_reagent)
+                reaction_mapped = remove_reagents_and_map(smiles(str(reaction)), keep_reagent)
             except:
                 mapping_errors += 1
                 continue
-        if rea_mapped:
-            rea_output = format(reaction, "m") + "\n" if out_ext == ".smi" else reaction
-            output_file.write(rea_output)
+        if reaction_mapped:
+            reaction_smi_mapped = format(reaction, "m") + "\n" if out_ext == ".smi" else reaction
+            output_file.write(reaction_smi_mapped)
         else:
             mapping_errors += 1
 

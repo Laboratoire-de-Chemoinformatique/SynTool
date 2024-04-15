@@ -4,9 +4,9 @@ Module containing classes and functions needed for reactions/molecules data read
 
 from pathlib import Path
 from os.path import splitext
-from typing import Iterable, Union, Any
+from typing import Iterable, Union
 from CGRtools import smiles
-from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContainer, QueryContainer
+from CGRtools.containers import ReactionContainer, MoleculeContainer, CGRContainer
 from CGRtools.files.SDFrw import SDFRead, SDFWrite
 from CGRtools.files.RDFrw import RDFRead, RDFWrite
 
@@ -70,7 +70,6 @@ class SMILESRead:
         filename = str(Path(filename).resolve(strict=True))
         self._file = open(filename, "r")
         self._data = self.__data()
-        self._len = sum(1 for _ in open(filename, "r")) #TODO replace later
 
     def __data(self) -> Iterable[Union[ReactionContainer, CGRContainer, MoleculeContainer]]:
         for line in iter(self._file.readline, ''):
@@ -96,9 +95,6 @@ class SMILESRead:
 
     def __next__(self):
         return next(iter(self))
-
-    def __len__(self):
-        return self._len
 
     def close(self):
         self._file.close()
@@ -215,7 +211,7 @@ class MoleculeWriter(Writer):
         else:
             raise ValueError("File type incompatible -", filename)
 
-    def write(self, molecule: Any[MoleculeContainer, ReactionContainer, CGRContainer]):
+    def write(self, molecule: MoleculeContainer):
         """
         Function to write a specific molecule to the file.
 

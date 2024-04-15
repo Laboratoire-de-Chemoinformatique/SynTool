@@ -129,7 +129,8 @@ class RankingPolicyDataset(InMemoryDataset):
         list_of_graphs = []
         with ReactionReader(self.reactions_path) as reactions:
 
-            for reaction_id, reaction in tqdm(enumerate(reactions)):
+            for reaction_id, reaction in tqdm(enumerate(reactions), desc="Number of reactions processed: ",
+                                              bar_format='{desc}{n} [{elapsed}]'):
 
                 rule_id = dataset.get(reaction_id)
                 if rule_id:
@@ -186,8 +187,9 @@ class FilteringPolicyDataset(InMemoryDataset):
 
     def prepare_data(self):
         """
-        The function prepares data by loading reaction rules, initializing Ray, preprocessing the molecules, collating
+        Prepares data by loading reaction rules, initializing Ray, preprocessing the molecules, collating
         the data, and returning the data and slices.
+
         :return: data (PyTorch geometric graphs) and slices.
         """
 
@@ -200,7 +202,9 @@ class FilteringPolicyDataset(InMemoryDataset):
         results_ids = [preprocess_filtering_policy_molecules.remote(to_process, reaction_rules_ids) for _ in range(self.num_cpus)]
 
         with open(self.molecules_path, "r") as inp_data:
-            for molecule in tqdm(inp_data.read().splitlines()):
+            for molecule in tqdm(inp_data.read().splitlines(), desc="Number of molecules processed: ",
+                                 bar_format='{desc}{n} [{elapsed}]'):
+
                 to_process.put(molecule)
 
         results = [graph for res in ray.get(results_ids) if res for graph in res]
@@ -281,34 +285,52 @@ def preprocess_filtering_policy_molecules(to_process: Queue, reaction_rules: Lis
     :type to_process: Queue
     :param reaction_rules: The list of reaction rules.
     :type reaction_rules: List[Reactor]
+
     :return: a list of PyGraph objects.
     """
 
     pyg_graphs = []
     while True:
+        tmp = []
+        print('Queue len:', len(to_process))
         try:
             molecule = smiles(to_process.get(timeout=30))
             if not isinstance(molecule, MoleculeContainer):
                 continue
 
             # reaction reaction_rules application
+            import time
+            import numpy as np
+            s = time.time()
+            print('reaction_rules_appliance started')
             applied_rules, priority_rules = reaction_rules_appliance(molecule, reaction_rules)
-            y_rules = torch.sparse_coo_tensor([applied_rules], torch.ones(len(applied_rules)),
-                                              (len(reaction_rules),), dtype=torch.uint8)
-            y_priority = torch.sparse_coo_tensor([priority_rules], torch.ones(len(priority_rules)),
-                                                 (len(reaction_rules),), dtype=torch.uint8)
+            e = time.time()
+            tmp.append(e -s)
+
+            print(f'reaction_rules_appliance finished - {e - s}')
+            print('mean time', np.mean(tmp))
+
+
+            y_rules = torch.sparse_coo_tensor([applied_rules], torch.ones(len(applied_rules)), (len(reaction_rules),), dtype=torch.uint8)
+            y_priority = torch.sparse_coo_tensor([priority_rules], torch.ones(len(priority_rules)), (len(reaction_rules),), dtype=torch.uint8)
 
             y_rules = torch.unsqueeze(y_rules, 0)
             y_priority = torch.unsqueeze(y_priority, 0)
 
+            print('mol_to_pyg started')
             pyg_graph = mol_to_pyg(molecule)
+            print('mol_to_pyg finished')
+
             if not pyg_graph:
                 continue
             pyg_graph.y_rules = y_rules
             pyg_graph.y_priority = y_priority
             pyg_graphs.append(pyg_graph)
+
         except Empty:
+            print('Batch finished')
             break
+
     return pyg_graphs
 
 
@@ -385,8 +407,13 @@ def mol_to_pyg(molecule: MoleculeContainer, canonicalize: bool = True):
 
     :param canonicalize:
     :param molecule: The molecule to be converted to PyTorch Geometric graph.
+
     :return: A list of pyg graphs
     """
+
+    if len(molecule) == 1: # TODO sometimes the retron is a single atom
+        return None
+
     tmp_molecule = molecule.copy()
     try:
         if canonicalize:

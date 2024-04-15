@@ -4,13 +4,14 @@ Module containing functions for running tree search for the set of target molecu
 
 import csv
 import json
+import os.path
 from pathlib import Path
 from tqdm import tqdm
+from CGRtools import smiles
 from SynTool.interfaces.visualisation import generate_results_html, extract_routes
 from SynTool.mcts.tree import Tree, TreeConfig
 from SynTool.mcts.evaluation import ValueFunction
 from SynTool.mcts.expansion import PolicyFunction
-from SynTool.utils.files import MoleculeReader
 from SynTool.utils.config import PolicyNetworkConfig
 
 
@@ -24,15 +25,20 @@ def extract_tree_stats(tree, target):
     :return: A dictionary with the calculated statistics.
     """
 
+    if isinstance(target, str):
+        target_smi = target
+        target = smiles(target)
+        target.meta['init_smiles'] = target_smi
+
     newick_tree, newick_meta = tree.newickify(visits_threshold=0)
     newick_meta_line = ";".join([f"{nid},{v[0]},{v[1]},{v[2]}" for nid, v in newick_meta.items()])
 
     return {"target_smiles": target.meta['init_smiles'],
             "tree_size": len(tree),
-           "search_time": round(tree.curr_time, 1),
-           "found_paths": len(tree.winning_nodes),
-           "newick_tree": newick_tree,
-           "newick_meta": newick_meta_line}
+            "search_time": round(tree.curr_time, 1),
+            "found_paths": len(tree.winning_nodes),
+            "newick_tree": newick_tree,
+            "newick_meta": newick_meta_line}
 
 
 def tree_search(
@@ -59,8 +65,6 @@ def tree_search(
     :return: None.
     """
 
-    targets_file = Path(targets_path)
-
     # results folder
     results_root = Path(results_root)
     if not results_root.exists():
@@ -68,8 +72,8 @@ def tree_search(
 
     # output files
     stats_file = results_root.joinpath("tree_search_stats.csv")
-    paths_file = results_root.joinpath("extracted_paths.json")
-    retropaths_folder = results_root.joinpath("retropaths")
+    paths_file = results_root.joinpath("extracted_routes.json")
+    retropaths_folder = results_root.joinpath("extracted_routes")
     retropaths_folder.mkdir(exist_ok=True)
 
     # stats header
@@ -84,17 +88,21 @@ def tree_search(
 
     # run search
     n_solved = 0
-    extracted_paths = []
-    with MoleculeReader(targets_file) as targets_path, open(stats_file, "w", newline="\n") as csvfile:
+    extracted_routes = []
+
+    with open(targets_path, 'r') as targets, open(stats_file, "w", newline="\n") as csvfile:
+
         statswriter = csv.DictWriter(csvfile, delimiter=",", fieldnames=stats_header)
         statswriter.writeheader()
 
-        for ti, target in tqdm(enumerate(targets_path), total=len(targets_path)):
-
+        for ti, target_smi in tqdm(enumerate(targets), leave=True, desc="Number of target molecules processed: ",
+                                   bar_format='{desc}{n} [{elapsed}]'):
+            target_smi = target_smi.strip()
+            print(f'Search for {target_smi}')
             try:
                 # run search
                 tree = Tree(
-                    target=target,
+                    target=target_smi,
                     tree_config=tree_config,
                     reaction_rules_path=reaction_rules_path,
                     building_blocks_path=building_blocks_path,
@@ -103,24 +111,33 @@ def tree_search(
 
                 _ = list(tree)
 
-            except:
+            except Exception as e:
+                extracted_routes.append([{"type": "mol", "smiles": target_smi, "in_stock": False, "children": []}])
+                statswriter.writerow({"target_smiles": target_smi,
+                                      "tree_size": None,
+                                      "search_time": None,
+                                      "found_paths": None,
+                                      "newick_tree": e,
+                                      "newick_meta": e})
+                csvfile.flush()
                 continue
 
+            # is solved
             n_solved += bool(tree.winning_nodes)
 
             # extract routes
-            extracted_paths.append(extract_routes(tree))
+            extracted_routes.append(extract_routes(tree))
 
-            # retropaths
-            retropaths_file = retropaths_folder.joinpath(f"retropaths_target_{ti}.html")
-            generate_results_html(tree, retropaths_file, extended=True)
+            # write routes
+            generate_results_html(tree, os.path.join(retropaths_folder, f"retropaths_target_{ti}.html"), extended=True)
 
-            # stats
-            statswriter.writerow(extract_tree_stats(tree, target))
+            # write stats
+            statswriter.writerow(extract_tree_stats(tree, target_smi))
             csvfile.flush()
 
+            # write json routes
             with open(paths_file, 'w') as f:
-                json.dump(extracted_paths, f)
+                json.dump(extracted_routes, f)
 
     print(f"Solved number of target molecules: {n_solved}")
 

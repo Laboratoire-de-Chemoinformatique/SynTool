@@ -119,7 +119,9 @@ def reactions_cleaner(config: ReactionStandardizationConfig, input_file: str, ou
 
         n = 0
         with ReactionReader(input_file) as reactions:
-            for raw_reaction in tqdm(reactions):
+            for raw_reaction in tqdm(reactions, desc="Number of reactions processed: ",
+                                     bar_format='{desc}{n} [{elapsed}]'):
+
                 if 'Reaction_ID' not in raw_reaction.meta:
                     raw_reaction.meta['Reaction_ID'] = n
                 to_clean.put(raw_reaction)

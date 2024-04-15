@@ -28,7 +28,13 @@ This is why sometimes the output reaction SMILES, after it passed all the filter
 The current version of SynTool is not perfectly optimal in terms of memory usage with many CPUs (this problem will be fixed in future versions).
 This is why it is recommended to set no more than 4 CPU for steps related to the data curation.
 
-**4. Search strategies in retrosynthesis planning**
+**5. Ranking and filtering policy networks**
+
+*Prefer the ranking policy network
+
+Ranking and filtering policy network.
+
+**5. Search strategies in retrosynthesis planning**
 
 *"Evaluation first" search strategy is not compatible with the rollout evaluation.*
 
