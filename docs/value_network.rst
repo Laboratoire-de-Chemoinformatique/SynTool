@@ -1,3 +1,5 @@
+.. _value_network:
+
 Value network
 ================
 
@@ -6,24 +8,24 @@ This page explains how to train a value network in SynTool.
 Introduction
 ---------------------------
 
-During the evaluation step, the value function (or evaluation function) is used to estimate the retrosynthetic feasibility
-of a newly created node. In Syntool, evaluation functions such as random function (assigns a random value), rollout function,
-and value network trained with the learning from simulated experience algorithm are implemented. The architecture of the
+**Value network architecture**. During the evaluation step, the value function (or evaluation function) is used to estimate the retrosynthetic feasibility
+of a newly created node. In SynTool, evaluation functions such as random function (assigns a random value), rollout function,
+and value network trained with the reinforcement learning based algorithm are implemented. The architecture of the
 value network is like the policy network. The molecular representation part of the neural network is the same, and the
 difference is that the output linear layer returns a single value ranging from 0 to 1.
 
-The value neural network is iteratively trained on training subsets extracted from the previous planning sessions
-(learning from simulated experience). In the first iteration, the value network is initialized with random weights and
-is used for the initial retrosynthesis planning session for N target molecules. Then, intermediate products that were
-part of a successful retrosynthesis path leading to building block molecules are labeled with a positive label, and
-precursors that did not lead to building blocks are labeled with a negative label. This generated training data is
-used to retrain the value network to better recognize precursors leading to possible successful retrosynthetic paths.
-The training task of the value network is a classification problem, where the positive class corresponds to the precursor
-that leads to building blocks; otherwise, it is considered a negative class.
+**Reinforcement value network tuning**. The value neural network is iteratively tuned on the training subsets of molecules
+extracted from the simulated planning sessions. In the first iteration, the value network is initialized with random weights and
+is used for the initial simulated retrosynthesis planning session for N target molecules. Then, retrons that were
+part of a successful retrosynthesis routes leading to the building block molecules are labeled with a positive class, and
+retron that did not lead to the building blocks are labeled with a negative class. This generated training data is
+used to retrain the value network to better recognize retrons leading to possible successful retrosynthetic routes.
+This is a classification problem, where the positive class corresponds to the retron that leads to building blocks;
+otherwise, it is considered a negative class.
 
 Configuration
 ---------------------------
-The network architecture and training hyperparameters can be adjusted in the training configuration file below. The value network, its architecture, and hyperparameters can be specified in the ValueNetwork section in the training configuration file:
+The network architecture and training hyperparameters can be adjusted in the training configuration file below.
 
 .. code-block:: yaml
 
@@ -94,15 +96,15 @@ Value network training can be performed with the below command.
 
 .. code-block:: bash
 
-    syntool reinforcement_value_network_training --config reinforcement.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network ranking_policy_network/policy_network.ckpt --results_dir value_network
+    syntool reinforcement_value_network_training --config reinforcement.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network policy_network.ckpt --results_dir value_network
 
 **Parameters**:
-    - `--config` is the path to the configuration file.
-    - `--targets` is the path to the file with target molecules.
-    - `--reaction_rules` is the path to the file with reactions rules.
-    - `--building_blocks` is the path to the file with building blocks.
-    - `--policy_network` is the path to the file with trained policy network (ranking or filtering).
-    - `--results_dir` is the path to the directory where the trained value network will be to be stored.
+    - `config` - the path to the configuration file.
+    - `targets` - the path to the file with target molecules.
+    - `reaction_rules` - the path to the file with reactions rules.
+    - `building_blocks` - the path to the file with building blocks.
+    - `policy_network` - the path to the file with trained policy network (ranking or filtering).
+    - `results_dir` - the path to the directory where the trained value network will be to be stored.
 
 
 

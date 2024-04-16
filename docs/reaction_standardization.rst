@@ -1,10 +1,13 @@
+.. _reaction_standardization:
+
 Reaction standardization
 ===========================
 This page explains how to do a reaction standardization in SynTool.
 
 Introduction
 -------------------------
-The reaction data are standardized using an original protocol for reaction data curation published later [https://doi.org/10.1002/minf.202100119].
+The reaction data are standardized using an original protocol for reaction data curation
+published earlier [https://doi.org/10.1002/minf.202100119].
 
 This protocol includes several steps such as:
     * transform functional groups, kekulize
@@ -17,7 +20,7 @@ This protocol includes several steps such as:
 
 Configuration
 ---------------------------
-Reaction data standardization can be adjusted with the bellow configuration file (these default parameters are recommended).
+Reaction data standardization can be adjusted with the bellow configuration yaml file (these default parameters are recommended).
 
 .. code-block:: yaml
 
@@ -44,8 +47,8 @@ Reaction standardization can be performed with the below command.
     syntool reaction_standardizing --config standardization.yaml --input reaction_data_mapped.smi --output reaction_data_standardized.smi
 
 **Parameters**:
-    - `--config` is the path to the configuration file.
-    - `--input` is the path to the file (.smi or .rdf) with reactions to be standardized.
-    - `--output` is the path to the file (.smi or .rdf) where standardized reactions to be stored.
+    - `config` - the path to the configuration file.
+    - `input` - the path to the file (.smi or .rdf) with reactions to be standardized.
+    - `output` - the path to the file (.smi or .rdf) where standardized reactions will be stored.
 
-The extension of the files will be automatically parsed and for reading/writing reactions.
+The extension of the input/output files will be automatically parsed.
