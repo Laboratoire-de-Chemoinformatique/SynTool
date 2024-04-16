@@ -2,19 +2,17 @@
 Module containing functions for running value network tuning with self-tuning approach
 """
 
-import os.path
+import os
+import torch
 from collections import defaultdict
 from pathlib import Path
 from random import shuffle
-
-import torch
-from CGRtools.containers import MoleculeContainer
-from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor
+from tqdm import tqdm
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
-from tqdm import tqdm
-
+from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import LearningRateMonitor
+from CGRtools.containers import MoleculeContainer
 from SynTool.mcts.tree import Tree
 from SynTool.utils.files import MoleculeReader
 from SynTool.ml.training.preprocessing import ValueNetworkDataset
@@ -25,9 +23,17 @@ from SynTool.utils.loading import load_value_net
 from SynTool.mcts.expansion import PolicyFunction
 from SynTool.mcts.evaluation import ValueFunction
 from SynTool.utils.config import TreeConfig, PolicyNetworkConfig, ValueNetworkConfig, ReinforcementConfig
+from typing import List, Dict
 
 
-def create_value_network(value_config):
+def create_value_network(value_config: ValueNetworkConfig) -> ValueNetwork:
+    """
+    Creates the initial value network.
+
+    :param value_config: The value network configuration.
+
+    :return: The valueNetwork to be trained/tuned.
+    """
 
     weights_path = Path(value_config.weights_path)
     value_network = ValueNetwork(vector_dim=value_config.vector_dim,
@@ -45,7 +51,15 @@ def create_value_network(value_config):
 
 
 
-def create_targets_batch(targets, batch_size):
+def create_targets_batch(targets: List[MoleculeContainer], batch_size: int) -> List[List[MoleculeContainer]]:
+    """
+    Creates the targets batches for planning simulations and value network tuning.
+
+    :param targets: The list of target molecules.
+    :param batch_size: The size of each target batch.
+
+    :return: The list of lists corresponding to each target batch.
+    """
 
     num_targets = len(targets)
     batch_splits = list(range(num_targets // batch_size + int(bool(num_targets % batch_size))))
@@ -64,33 +78,6 @@ def create_targets_batch(targets, batch_size):
 
 
 
-def extract_tree_retrons(tree_list):
-    """
-    Takes a built tree and a dictionary of processed molecules extracted from the previous trees as input, and returns
-    the updated dictionary of processed molecules after adding the solved nodes from the given tree.
-
-    :param tree_list: The built tree
-    """
-    extracted_retrons = defaultdict(float)
-    for tree in tree_list:
-        for idx, node in tree.nodes.items():
-            # add solved nodes to set
-            if node.is_solved():
-                parent = idx
-                while parent and parent != 1:
-                    composed_smi = str(compose_retrons(tree.nodes[parent].new_retrons))
-                    extracted_retrons[composed_smi] = 1.0
-                    parent = tree.parents[parent]
-            else:
-                composed_smi = str(compose_retrons(tree.nodes[idx].new_retrons))
-                extracted_retrons[composed_smi] = 0.0
-
-    # shuffle extracted retrons
-    processed_keys = list(extracted_retrons.keys())
-    shuffle(processed_keys)
-    extracted_retrons = {i: extracted_retrons[i] for i in processed_keys}
-
-    return extracted_retrons
 
 
 def run_tree_search(target: MoleculeContainer,
@@ -98,14 +85,18 @@ def run_tree_search(target: MoleculeContainer,
                     policy_config: PolicyNetworkConfig,
                     value_config: ValueNetworkConfig,
                     reaction_rules_path: str,
-                    building_blocks_path: str):
+                    building_blocks_path: str) -> Tree:
     """
-    Takes a target molecule and a planning configuration dictionary as input, preprocesses the target molecule,
-    initializes a tree and then runs the tree search algorithm.
+    Runs tree search for the given target molecule.
 
-    :param target: The target molecule. It can be either a `MoleculeContainer` object or a SMILES string
-    :param tree_config: The planning configuration that contains settings for tree search
-    :return: The built tree
+    :param target: The target molecule.
+    :param tree_config: The planning configuration of tree search.
+    :param policy_config: The policy network configuration.
+    :param value_config: The value network configuration.
+    :param reaction_rules_path: The path to the file with reaction rules.
+    :param building_blocks_path: The path to the file with building blocks.
+
+    :return: The built search tree for the given molecule.
     """
 
     # policy and value function loading
@@ -133,14 +124,45 @@ def run_tree_search(target: MoleculeContainer,
     return tree
 
 
-def create_tuning_set(extracted_retrons, batch_size=1):
+def extract_tree_retrons(tree_list: List[Tree]) -> Dict[str, float]:
     """
-    Creates a tuning dataset from a given processed molecules extracted from the trees from the
-    planning stage and returns a LightningDataset object with a specified batch size for tuning value neural network.
+    Takes the built tree and extracts the retrons for value network tuning. The retrons from found retrosynthetic routes
+    are labeled as a positive class and retrons from not solved routes are labeled as a negative class.
 
-    :param batch_size:
-    :param extracted_retrons: The path to the directory where the processed molecules is stored
-    :return: A LightningDataset object, which contains the tuning sets for value network tuning
+    :param tree_list: The list of built search trees.
+
+    :return: The dictionary with the retron SMILES and its class (positive - 1 or negative - 0).
+    """
+    extracted_retrons = defaultdict(float)
+    for tree in tree_list:
+        for idx, node in tree.nodes.items():
+            # add solved nodes to set
+            if node.is_solved():
+                parent = idx
+                while parent and parent != 1:
+                    composed_smi = str(compose_retrons(tree.nodes[parent].new_retrons))
+                    extracted_retrons[composed_smi] = 1.0
+                    parent = tree.parents[parent]
+            else:
+                composed_smi = str(compose_retrons(tree.nodes[idx].new_retrons))
+                extracted_retrons[composed_smi] = 0.0
+
+    # shuffle extracted retrons
+    processed_keys = list(extracted_retrons.keys())
+    shuffle(processed_keys)
+    extracted_retrons = {i: extracted_retrons[i] for i in processed_keys}
+
+    return extracted_retrons
+
+
+def create_tuning_set(extracted_retrons: Dict[str, float], batch_size: int = 1) -> LightningDataset:
+    """
+    Creates the value network tuning dataset from retrons extracted from the planning simulation.
+
+    :param extracted_retrons: The dictionary with the extracted retrons and their labels.
+    :param batch_size: The size of the batch in value network tuning.
+
+    :return: A LightningDataset object, which contains the tuning set for value network tuning.
     """
 
     full_dataset = ValueNetworkDataset(extracted_retrons)
@@ -155,12 +177,14 @@ def create_tuning_set(extracted_retrons, batch_size=1):
     return LightningDataset(train_set, val_set, batch_size=batch_size, pin_memory=True, drop_last=True)
 
 
-def tune_value_network(datamodule, value_config: ValueNetworkConfig):
+def tune_value_network(datamodule: LightningDataset, value_config: ValueNetworkConfig) -> None:
     """
-    Trains a value network using a given data module and saves the trained neural network.
+    Trains the value network using a given tuning data and saves the trained neural network.
 
-    :param datamodule: The instance of a PyTorch Lightning `DataModule` class with tuning set
-    :param value_config:
+    :param datamodule: The tuning dataset (LightningDataset).
+    :param value_config: The value network configuration.
+
+    :return: None.
     """
 
     current_weights = value_config.weights_path
@@ -196,14 +220,14 @@ def tune_value_network(datamodule, value_config: ValueNetworkConfig):
     print(f"Value network balanced accuracy: {val_score['val_balanced_accuracy']}")
 
 
-def run_training(extracted_retrons=None, value_config=None):
-
+def run_training(extracted_retrons: Dict[str, float] = None, value_config: ValueNetworkConfig = None) -> None:
     """
-    Performs the training stage in self-tuning process. Trains a value network using a set of processed molecules and
-    saves the weights of the network.
+    Runs the training stage in reinforcement value network tuning.
 
-    :param extracted_retrons: The path to the directory where the processed molecules extracted from planning
-    :param value_config:
+    :param extracted_retrons: The retrons extracted from the planing simulations.
+    :param value_config: The value network configuration.
+
+    :return: None.
     """
 
     # create training set
@@ -212,25 +236,26 @@ def run_training(extracted_retrons=None, value_config=None):
     # retrain value network
     tune_value_network(datamodule=training_set, value_config=value_config)
 
-def run_planning(targets_batch: list,
+def run_planning(targets_batch: list[MoleculeContainer],
                  tree_config: TreeConfig,
                  policy_config: PolicyNetworkConfig,
                  value_config: ValueNetworkConfig,
                  reaction_rules_path: str,
                  building_blocks_path: str,
-                 targets_batch_id: int):
+                 targets_batch_id: int) -> List[Tree]:
 
     """
-    Performs planning stage (tree search) for target molecules and save extracted from built trees retrons for further
-    tuning the value network in the training stage.
+    Performs the planning stage for the batch of target molecules.
 
-    :param targets_batch:
-    :param tree_config:
-    :param policy_config:
-    :param value_config:
-    :param reaction_rules_path:
-    :param building_blocks_path:
-    :param targets_batch_id:
+    :param targets_batch: The batch of target molecules for planning simulation.
+    :param tree_config: The search tree configuration.
+    :param policy_config: The policy network configuration.
+    :param value_config: The value network configuration.
+    :param reaction_rules_path: The path to the file with reaction rules.
+    :param building_blocks_path: The path to the file with building blocks.
+    :param targets_batch_id: The id of the batch of target molecules.
+
+    :return: The list of built trees for the given batch of target molecules.
     """
 
     print(f'\nProcess batch number {targets_batch_id}')
@@ -263,18 +288,21 @@ def run_reinforcement_tuning(targets_path: str,
                              reinforce_config: ReinforcementConfig,
                              reaction_rules_path: str,
                              building_blocks_path: str,
-                             results_root: str = None):
+                             results_root: str = None) -> None:
     """
-    Performs self-tuning simulations with alternating planning and training stages
+    Performs reinforcement value network tuning.
 
-    :param targets_path:
-    :param tree_config:
-    :param policy_config:
-    :param value_config:
-    :param reinforce_config:
-    :param reaction_rules_path:
-    :param building_blocks_path:
-    :param results_root:
+    :param targets_path: The path to the file with target molecules.
+
+    :param tree_config: The search tree configuration.
+    :param policy_config: The policy network configuration.
+    :param value_config: The value network configuration.
+    :param reinforce_config: The reinforcement tuning configuration.
+    :param reaction_rules_path: The path to the file with reaction rules.
+    :param building_blocks_path: The path to the file with building blocks.
+    :param results_root: The path to the directory where trained value network will be saved.
+
+    :return: None.
     """
 
     # create results root folder
