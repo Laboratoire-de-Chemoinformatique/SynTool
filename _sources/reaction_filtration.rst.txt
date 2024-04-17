@@ -1,3 +1,5 @@
+.. _reaction_filtration:
+
 Reaction filtration
 ===========================
 This page explains how to do a reaction filtration in SynTool.
@@ -8,7 +10,7 @@ Reaction filtration is a crucial step in reaction data curation. It ensures the 
 used fo reaction rules extraction. The current version of SynTool includes 11 reaction filters (see below).
 In brackets it is showed how this filter should be listed in the configuration file to be activated.
 
-The current available filters in SynTool:
+The current available reaction filters in SynTool:
 
     * `CompeteProductsChecker` (`compete_products_config`) - checks if there are compete reactions.
     * `DynamicBondsChecker` (`dynamic_bonds_config`) - checks if there is an unacceptable number of dynamic bonds in CGR.
@@ -54,7 +56,7 @@ Standard and special filters (4 + 3 filters):
     wrong_ch_breaking_config:
     cc_sp3_breaking_config:
 
-**Important**: ih the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
+**Important**: if the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
 Also, some filters requires additional parameters (e.g. `small_molecules_config`).
 
 CLI
@@ -66,8 +68,8 @@ Reaction filtration can be performed with the below command.
     syntool reaction_filtering --config filtration.yaml --input reaction_data_standardized.smi --output reaction_data_filtered.smi
 
 **Parameters**:
-    - `--config` is the path to the configuration file.
-    - `--input` is the path to the file (.smi or .rdf) with reactions to be filtered.
-    - `--output` is the path to the file (.smi or .rdf) where filtered reactions to be stored.
+    - `config` - the path to the configuration file.
+    - `input` - the path to the file (.smi or .rdf) with reactions to be filtered.
+    - `output` - the path to the file (.smi or .rdf) where filtered reactions to be stored.
 
-The extension of the files will be automatically parsed and for reading/writing reactions.
+The extension of the input/output files will be automatically parsed.

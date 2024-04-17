@@ -13,7 +13,7 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="next" title="User guide" href="user_guide.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,15 +32,69 @@
             
   <section id="syntool">
 <h1>SynTool<a class="headerlink" href="#syntool" title="Link to this heading">¶</a></h1>
-<p>SynTool (SYNthesis planning TOol) is a tool for chemical synthesis planning based on Monte-Carlo Tree Search (MCTS) with
-various implementations of policy and value functions.</p>
+<p>SynTool (SYNthesis planning TOol) is a tool for computer-aided retrosynthesis planning.</p>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>SynTool combines Monte-Carlo Tree Search (MCTS) with graph neural networks for the prediction of reaction
-rules and synthesizability of intermediate products. Synto can be directly used for retrosynthesis planning
-with pre-trained policy/value neural networks (planning mode) or can be fine-tuned to the custom data
+rules and synthesizability of intermediate products. SynTool can be directly used for retrosynthesis planning
+with pre-trained policy/value neural networks (planning mode) or can be trained from scratch for the custom reaction data
 using an automated end-to-end training pipeline (training mode).</p>
-<img alt="_images/workflow.png" src="_images/workflow.png" />
+<img alt="_images/pipeline.jpg" src="_images/pipeline.jpg" />
+</section>
+<section id="software">
+<h2>Software<a class="headerlink" href="#software" title="Link to this heading">¶</a></h2>
+<p>SynTool is based on the original Python packages for reaction chemoinformatics. Here is the core software:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>CGRTools</cite> – a core open-source library for reaction data processing and manipulation.</p></li>
+<li><p><cite>chython</cite> – this package is a fork of CGRtools and includes some additional functionalities.</p></li>
+<li><p><cite>chytorch-rxnmap</cite> – a package for reactions mapping.</p></li>
+</ul>
+</div></blockquote>
+<p>Also, SynTool includes some special modules, that can also be used separately:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Reaction standardization module – a separate module in SynTool for reaction standardization. This is a copy of another open-source code based on CGRTools functionality.</p></li>
+<li><p>Reaction rules extraction module – an original module of SynTool and based on the CGRTools package.</p></li>
+<li><p>Reaction filtration module – includes the collection of original reaction filters for discarding erroneous and suspicious reactions.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="syntool-pipeline">
+<h2>SynTool pipeline<a class="headerlink" href="#syntool-pipeline" title="Link to this heading">¶</a></h2>
+<p>SynTool is a multilayered software for the computer-aided synthesis planning. It includes original modules for reaction data
+curation, reaction rules extraction, and retrosynthesis planning with Monte-Carlo tree search (MCTS) algorithm coupled with
+neural networks for node expansion and evaluation in MCTS. SynTool can be used for training retrosynthetic models from any
+source of reaction data. Below, the main steps of this pipeline are listed.</p>
+<p><strong>1. Data download.</strong></p>
+<p>Reaction data (USPTO dataset) and other supplementary data for retrosynthetic models training and retrosynthesis planning
+can be easily downloaded.
+See the details in <a class="reference internal" href="data_download.html#data-download"><span class="std std-ref">Data download</span></a>.</p>
+<p><strong>2. Reaction data mapping</strong></p>
+<p>Reaction mapping is a necessary step in reaction data curation.
+See the details in <a class="reference internal" href="reaction_mapping.html#reaction-mapping"><span class="std std-ref">Reaction mapping</span></a>.</p>
+<p><strong>3. Reaction data standardization</strong></p>
+<p>Reaction standardization is a necessary step in reaction data curation. It requires already mapped reactions.
+See the details in <a class="reference internal" href="reaction_standardization.html#reaction-standardization"><span class="std std-ref">Reaction standardization</span></a>.</p>
+<p><strong>4. Reaction data filtration</strong></p>
+<p>Reaction data filtration ensures the validity of reaction rules extracted from the reactions.
+See the details in <a class="reference internal" href="reaction_filtration.html#reaction-filtration"><span class="std std-ref">Reaction filtration</span></a>.</p>
+<p><strong>5. Reaction rules extraction</strong></p>
+<p>Reaction rules should be extracted from the high-quality reaction data prepared by the data curation steps listed above.
+See the details in <a class="reference internal" href="reaction_rules_extraction.html#reaction-rules-extraction"><span class="std std-ref">Reaction rules extraction</span></a>.</p>
+<p><strong>6. Policy network training</strong></p>
+<p>Policy network training is needed for the node expansion in the tree search algorithm.
+See the details in <a class="reference internal" href="policy_network.html#policy-network"><span class="std std-ref">Policy network</span></a>.</p>
+<p><strong>7. Value network training</strong></p>
+<p>Value network training is needed for the node evaluation in the tree search algorithm.
+See the details in <a class="reference internal" href="value_network.html#value-network"><span class="std std-ref">Value network</span></a>.</p>
+<p><strong>8. Retrosynthesis planning</strong></p>
+<p>After the preparation of the reaction rules and trained retrosynthetic model,
+the retrosynthesis planning of target molecules can be performed.
+See the details in <a class="reference internal" href="retrosynthesis_planning.html#retrosynthesis-planning"><span class="std std-ref">Retrosynthesis planning</span></a>.</p>
 <div class="toctree-wrapper compound">
 </div>
+</section>
 </section>
 
 
@@ -61,22 +115,23 @@ using an automated end-to-end training pipeline (training mode).</p>
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
+      <li>Next: <a href="user_guide.html" title="next chapter">User guide</a></li>
   </ul></li>
 </ul>
 </div>

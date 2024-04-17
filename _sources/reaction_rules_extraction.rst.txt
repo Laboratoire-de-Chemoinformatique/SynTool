@@ -1,3 +1,5 @@
+.. _reaction_rules_extraction:
+
 Reaction rules extraction
 ===========================
 
@@ -9,7 +11,7 @@ The protocol for extraction of reaction rules from reactions in SynTool involves
 
     * Substructure Extraction - for each reactant and product in a given reaction, substructures containing the atoms of the reaction center and their immediate environment are extracted.
     * Substructure Exchange -the reactant and product substructures are then exchanged.
-    * Reagents Handling -if the reaction includes reagents, they are not incorporated into the retro-rule.
+    * Reagents Handling - if the reaction includes reagents, they are not incorporated into the retro-rule.
     * Label Preservation - all labels related to the atoms of the reaction center, such as hybridization, the number of neighbors, and the ring sizes in which the atoms participate, are preserved. For atoms in the first environment, only the sizes of rings are preserved.
 
 A reaction rule extracted by this protocol is applied to the product of the original reaction. If it successfully
@@ -18,7 +20,7 @@ generates the reactants of the reaction, the reaction rule is considered valid.
 Configuration
 ---------------------------
 
-The ExtractRuleConfig class in SynTool allows for the fine-tuning of the reaction rules extraction protocol:
+The reaction rules extraction protocol can be adjusted with the configuration file:
 
 .. code-block:: yaml
 
@@ -74,10 +76,10 @@ Reaction rules extraction can be performed with the below command.
     syntool rule_extracting --config extraction.yaml --input reaction_data_filtered.smi --output reaction_rules.pickle
 
 **Parameters**:
-    - `--config` is the path to the configuration file.
-    - `--input` is the path to the file (.smi or .rdf) with reactions to be standardized.
-    - `--output` is the path to the file (.pickle) where extracted reactions rules to be stored.
+    - `config` - the path to the configuration file.
+    - `input` - the path to the file (.smi or .rdf) with reactions to be standardized.
+    - `output` - the path to the file (.pickle) where extracted reactions rules will be stored.
 
-The extension of the input reaction data file will be automatically parsed and for reading/writing reactions.
+The extension of the input/output files will be automatically parsed.
 
 

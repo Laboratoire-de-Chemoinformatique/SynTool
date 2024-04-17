@@ -1,15 +1,19 @@
-Tree search
+.. _retrosynthesis_planning:
+
+Retrosynthesis planning
 ================
 
 This page explains how to perform a retrosynthesis planning with tree search in SynTool.
 
 Introduction
 ---------------------------
-Retrosynthesis planning
+In SynTool retrosynthesis planning module combines the search algorithm (MCTS), reaction rules, and policy function for
+their prediction in node expansion and value function (rollout function or value network) in node evaluation.
+The planning is coupled with a visualization module for the display of found retrosynthetic routes.
 
 Configuration
 ---------------------------
-Retrosynthesis planning
+The retrosynthesis planning algorithm can be adjusted by the configuration file:
 
 .. code-block:: yaml
 
@@ -57,19 +61,41 @@ Retrosynthesis planning
 
 CLI
 ---------------------------
-Planning.
+Retrosynthesis planning can be performed with the below command.
+
+**Retrosynthesis planning with rollout evaluation**
 
 .. code-block:: bash
 
-    syntool reinforcement_value_network_training --config reinforcement.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network ranking_policy_network/policy_network.ckpt --results_dir value_network
+    syntool planning --config planning.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network policy_network.ckpt --results_dir planning
 
 **Parameters**:
-    - `--config` is the path to the configuration file.
-    - `--targets` is the path to the file with target molecules.
-    - `--reaction_rules` is the path to the file with reactions rules.
-    - `--building_blocks` is the path to the file with building blocks.
-    - `--policy_network` is the path to the file with trained policy network (ranking or filtering).
-    - `--results_dir` is the path to the directory where the trained value network will be to be stored.
+    - `config` - the path to the configuration file.
+    - `targets` - the path to the file with target molecule for retrosynthesis planning.
+    - `reaction_rules` - the path to the file with reaction rules.
+    - `building_blocks` - the path to the file with building blocks.
+    - `policy_network` - the path to the file with trained policy network (ranking or filtering).
+    - `results_dir` - the path to the directory where the trained value network will be to be stored.
 
+**Retrosynthesis planning with value network evaluation**
 
+.. code-block:: bash
 
+    syntool planning --config planning.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network policy_network.ckpt --value_network value_network.ckpt --results_dir planning
+
+**Parameters**:
+    - `config` - the path to the configuration file.
+    - `targets` - the path to the file with target molecule for retrosynthesis planning.
+    - `reaction_rules` - the path to the file with reaction rules.
+    - `building_blocks` - the path to the file with building blocks.
+    - `policy_network` - the path to the file with trained policy network (ranking or filtering).
+    - `value_network` - the path to the file with trained value network (ranking or filtering).
+    - `results_dir` - the path to the directory where the trained value network will be to be stored.
+
+Results analysis
+---------------------------
+After the retrosynthesis planning is finished, the user will see the folder containing the results. This folder will contain the following subfolders/files:
+
+- `tree_search_stats.csv` – the CSV table with planning statistics.
+- `extracted_routes.json` – the retrosynthesis routes extracted from the search trees. Can be used for route analysis with programming utils.
+- `extracted_routes` – the folder containing html files with visualized retrosynthesis routes extracted from the search trees. Can be used for the visual analysis of the extracted retrosynthesis routes.

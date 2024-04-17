@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reaction mapping &#8212; SynTool 1.0 documentation</title>
+    <title>Data download &#8212; SynTool 1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
     <script src="_static/documentation_options.js?v=f2a433a1"></script>
@@ -13,8 +13,8 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Reaction standardization" href="reaction_standardization.html" />
-    <link rel="prev" title="Data download" href="data_download.html" />
+    <link rel="next" title="Reaction mapping" href="reaction_mapping.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -31,37 +31,57 @@
 
           <div class="body" role="main">
             
-  <section id="reaction-mapping">
-<span id="id1"></span><h1>Reaction mapping<a class="headerlink" href="#reaction-mapping" title="Link to this heading">¶</a></h1>
-<p>This page explains how to do a reaction mapping in SynTool.</p>
+  <section id="data-download">
+<span id="id1"></span><h1>Data download<a class="headerlink" href="#data-download" title="Link to this heading">¶</a></h1>
+<p>This page explains how to download data for retrosythetic models training and retrosynthesis planning in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>Reaction atom-to-atom (AAM) mapping in SynTool is performed with GraphormerMapper, a new algorithm for AAM based on a transformer
-neural network adopted for the direct processing of molecular graphs as sets of atoms and bonds, as opposed to SMILES/SELFIES
-sequence-based approaches, in combination with the Bidirectional Encoder Representations from Transformers (BERT) network.
-The graph transformer serves to extract molecular features that are tied to atoms and bonds. The BERT network is used for
-chemical transformation learning. In a benchmarking study, it was demonstrated [<a class="reference external" href="https://doi.org/10.1021/acs.jcim.2c00344">https://doi.org/10.1021/acs.jcim.2c00344</a>]
-that GraphormerMapper is superior to the state-of-the-art IBM RxnMapper algorithm in the “Golden” benchmarking data set
-(total correctly mapped reactions 89.5% vs. 84.5%).</p>
+<p>For the training of the retrosynthetic models (policy and value network, reaction rules) the following types of data are needed:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Reaction data – needed for reaction rules extraction and ranking policy network training.</p></li>
+<li><p>Molecule data – needed for filtering policy network training.</p></li>
+<li><p>Targets data – needed for value network training (targets for planning simulation in reinforcement-based tuning).</p></li>
+<li><p>Building blocks - needed for retrosynthesis planning simulations in reinforcement-based value network tuning.</p></li>
+</ul>
+</div></blockquote>
+<p>For the retrosynthesis planning the following data and files are needed:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Trained retrosynthetic models – already trained policy and value networks can be used in retrosynthesis planning.</p></li>
+<li><p>Reaction rules</p></li>
+<li><p>Building blocks</p></li>
+</ul>
+</div></blockquote>
+<p>As a source of reaction and molecule data public database are used such as USPTO, ChEMBL, COCONUT.</p>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>Reaction mapping does not require any special configuration in the current version of SynTool.</p>
+<p>Data download does not require any special configuration in the current version of SynTool.</p>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
-<p>Reaction mapping can be performed with the below command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>reaction_mapping<span class="w"> </span>--input<span class="w"> </span>reaction_data_init.smi<span class="w"> </span>--output<span class="w"> </span>reaction_data_mapped.smi
+<p>Data download can be performed with the below commands.</p>
+<p><strong>Data download for retrosynthetic models training</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>download_training_data<span class="w"> </span>--root_dir<span class="w"> </span>training_data
 </pre></div>
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be mapped.</p></li>
-<li><p><cite>output</cite> - the path to the file (.smi or .rdf) where mapped reactions will be stored.</p></li>
+<li><p><cite>root_dir</cite> - the path to the directory where the data files will be stored.</p></li>
 </ul>
 </dd>
 </dl>
-<p>The extension of the input/output files will be automatically parsed.</p>
+<p><strong>Data download for retrosythesis planning</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>download_planning_data<span class="w"> </span>--root_dir<span class="w"> </span>training_data
+</pre></div>
+</div>
+<dl class="simple">
+<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
+<li><p><cite>root_dir</cite> - the path to the directory where the data files will be stored.</p></li>
+</ul>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -85,13 +105,13 @@ that GraphormerMapper is superior to the state-of-the-art IBM RxnMapper algorith
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction mapping</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data download</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
@@ -104,8 +124,8 @@ that GraphormerMapper is superior to the state-of-the-art IBM RxnMapper algorith
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="data_download.html" title="previous chapter">Data download</a></li>
-      <li>Next: <a href="reaction_standardization.html" title="next chapter">Reaction standardization</a></li>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="reaction_mapping.html" title="next chapter">Reaction mapping</a></li>
   </ul></li>
 </ul>
 </div>
@@ -139,7 +159,7 @@ that GraphormerMapper is superior to the state-of-the-art IBM RxnMapper algorith
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
-      <a href="_sources/reaction_mapping.rst.txt"
+      <a href="_sources/data_download.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

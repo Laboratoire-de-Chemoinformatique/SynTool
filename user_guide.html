@@ -13,8 +13,8 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Reaction mapping" href="reaction_mapping.html" />
-    <link rel="prev" title="Installation" href="installation.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="SynTool" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -42,14 +42,21 @@
 and is needed for correct execution of the programming code (some erroneous reactions may crash the current version of the SynTool code).
 Thus, it is recommended to do a reaction data filtration before the extraction of reaction rules and training retrosynthetic models.</p>
 <p><strong>2. Reaction data filtration - 2</strong></p>
-<p><em>Input and output reaction representation may be different after filtration</em></p>
+<p><em>Input and output reaction representation may be different after filtration.</em></p>
 <p>The current version of reaction data filtration protocol in SynTool include some function for additional standardization of input reactons.
 This is why sometimes the output reaction SMILES, after it passed all the filters, may not exactly to the input reaction SMILES.</p>
 <p><strong>3. Data curation parallelization</strong></p>
-<p><em>Do not use more than 4-8 CPU</em></p>
+<p><em>Do not use more than 4-8 CPU.</em></p>
 <p>The current version of SynTool is not perfectly optimal in terms of memory usage with many CPUs (this problem will be fixed in future versions).
 This is why it is recommended to set no more than 4 CPU for steps related to the data curation.</p>
-<p><strong>4. Search strategies in retrosynthesis planning</strong></p>
+<p><strong>4. Ranking and filtering policy networks</strong></p>
+<p><em>Prefer ranking policy network over filtering policy network.</em></p>
+<p>The filtering policy network in its current implementation requires a lot of computational resources and its training is
+practically feasible with &gt; 30 CPUs and several dozen GB of RAM. The bottleneck of the current implementation is the preparation
+of the training dataset, particularly the generation of binary vectors if successfully applied reaction rules to each training
+molecule – on average, this step takes about 10 sec (for several thousand reaction rules). Thus, with limited computational
+resources, it is recommended to use a ranking policy network.</p>
+<p><strong>5. Search strategies in retrosynthesis planning</strong></p>
 <p><em>“Evaluation first” search strategy is not compatible with the rollout evaluation.</em></p>
 <p>In SynTool, there are two main search strategies implemented - “Expansion first” and “Evaluation first” strategy.
 These are the strategies for navigating the search tree. “Expansion first” prioritizes the expansion of new nodes and
@@ -80,26 +87,27 @@ value network evaluation only.</p>
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-recommendations">Basic recommendations</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
-      <li>Next: <a href="reaction_mapping.html" title="next chapter">Reaction mapping</a></li>
+      <li>Previous: <a href="index.html" title="previous chapter">SynTool</a></li>
+      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
   </ul></li>
 </ul>
 </div>

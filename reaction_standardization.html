@@ -32,11 +32,12 @@
           <div class="body" role="main">
             
   <section id="reaction-standardization">
-<h1>Reaction standardization<a class="headerlink" href="#reaction-standardization" title="Link to this heading">¶</a></h1>
+<span id="id1"></span><h1>Reaction standardization<a class="headerlink" href="#reaction-standardization" title="Link to this heading">¶</a></h1>
 <p>This page explains how to do a reaction standardization in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>The reaction data are standardized using an original protocol for reaction data curation published later [<a class="reference external" href="https://doi.org/10.1002/minf.202100119">https://doi.org/10.1002/minf.202100119</a>].</p>
+<p>The reaction data are standardized using an original protocol for reaction data curation
+published earlier [<a class="reference external" href="https://doi.org/10.1002/minf.202100119">https://doi.org/10.1002/minf.202100119</a>].</p>
 <dl class="simple">
 <dt>This protocol includes several steps such as:</dt><dd><ul class="simple">
 <li><p>transform functional groups, kekulize</p></li>
@@ -52,7 +53,7 @@
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>Reaction data standardization can be adjusted with the bellow configuration file (these default parameters are recommended).</p>
+<p>Reaction data standardization can be adjusted with the bellow configuration yaml file (these default parameters are recommended).</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">ignore_mapping</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">skip_errors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">keep_unbalanced_ions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
@@ -79,13 +80,13 @@
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
-<li><p><cite>–input</cite> is the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
-<li><p><cite>–output</cite> is the path to the file (.smi or .rdf) where standardized reactions to be stored.</p></li>
+<li><p><cite>config</cite> - the path to the configuration file.</p></li>
+<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
+<li><p><cite>output</cite> - the path to the file (.smi or .rdf) where standardized reactions will be stored.</p></li>
 </ul>
 </dd>
 </dl>
-<p>The extension of the files will be automatically parsed and for reading/writing reactions.</p>
+<p>The extension of the input/output files will be automatically parsed.</p>
 </section>
 </section>
 
@@ -107,8 +108,9 @@
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction standardization</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
@@ -120,7 +122,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 </ul>
 
 <div class="relations">

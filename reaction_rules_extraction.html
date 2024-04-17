@@ -32,7 +32,7 @@
           <div class="body" role="main">
             
   <section id="reaction-rules-extraction">
-<h1>Reaction rules extraction<a class="headerlink" href="#reaction-rules-extraction" title="Link to this heading">¶</a></h1>
+<span id="id1"></span><h1>Reaction rules extraction<a class="headerlink" href="#reaction-rules-extraction" title="Link to this heading">¶</a></h1>
 <p>This page explains how to do a reaction rules extraction in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
@@ -41,7 +41,7 @@
 <div><ul class="simple">
 <li><p>Substructure Extraction - for each reactant and product in a given reaction, substructures containing the atoms of the reaction center and their immediate environment are extracted.</p></li>
 <li><p>Substructure Exchange -the reactant and product substructures are then exchanged.</p></li>
-<li><p>Reagents Handling -if the reaction includes reagents, they are not incorporated into the retro-rule.</p></li>
+<li><p>Reagents Handling - if the reaction includes reagents, they are not incorporated into the retro-rule.</p></li>
 <li><p>Label Preservation - all labels related to the atoms of the reaction center, such as hybridization, the number of neighbors, and the ring sizes in which the atoms participate, are preserved. For atoms in the first environment, only the sizes of rings are preserved.</p></li>
 </ul>
 </div></blockquote>
@@ -50,7 +50,7 @@ generates the reactants of the reaction, the reaction rule is considered valid.<
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>The ExtractRuleConfig class in SynTool allows for the fine-tuning of the reaction rules extraction protocol:</p>
+<p>The reaction rules extraction protocol can be adjusted with the configuration file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">environment_atom_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 <span class="nt">min_popularity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 <span class="nt">multicenter_rules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
@@ -106,13 +106,13 @@ generates the reactants of the reaction, the reaction rule is considered valid.<
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
-<li><p><cite>–input</cite> is the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
-<li><p><cite>–output</cite> is the path to the file (.pickle) where extracted reactions rules to be stored.</p></li>
+<li><p><cite>config</cite> - the path to the configuration file.</p></li>
+<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
+<li><p><cite>output</cite> - the path to the file (.pickle) where extracted reactions rules will be stored.</p></li>
 </ul>
 </dd>
 </dl>
-<p>The extension of the input reaction data file will be automatically parsed and for reading/writing reactions.</p>
+<p>The extension of the input/output files will be automatically parsed.</p>
 </section>
 </section>
 
@@ -134,8 +134,9 @@ generates the reactants of the reaction, the reaction rule is considered valid.<
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
@@ -147,7 +148,7 @@ generates the reactants of the reaction, the reaction rule is considered valid.<
 </li>
 <li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 </ul>
 
 <div class="relations">

@@ -13,7 +13,7 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tree search" href="tree_search.html" />
+    <link rel="next" title="Retrosynthesis planning" href="retrosynthesis_planning.html" />
     <link rel="prev" title="Policy network" href="policy_network.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -32,27 +32,27 @@
           <div class="body" role="main">
             
   <section id="value-network">
-<h1>Value network<a class="headerlink" href="#value-network" title="Link to this heading">¶</a></h1>
+<span id="id1"></span><h1>Value network<a class="headerlink" href="#value-network" title="Link to this heading">¶</a></h1>
 <p>This page explains how to train a value network in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>During the evaluation step, the value function (or evaluation function) is used to estimate the retrosynthetic feasibility
-of a newly created node. In Syntool, evaluation functions such as random function (assigns a random value), rollout function,
-and value network trained with the learning from simulated experience algorithm are implemented. The architecture of the
+<p><strong>Value network architecture</strong>. During the evaluation step, the value function (or evaluation function) is used to estimate the retrosynthetic feasibility
+of a newly created node. In SynTool, evaluation functions such as random function (assigns a random value), rollout function,
+and value network trained with the reinforcement learning based algorithm are implemented. The architecture of the
 value network is like the policy network. The molecular representation part of the neural network is the same, and the
 difference is that the output linear layer returns a single value ranging from 0 to 1.</p>
-<p>The value neural network is iteratively trained on training subsets extracted from the previous planning sessions
-(learning from simulated experience). In the first iteration, the value network is initialized with random weights and
-is used for the initial retrosynthesis planning session for N target molecules. Then, intermediate products that were
-part of a successful retrosynthesis path leading to building block molecules are labeled with a positive label, and
-precursors that did not lead to building blocks are labeled with a negative label. This generated training data is
-used to retrain the value network to better recognize precursors leading to possible successful retrosynthetic paths.
-The training task of the value network is a classification problem, where the positive class corresponds to the precursor
-that leads to building blocks; otherwise, it is considered a negative class.</p>
+<p><strong>Reinforcement value network tuning</strong>. The value neural network is iteratively tuned on the training subsets of molecules
+extracted from the simulated planning sessions. In the first iteration, the value network is initialized with random weights and
+is used for the initial simulated retrosynthesis planning session for N target molecules. Then, retrons that were
+part of a successful retrosynthesis routes leading to the building block molecules are labeled with a positive class, and
+retron that did not lead to the building blocks are labeled with a negative class. This generated training data is
+used to retrain the value network to better recognize retrons leading to possible successful retrosynthetic routes.
+This is a classification problem, where the positive class corresponds to the retron that leads to building blocks;
+otherwise, it is considered a negative class.</p>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>The network architecture and training hyperparameters can be adjusted in the training configuration file below. The value network, its architecture, and hyperparameters can be specified in the ValueNetwork section in the training configuration file:</p>
+<p>The network architecture and training hyperparameters can be adjusted in the training configuration file below.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tree</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
 <span class="w">  </span><span class="nt">max_tree_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
@@ -120,17 +120,17 @@ that leads to building blocks; otherwise, it is considered a negative class.</p>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
 <p>Value network training can be performed with the below command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>reinforcement_value_network_training<span class="w"> </span>--config<span class="w"> </span>reinforcement.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks.smi<span class="w"> </span>--policy_network<span class="w"> </span>ranking_policy_network/policy_network.ckpt<span class="w"> </span>--results_dir<span class="w"> </span>value_network
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>reinforcement_value_network_training<span class="w"> </span>--config<span class="w"> </span>reinforcement.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks.smi<span class="w"> </span>--policy_network<span class="w"> </span>policy_network.ckpt<span class="w"> </span>--results_dir<span class="w"> </span>value_network
 </pre></div>
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
-<li><p><cite>–targets</cite> is the path to the file with target molecules.</p></li>
-<li><p><cite>–reaction_rules</cite> is the path to the file with reactions rules.</p></li>
-<li><p><cite>–building_blocks</cite> is the path to the file with building blocks.</p></li>
-<li><p><cite>–policy_network</cite> is the path to the file with trained policy network (ranking or filtering).</p></li>
-<li><p><cite>–results_dir</cite> is the path to the directory where the trained value network will be to be stored.</p></li>
+<li><p><cite>config</cite> - the path to the configuration file.</p></li>
+<li><p><cite>targets</cite> - the path to the file with target molecules.</p></li>
+<li><p><cite>reaction_rules</cite> - the path to the file with reactions rules.</p></li>
+<li><p><cite>building_blocks</cite> - the path to the file with building blocks.</p></li>
+<li><p><cite>policy_network</cite> - the path to the file with trained policy network (ranking or filtering).</p></li>
+<li><p><cite>results_dir</cite> - the path to the directory where the trained value network will be to be stored.</p></li>
 </ul>
 </dd>
 </dl>
@@ -155,8 +155,9 @@ that leads to building blocks; otherwise, it is considered a negative class.</p>
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
@@ -168,7 +169,7 @@ that leads to building blocks; otherwise, it is considered a negative class.</p>
 <li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 </ul>
 
 <div class="relations">
@@ -176,7 +177,7 @@ that leads to building blocks; otherwise, it is considered a negative class.</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="policy_network.html" title="previous chapter">Policy network</a></li>
-      <li>Next: <a href="tree_search.html" title="next chapter">Tree search</a></li>
+      <li>Next: <a href="retrosynthesis_planning.html" title="next chapter">Retrosynthesis planning</a></li>
   </ul></li>
 </ul>
 </div>

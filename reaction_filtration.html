@@ -32,14 +32,14 @@
           <div class="body" role="main">
             
   <section id="reaction-filtration">
-<h1>Reaction filtration<a class="headerlink" href="#reaction-filtration" title="Link to this heading">¶</a></h1>
+<span id="id1"></span><h1>Reaction filtration<a class="headerlink" href="#reaction-filtration" title="Link to this heading">¶</a></h1>
 <p>This page explains how to do a reaction filtration in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>Reaction filtration is a crucial step in reaction data curation. It ensures the correctness of reactions
 used fo reaction rules extraction. The current version of SynTool includes 11 reaction filters (see below).
 In brackets it is showed how this filter should be listed in the configuration file to be activated.</p>
-<p>The current available filters in SynTool:</p>
+<p>The current available reaction filters in SynTool:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><cite>CompeteProductsChecker</cite> (<cite>compete_products_config</cite>) - checks if there are compete reactions.</p></li>
@@ -83,7 +83,7 @@ which can be set up by configuration files (these default parameters are recomme
 <span class="nt">cc_sp3_breaking_config</span><span class="p">:</span>
 </pre></div>
 </div>
-<p><strong>Important</strong>: ih the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
+<p><strong>Important</strong>: if the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
 Also, some filters requires additional parameters (e.g. <cite>small_molecules_config</cite>).</p>
 </section>
 <section id="cli">
@@ -94,13 +94,13 @@ Also, some filters requires additional parameters (e.g. <cite>small_molecules_co
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>–config</cite> is the path to the configuration file.</p></li>
-<li><p><cite>–input</cite> is the path to the file (.smi or .rdf) with reactions to be filtered.</p></li>
-<li><p><cite>–output</cite> is the path to the file (.smi or .rdf) where filtered reactions to be stored.</p></li>
+<li><p><cite>config</cite> - the path to the configuration file.</p></li>
+<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be filtered.</p></li>
+<li><p><cite>output</cite> - the path to the file (.smi or .rdf) where filtered reactions to be stored.</p></li>
 </ul>
 </dd>
 </dl>
-<p>The extension of the files will be automatically parsed and for reading/writing reactions.</p>
+<p>The extension of the input/output files will be automatically parsed.</p>
 </section>
 </section>
 
@@ -122,8 +122,9 @@ Also, some filters requires additional parameters (e.g. <cite>small_molecules_co
 
 <h3>Navigation</h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction filtration</a><ul>
@@ -135,7 +136,7 @@ Also, some filters requires additional parameters (e.g. <cite>small_molecules_co
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tree_search.html">Tree search</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 </ul>
 
 <div class="relations">
