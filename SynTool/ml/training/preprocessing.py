@@ -391,6 +391,9 @@ def mol_to_pyg(molecule: MoleculeContainer, canonicalize: bool = True) -> Option
     :return: The list of PyGraph objects.
     """
 
+    if len(molecule) == 1:
+        return None
+
     tmp_molecule = molecule.copy()
     try:
         if canonicalize:

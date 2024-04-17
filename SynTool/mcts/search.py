@@ -33,12 +33,18 @@ def extract_tree_stats(tree, target):
     newick_tree, newick_meta = tree.newickify(visits_threshold=0)
     newick_meta_line = ";".join([f"{nid},{v[0]},{v[1]},{v[2]}" for nid, v in newick_meta.items()])
 
+    if len(tree.winning_nodes) > 0:
+        debug = 'SOLVED'
+    else:
+        debug = 'NOT SOLVED'
+
     return {"target_smiles": target.meta['init_smiles'],
             "tree_size": len(tree),
             "search_time": round(tree.curr_time, 1),
             "found_paths": len(tree.winning_nodes),
             "newick_tree": newick_tree,
-            "newick_meta": newick_meta_line}
+            "newick_meta": newick_meta_line,
+            "debug": debug}
 
 
 def tree_search(
@@ -117,8 +123,9 @@ def tree_search(
                                       "tree_size": None,
                                       "search_time": None,
                                       "found_paths": None,
-                                      "newick_tree": e,
-                                      "newick_meta": e})
+                                      "newick_tree": None,
+                                      "newick_meta": None,
+                                      "debug": e})
                 csvfile.flush()
                 continue
 
