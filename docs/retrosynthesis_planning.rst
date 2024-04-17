@@ -92,4 +92,10 @@ Retrosynthesis planning can be performed with the below command.
     - `value_network` - the path to the file with trained value network (ranking or filtering).
     - `results_dir` - the path to the directory where the trained value network will be to be stored.
 
+Results analysis
+---------------------------
+After the retrosynthesis planning is finished, the user will see the folder containing the results. This folder will contain the following subfolders/files:
 
+- `tree_search_stats.csv` – the CSV table with planning statistics.
+- `extracted_routes.json` – the retrosynthesis routes extracted from the search trees. Can be used for route analysis with programming utils.
+- `extracted_routes` – the folder containing html files with visualized retrosynthesis routes extracted from the search trees. Can be used for the visual analysis of the extracted retrosynthesis routes.
