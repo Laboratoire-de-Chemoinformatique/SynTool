@@ -391,7 +391,7 @@ def mol_to_pyg(molecule: MoleculeContainer, canonicalize: bool = True) -> Option
     :return: The list of PyGraph objects.
     """
 
-    if len(molecule) == 1:
+    if len(molecule) == 1: # TODO sometimes the Retron is single atom
         return None
 
     tmp_molecule = molecule.copy()

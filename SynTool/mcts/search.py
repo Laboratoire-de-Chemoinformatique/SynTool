@@ -83,7 +83,7 @@ def tree_search(
     retropaths_folder.mkdir(exist_ok=True)
 
     # stats header
-    stats_header = ["target_smiles", "tree_size", "search_time", "found_paths", "newick_tree", "newick_meta"]
+    stats_header = ["target_smiles", "tree_size", "search_time", "found_paths", "newick_tree", "newick_meta", "debug"]
 
     # config
     policy_function = PolicyFunction(policy_config=policy_config)

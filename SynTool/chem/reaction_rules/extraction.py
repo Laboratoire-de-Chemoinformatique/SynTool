@@ -574,19 +574,6 @@ def extract_rules_from_reactions(config: RuleExtractionConfig, reaction_file: st
         extracted_rules_and_statistics = defaultdict(list)
         for index, reaction in enumerate(reactions):
 
-            # prepare reaction # TODO otherwise the protocol does not work
-            # remove small molecules
-            try: # TODO sometimes fails because of mapping for example
-                reaction = remove_small_molecules(reaction, number_of_atoms=6)
-                if reaction is None:
-                    continue
-                # remove reagents
-                reaction = remove_reagents(reaction, keep_reagents=True, reagents_max_size=7)
-                if reaction is None:
-                    continue
-            except:
-                continue
-
             # reaction ready to use
             batch.append((index, reaction))
             if len(batch) == batch_size:

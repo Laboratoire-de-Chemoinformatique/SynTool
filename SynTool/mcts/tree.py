@@ -70,6 +70,7 @@ class Tree:
         self.nodes_visit: Dict[int, int] = {1: 0}
         self.nodes_depth: Dict[int, int] = {1: 0}
         self.nodes_prob: Dict[int, float] = {1: 0.0}
+        self.nodes_rules: Dict[int, float] = {}
         self.nodes_init_value: Dict[int, float] = {1: 0.0}
         self.nodes_total_value: Dict[int, float] = {1: 0.0}
 
@@ -286,9 +287,9 @@ class Tree:
                     for new_retron in new_retrons:
                         new_retron.prev_retrons = [new_retron, *prev_retrons]
 
-                    self._add_node(node_id, child_node, scaled_prob)
+                    self._add_node(node_id, child_node, scaled_prob, rule_id)
 
-    def _add_node(self, node_id: int, new_node: Node, policy_prob: float = None) -> None:
+    def _add_node(self, node_id: int, new_node: Node, policy_prob: float = None, rule_id: int = None) -> None:
         """
         Adds a new node to the tree with probability of reaction rules predicted by policy function and applied to the
         parent node of the new node.
@@ -308,6 +309,7 @@ class Tree:
         self.children[new_node_id] = set()
         self.nodes_visit[new_node_id] = 0
         self.nodes_prob[new_node_id] = policy_prob
+        self.nodes_rules[new_node_id] = rule_id
         self.nodes_depth[new_node_id] = self.nodes_depth[node_id] + 1
         self.curr_tree_size += 1
 
