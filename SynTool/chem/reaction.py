@@ -73,8 +73,8 @@ def apply_reaction_rule(molecule: MoleculeContainer,
             sorted_reactions = sorted(
                 unsorted_reactions,
                 key=lambda react: len(list(filter(lambda mol: len(mol) > 6, react.products))),
-                reverse=True
-            )
+                reverse=True)
+
             reactions = sorted_reactions[:top_reactions_num]  # Take top-N reactions from reactor
         else:
             reactions = []
@@ -101,4 +101,4 @@ def apply_reaction_rule(molecule: MoleculeContainer,
                     molecule.thiele()
                 except InvalidAromaticRing:
                     yield None
-        yield products
+        yield products # TODO may bw more correctly - reactants/precursors

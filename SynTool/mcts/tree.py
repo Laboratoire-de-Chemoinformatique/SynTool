@@ -25,12 +25,12 @@ from typing import Iterator, List, Tuple, Union
 
 class Tree:
     """
-    Tree class with attributes and methods for Monte-Carlo tree search
+    Tree class with attributes and methods for Monte-Carlo tree search.
     """
 
     def __init__(self,
                  target: Union[MoleculeContainer, str],
-                 tree_config: TreeConfig,
+                 config: TreeConfig,
                  reaction_rules_path: str,
                  building_blocks_path: str,
                  policy_function: PolicyFunction,
@@ -39,7 +39,7 @@ class Tree:
         Initializes a tree object with optional parameters for tree search for target molecule.
 
         :param target: A target molecule for retrosynthesis routes search.
-        :param tree_config: A tree configuration.
+        :param config: A tree configuration.
         :param reaction_rules_path: A path for reaction rules file.
         :param building_blocks_path: A path for building blocks file.
         :param policy_function: A loaded policy function.
@@ -47,7 +47,7 @@ class Tree:
         """
 
         # config parameters
-        self.config = tree_config
+        self.config = config
 
         # check target
         if isinstance(target, str):
@@ -80,15 +80,13 @@ class Tree:
         self.curr_time: float = 2
 
         # utils
-        self._tqdm = None
+        self._tqdm = True
 
         # policy and value functions
         self.policy_function = policy_function
         if self.config.evaluation_type == "gcn":
             if value_function is None:
-                raise ValueError(
-                    "Value function not specified while evaluation mode is 'gcn'"
-                )
+                raise ValueError("Value function not specified while evaluation mode is 'gcn'")
             else:
                 self.value_function = value_function
 
@@ -108,8 +106,8 @@ class Tree:
         The function is defining an iterator for a Tree object. Also needed for the bar progress display.
         """
 
-        if not self._tqdm:
-            self._start_time = time()
+        self._start_time = time()
+        if self._tqdm:
             self._tqdm = tqdm(total=self.config.max_iterations, disable=self.config.silent)
         return self
 
@@ -128,22 +126,21 @@ class Tree:
         """
 
         if self.nodes[1].curr_retron.is_building_block(self.building_blocks, self.config.min_mol_size):
-            raise StopIteration("Target is building block \n")
+            raise StopIteration("Target is building block.")
 
         if self.curr_iteration >= self.config.max_iterations:
-            self._tqdm.close()
-            raise StopIteration("Iterations limit exceeded. \n")
+            raise StopIteration("Iterations limit exceeded.")
         elif self.curr_tree_size >= self.config.max_tree_size:
-            self._tqdm.close()
-            raise StopIteration("Max tree size exceeded or all possible paths found")
+            raise StopIteration("Max tree size exceeded or all possible paths found.")
         elif self.curr_time >= self.config.max_time:
-            self._tqdm.close()
-            raise StopIteration("Time limit exceeded. \n")
+            raise StopIteration("Time limit exceeded.")
 
         # start new iteration
         self.curr_iteration += 1
         self.curr_time = time() - self._start_time
-        self._tqdm.update()
+
+        if self._tqdm:
+            self._tqdm.update()
 
         curr_depth, node_id = 0, 1  # start from the root node_id
 
@@ -251,7 +248,8 @@ class Tree:
                 best_score, best_children = score, [child_id]
             elif score == best_score:
                 best_children.append(child_id)
-        return choice(best_children)
+
+        return best_children[0] # TODO choice(best_children) were replaced for the reproducibility
 
     def _expand_node(self, node_id: int) -> None:
         """

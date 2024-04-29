@@ -7,6 +7,7 @@ import torch
 from collections import defaultdict
 from pathlib import Path
 from random import shuffle
+from multiprocessing import Pool
 from tqdm import tqdm
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
@@ -107,12 +108,12 @@ def run_tree_search(target: MoleculeContainer,
     # initialize tree
     tree_config.silent = True
     tree = Tree(target=target,
-                tree_config=tree_config,
+                config=tree_config,
                 reaction_rules_path=reaction_rules_path,
                 building_blocks_path=building_blocks_path,
                 policy_function=policy_function,
-                value_function=value_function
-                )
+                value_function=value_function)
+    tree._tqdm = False
 
     # remove target from buildings blocs
     if str(target) in tree.building_blocks:
@@ -258,22 +259,13 @@ def run_planning(targets_batch: list[MoleculeContainer],
     :return: The list of built trees for the given batch of target molecules.
     """
 
-    print(f'\nProcess batch number {targets_batch_id}')
-    tree_list = []
-    tree_config.silent = True
-    for target in tqdm(targets_batch):
+    search_batch = [(target, tree_config,
+                      policy_config, value_config,
+                      reaction_rules_path, building_blocks_path) for target in targets_batch]
 
-        try:
-            tree = run_tree_search(target=target,
-                                   tree_config=tree_config,
-                                   policy_config=policy_config,
-                                   value_config=value_config,
-                                   reaction_rules_path=reaction_rules_path,
-                                   building_blocks_path=building_blocks_path)
-            tree_list.append(tree)
-
-        except:
-            continue
+    # print(f'\nProcess batch number {targets_batch_id}')
+    with Pool(1) as pool:
+        tree_list = pool.starmap(run_tree_search, search_batch)
 
     num_solved = sum([len(i.winning_nodes) > 0 for i in tree_list])
     print(f"Planning is finished with {num_solved} solved targets")

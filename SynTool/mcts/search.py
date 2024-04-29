@@ -41,6 +41,7 @@ def extract_tree_stats(tree, target):
     return {"target_smiles": target.meta['init_smiles'],
             "tree_size": len(tree),
             "search_time": round(tree.curr_time, 1),
+            "num_iter": tree.curr_iteration,
             "found_paths": len(tree.winning_nodes),
             "newick_tree": newick_tree,
             "newick_meta": newick_meta_line,
@@ -83,7 +84,8 @@ def tree_search(
     retropaths_folder.mkdir(exist_ok=True)
 
     # stats header
-    stats_header = ["target_smiles", "tree_size", "search_time", "found_paths", "newick_tree", "newick_meta", "debug"]
+    stats_header = ["target_smiles", "tree_size", "search_time",
+                    "found_paths", "num_iter",  "newick_tree", "newick_meta", "debug"]
 
     # config
     policy_function = PolicyFunction(policy_config=policy_config)
@@ -109,7 +111,7 @@ def tree_search(
                 # run search
                 tree = Tree(
                     target=target_smi,
-                    tree_config=tree_config,
+                    config=tree_config,
                     reaction_rules_path=reaction_rules_path,
                     building_blocks_path=building_blocks_path,
                     policy_function=policy_function,
@@ -122,6 +124,7 @@ def tree_search(
                 statswriter.writerow({"target_smiles": target_smi,
                                       "tree_size": None,
                                       "search_time": None,
+                                      "num_iter": None,
                                       "found_paths": None,
                                       "newick_tree": None,
                                       "newick_meta": None,
