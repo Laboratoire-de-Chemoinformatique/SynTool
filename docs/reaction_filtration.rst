@@ -12,17 +12,24 @@ In brackets it is showed how this filter should be listed in the configuration f
 
 The current available reaction filters in SynTool:
 
-    * `CompeteProductsChecker` (`compete_products_config`) - checks if there are compete reactions.
-    * `DynamicBondsChecker` (`dynamic_bonds_config`) - checks if there is an unacceptable number of dynamic bonds in CGR.
-    * `SmallMoleculesChecker` (`small_molecules_config`) - checks if there are only small molecules in the reaction or if there is only one small reactant or product.
-    * `CGRConnectedComponentsChecker` (`cgr_connected_components_config`) - checks if CGR contains unrelated components (without reagents).
-    * `RingsChangeChecker` (`rings_change_config`) - checks if there is changing rings number in the reaction.
-    * `StrangeCarbonsChecker` (`strange_carbons_config`) - checks if there are 'strange' carbons in the reaction.
-    * `NoReactionChecker` (`no_reaction_config`) - checks if there is no reaction in the provided reaction container.
-    * `MultiCenterChecker` (`multi_center_config`) - checks if there is a multicenter reaction.
-    * `WrongCHBreakingChecker` (`wrong_ch_breaking_config`) - checks for incorrect C-C bond formation from breaking a C-H bond.
-    * `CCsp3BreakingChecker` (`cc_sp3_breaking_config`) - checks if there is C(sp3)-C bond breaking.
-    * `CCRingBreakingChecker` (`cc_ring_breaking_config`) - checks if a reaction involves ring C-C bond breaking.
+.. table::
+    :widths: 40 50
+
+    ================================== ============
+    Reaction filter                    Description
+    ================================== ============
+    compete_products_config            Checks if there are compete reactions
+    dynamic_bonds_config               Checks if there is an unacceptable number of dynamic bonds in CGR
+    small_molecules_config             Checks if there are only small molecules in the reaction or if there is only one small reactant or product
+    cgr_connected_components_config    Checks if CGR contains unrelated components (without reagents)
+    rings_change_config                Checks if there is changing rings number in the reaction
+    strange_carbons_config             Checks if there are 'strange' carbons in the reaction
+    no_reaction_config                 Checks if there is no reaction in the provided reaction container
+    multi_center_config                Checks if there is a multicenter reaction
+    wrong_ch_breaking_config           Checks for incorrect C-C bond formation from breaking a C-H bond
+    cc_sp3_breaking_config             Checks if there is C(sp3)-C bond breaking
+    cc_ring_breaking_config            Checks if a reaction involves ring C-C bond breaking
+    ================================== ============
 
 Configuration
 ---------------------------
@@ -68,8 +75,8 @@ Reaction filtration can be performed with the below command.
     syntool reaction_filtering --config filtration.yaml --input reaction_data_standardized.smi --output reaction_data_filtered.smi
 
 **Parameters**:
-    - `config` - the path to the configuration file.
-    - `input` - the path to the file (.smi or .rdf) with reactions to be filtered.
-    - `output` - the path to the file (.smi or .rdf) where filtered reactions to be stored.
+    - ``config`` - the path to the configuration file.
+    - ``input`` - the path to the file (.smi or .rdf) with reactions to be filtered.
+    - ``output`` - the path to the file (.smi or .rdf) where filtered reactions to be stored.
 
 The extension of the input/output files will be automatically parsed.

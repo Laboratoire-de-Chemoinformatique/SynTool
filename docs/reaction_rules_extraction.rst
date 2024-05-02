@@ -51,21 +51,28 @@ The reaction rules extraction protocol can be adjusted with the configuration fi
 
 **Configuration parameters**:
 
-    - `multicenter_rules` - determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False). The default is True.
-    - `as_query_container` - when set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching. The default is True.
-    - `reverse_rule` - if True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis. The default is True.
-    - `reactor_validation` - activates the validation of each generated rule in a chemical reactor to confirm the accurate generation of products from reactants when set to True. The default is True.
-    - `include_func_groups` - if True, specific functional groups are included in the reaction rule in addition to the reaction center and its environment. The default is False.
-    - `func_groups_list` - specifies a list of functional groups to be included when include_func_groups is True.
-    - `include_rings` - includes ring structures in the reaction rules connected to the reaction center atoms if set to True. The default is False.
-    - `keep_leaving_groups` - keeps the leaving groups in the extracted reaction rule when set to True. The default is False.
-    - `keep_incoming_groups` - retains incoming groups in the extracted reaction rule if set to True. The default is False.
-    - `keep_reagents` - includes reagents in the extracted reaction rule when True. The default is False.
-    - `environment_atom_count` - sets the number of layers of atoms around the reaction center to be included in the rule. A value of 0 includes only the reaction center, 1 includes the first surrounding layer, and so on. The default is 1.
-    - `min_popularity` - establishes the minimum number of times a rule must be applied to be included in further analysis. The default is 3.
-    - `keep_metadata` - preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.
-    - `single_reactant_only` - limits the extracted rules to those with only a single reactant molecule if True. The default is True.
-    - `atom_info_retention` - dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.
+.. table::
+    :widths: 30 10 50
+
+    ================================== ======= ============
+    Parameter                          Default  Description
+    ================================== ======= ============
+    multicenter_rules                  True    Determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False).
+    as_query_container                 True    When set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching.
+    reverse_rule                       True    If True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis.
+    reactor_validation                 True    Activates the validation of each generated rule in a chemical reactor to confirm the accurate generation of products from reactants when set to True.
+    include_func_groups                False   If True, specific functional groups are included in the reaction rule in addition to the reaction center and its environment.
+    func_groups_list                   []      Specifies a list of functional groups to be included when include_func_groups is True.
+    include_rings                      False   Includes ring structures in the reaction rules connected to the reaction center atoms if set to True.
+    keep_leaving_groups                False   Keeps the leaving groups in the extracted reaction rule when set to True. The default is False.
+    keep_incoming_groups               False   Retains incoming groups in the extracted reaction rule if set to True. The default is False.
+    keep_reagents                      False   Includes reagents in the extracted reaction rule when True. The default is False.
+    environment_atom_count             1       Determines the number of layers of atoms around the reaction center to be included in the reaction rule. A value of 0 includes only the reaction center, 1 includes the first surrounding layer, and so on.
+    min_popularity                     3       Determines the minimum number of occurrences of a reaction rule in the reaction dataset. The default is 3.
+    keep_metadata                      False   Preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.
+    single_reactant_only               True    Limits the extracted reaction rules to those with only a single reactant molecule if True. The default is True.
+    atom_info_retention                --      Dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.
+    ================================== ======= ============
 
 CLI
 ---------------------------
@@ -76,9 +83,9 @@ Reaction rules extraction can be performed with the below command.
     syntool rule_extracting --config extraction.yaml --input reaction_data_filtered.smi --output reaction_rules.pickle
 
 **Parameters**:
-    - `config` - the path to the configuration file.
-    - `input` - the path to the file (.smi or .rdf) with reactions to be standardized.
-    - `output` - the path to the file (.pickle) where extracted reactions rules will be stored.
+    - ``config`` - the path to the configuration file.
+    - ``input`` - the path to the file (.smi or .rdf) with reactions to be standardized.
+    - ``output`` - the path to the file (.pickle) where extracted reactions rules will be stored.
 
 The extension of the input/output files will be automatically parsed.
 

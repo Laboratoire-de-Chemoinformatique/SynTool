@@ -48,10 +48,12 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
         """
         x = self.embedder(batch, self.batch_size)
         y = self.y_predictor(x)
+
         if self.policy_type == "filtering":
             y = torch.sigmoid(y)
             priority = torch.sigmoid(self.priority_predictor(x))
             return y, priority
+
         elif self.policy_type == "ranking":
             y = torch.softmax(y, dim=-1)
             return y

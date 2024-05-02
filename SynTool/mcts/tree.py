@@ -80,7 +80,7 @@ class Tree:
         self.curr_time: float = 2
 
         # utils
-        self._tqdm = True
+        self._tqdm = True # TODO tqdm cannot be pickled, needed to disable it with multiproc module
 
         # policy and value functions
         self.policy_function = policy_function
@@ -461,8 +461,11 @@ class Tree:
         """
 
         return (f"Tree for: {str(self.nodes[1].retrons_to_expand[0])}\n"
-                f"Number of nodes: {len(self)}\nNumber of visited nodes: {len(self.visited_nodes)}\n"
-                f"Found paths: {len(self.winning_nodes)}\nTime: {round(self.curr_time, 1)} seconds")
+                f"Number of nodes: {len(self)}\n"
+                f"Number of visited nodes: {len(self.visited_nodes)}\n"
+                f"Number of found routes: {len(self.winning_nodes)}\n"
+                f"Number of iterations: {self.curr_iteration}\n"
+                f"Time: {round(self.curr_time, 1)} seconds")
 
     def path_score(self, node_id: int) -> float:
         """

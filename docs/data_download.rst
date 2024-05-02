@@ -43,7 +43,7 @@ Data download can be performed with the below commands.
 
 .. code-block:: bash
 
-    syntool download_planning_data --root_dir training_data
+    syntool download_planning_data --root_dir planning_data
 
 **Parameters**:
     - `root_dir` - the path to the directory where the data files will be stored.

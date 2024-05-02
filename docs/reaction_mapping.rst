@@ -27,8 +27,8 @@ Reaction mapping can be performed with the below command.
     syntool reaction_mapping --input reaction_data_init.smi --output reaction_data_mapped.smi
 
 **Parameters**:
-    - `input` - the path to the file (.smi or .rdf) with reactions to be mapped.
-    - `output` - the path to the file (.smi or .rdf) where mapped reactions will be stored.
+    - ``input`` - the path to the file (.smi or .rdf) with reactions to be mapped.
+    - ``output`` - the path to the file (.smi or .rdf) where mapped reactions will be stored.
 
 The extension of the input/output files will be automatically parsed.
 

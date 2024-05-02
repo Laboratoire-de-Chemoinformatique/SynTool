@@ -46,12 +46,19 @@ The ranking/filtering network architecture and training hyperparameters can be a
 
 **Configuration parameters**:
 
-    - `vector_dim` - the dimension of the hidden layers.
-    - `batch_size` - the size of the batch of input molecular graphs.
-    - `dropout` - the dropout value.
-    - `learning_rate` - the learning rate.
-    - `num_conv_layers` - the number of convolutional layers.
-    - `num_epoch` - the number of training epochs.
+.. table::
+    :widths: 30 10 50
+
+    ================================== ======= ============
+    Parameter                          Default  Description
+    ================================== ======= ============
+    vector_dim                         512     The dimension of the hidden layers
+    batch_size                         1000    The size of the batch of input molecular graphs
+    dropout                            0.4     The dropout value
+    learning_rate                      0.0005  The learning rate
+    num_conv_layers                    5       The number of convolutional layers
+    num_epoch                          100     The number of training epochs
+    ================================== ======= ============
 
 CLI
 ---------------------------
@@ -64,10 +71,10 @@ Ranking and filtering policy network training can be performed with the below co
     syntool supervised_ranking_policy_training --config policy.yaml --reaction_data reaction_data_filtered.smi --reaction_rules reaction_rules.pickle --results_dir ranking_policy_network
 
 **Parameters**:
-    - `config` - the path to the configuration file.
-    - `reaction_data` - the path to the file with reactions for ranking policy training.
-    - `reaction_rules` - the path to the file with extracted reaction rules.
-    - `results_dir` - the path to the directory where the trained policy network will be stored.
+    - ``config`` - the path to the configuration file.
+    - ``reaction_data`` - the path to the file with reactions for ranking policy training.
+    - ``reaction_rules`` - the path to the file with extracted reaction rules.
+    - ``results_dir`` - the path to the directory where the trained policy network will be stored.
 
 **Filtering policy network**
 
@@ -76,7 +83,7 @@ Ranking and filtering policy network training can be performed with the below co
     syntool supervised_filtering_policy_training --config policy.yaml --molecule_data molecules_data.smi --reaction_rules reaction_rules.pickle --results_dir filtering_policy_network
 
 **Parameters**:
-    - `config` - the path to the configuration file.
-    - `molecule_data` - the path to the file with molecules for filtering policy training.
-    - `reaction_rules` - the path to the file with extracted reaction rules.
-    - `results_dir` - the path to the directory where the trained policy network will be stored.
+    - ``config`` - the path to the configuration file.
+    - ``molecule_data`` - the path to the file with molecules for filtering policy training.
+    - ``reaction_rules`` - the path to the file with extracted reaction rules.
+    - ``results_dir`` - the path to the directory where the trained policy network will be stored.

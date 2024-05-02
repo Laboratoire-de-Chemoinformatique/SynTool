@@ -47,6 +47,17 @@ def extract_tree_stats(tree, target):
             "newick_meta": newick_meta_line,
             "debug": debug}
 
+import pickle
+def save_list_of_trees(list_of_trees, output_file=None):
+    for tree in list_of_trees:
+        tree.policy_function = None
+        tree.value_function = None
+        tree.reaction_rules = None
+        tree.building_blocks = None
+        tree._tqdm = False
+
+    with open(output_file, "wb") as f:
+        pickle.dump(list_of_trees, f)
 
 def tree_search(
         targets_path: str,
@@ -79,8 +90,9 @@ def tree_search(
 
     # output files
     stats_file = results_root.joinpath("tree_search_stats.csv")
-    paths_file = results_root.joinpath("extracted_routes.json")
-    retropaths_folder = results_root.joinpath("extracted_routes")
+    routes_file = results_root.joinpath("extracted_routes.json")
+    trees_file = results_root.joinpath("list_of_trees.pickle")
+    retropaths_folder = results_root.joinpath("extracted_routes_html")
     retropaths_folder.mkdir(exist_ok=True)
 
     # stats header
@@ -97,6 +109,7 @@ def tree_search(
     # run search
     n_solved = 0
     extracted_routes = []
+    list_of_trees = []
 
     with open(targets_path, 'r') as targets, open(stats_file, "w", newline="\n") as csvfile:
 
@@ -119,6 +132,8 @@ def tree_search(
 
                 _ = list(tree)
 
+                list_of_trees.append(tree)
+
             except Exception as e:
                 extracted_routes.append([{"type": "mol", "smiles": target_smi, "in_stock": False, "children": []}])
                 statswriter.writerow({"target_smiles": target_smi,
@@ -129,6 +144,7 @@ def tree_search(
                                       "newick_tree": None,
                                       "newick_meta": None,
                                       "debug": e})
+                list_of_trees.append(None)
                 csvfile.flush()
                 continue
 
@@ -138,16 +154,19 @@ def tree_search(
             # extract routes
             extracted_routes.append(extract_routes(tree))
 
-            # write routes
-            generate_results_html(tree, os.path.join(retropaths_folder, f"retropaths_target_{ti}.html"), extended=True)
+            # save routes
+            generate_results_html(tree, os.path.join(retropaths_folder, f"retroroutes_target_{ti}.html"), extended=True)
 
-            # write stats
+            # save stats
             statswriter.writerow(extract_tree_stats(tree, target_smi))
             csvfile.flush()
 
-            # write json routes
-            with open(paths_file, 'w') as f:
+            # save json routes
+            with open(routes_file, 'w') as f:
                 json.dump(extracted_routes, f)
+
+            # save built trees
+            save_list_of_trees(list_of_trees, trees_file)
 
     print(f"Solved number of target molecules: {n_solved}")
 

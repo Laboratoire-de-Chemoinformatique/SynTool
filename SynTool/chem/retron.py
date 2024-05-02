@@ -18,7 +18,7 @@ class Retron:
         It initializes a Retron object with a molecule container as a parameter.
 
         :param molecule: A molecule.
-        :param canonicalize: If True, the molecule is canonicalized. # TODO string representation is canonicalized ?
+        :param canonicalize: If True, the molecule is canonicalized. # TODO it should be canonicalized by default ?
         """
         self._molecule = safe_canonicalization(molecule) if canonicalize else molecule
         self._mapping = None

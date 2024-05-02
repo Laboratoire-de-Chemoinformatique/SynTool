@@ -499,9 +499,6 @@ class ReinforcementConfig(ConfigABC):
         if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
             raise ValueError("batch_size must be a positive integer.")
 
-        if not isinstance(params['num_simulations'], int) or params['num_simulations'] <= 0:
-            raise ValueError("num_simulations must be a positive integer.")
-
 
 def convert_config_to_dict(config_attr: ConfigABC, config_type) -> Dict:
     """

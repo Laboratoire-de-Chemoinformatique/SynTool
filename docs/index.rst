@@ -15,9 +15,10 @@ Software
 ---------------------------
 SynTool is based on the original Python packages for reaction chemoinformatics. Here is the core software:
 
-    - `CGRTools` – a core open-source library for reaction data processing and manipulation.
-    - `chython` – this package is a fork of CGRtools and includes some additional functionalities.
-    - `chytorch-rxnmap` – a package for reactions mapping.
+    - ``CGRTools`` – a core open-source library for reaction data processing and manipulation.
+    - ``chython`` – this package is a fork of CGRtools and includes some additional functionalities.
+    - ``chytorch-rxnmap`` – a package for reactions mapping.
+    - The machine learning module in SynTool is based on the PyTorch framework .
 
 Also, SynTool includes some special modules, that can also be used separately:
 

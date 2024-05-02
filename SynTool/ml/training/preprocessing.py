@@ -93,8 +93,8 @@ class RankingPolicyDataset(InMemoryDataset):
         """
         super().__init__(None, None, None)
 
-        self.reactions_path = Path(reactions_path).resolve(strict=True)
-        self.reaction_rules_path = Path(reaction_rules_path).resolve(strict=True)
+        self.reactions_path = reactions_path
+        self.reaction_rules_path = reaction_rules_path
         self.output_path = output_path
 
         if output_path and os.path.exists(output_path):
@@ -106,22 +106,23 @@ class RankingPolicyDataset(InMemoryDataset):
     def num_classes(self) -> int:
         return self._infer_num_classes(self._data.y_rules)
 
-    def prepare_data(self) -> Tuple[Data, Dict]:
+    def prepare_data(self) -> Tuple[Data, Dict[str, Tensor]]:
         """
         Prepares data by loading reaction rules, initializing Ray, preprocessing the molecules, collating the data,
-        and returning the data and slices.
+        and returning the data and slices. # TODO not descriptive explanation
 
         :return: The PyTorch geometric graphs and slices.
         """
 
         with open(self.reaction_rules_path, "rb") as inp:
             reaction_rules = pickle.load(inp)
+        reaction_rules = sorted(reaction_rules, key=lambda x: len(x[1]), reverse=True)
 
-        dataset = {}
+        reaction_rule_pairs = {}
         for rule_i, (_, reactions_ids) in enumerate(reaction_rules):
             for reaction_id in reactions_ids:
-                dataset[reaction_id] = rule_i
-        dataset = dict(sorted(dataset.items()))
+                reaction_rule_pairs[reaction_id] = rule_i
+        reaction_rule_pairs = dict(sorted(reaction_rule_pairs.items()))
 
         list_of_graphs = []
         with ReactionReader(self.reactions_path) as reactions:
@@ -129,7 +130,7 @@ class RankingPolicyDataset(InMemoryDataset):
             for reaction_id, reaction in tqdm(enumerate(reactions), desc="Number of reactions processed: ",
                                               bar_format='{desc}{n} [{elapsed}]'):
 
-                rule_id = dataset.get(reaction_id)
+                rule_id = reaction_rule_pairs.get(reaction_id)
                 if rule_id:
                     try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
                         molecule = unite_molecules(reaction.products)

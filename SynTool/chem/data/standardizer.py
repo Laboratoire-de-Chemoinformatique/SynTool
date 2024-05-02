@@ -25,14 +25,14 @@
 # Version: 00.02
 #############################################################################
 
-from CGRtools.files import RDFRead, RDFWrite, SDFWrite, SDFRead, SMILESRead
-from CGRtools.containers import MoleculeContainer, ReactionContainer
-import logging
-from ordered_set import OrderedSet
 import os
 import io
 import pathlib
+import logging
 from pathlib import PurePosixPath
+from ordered_set import OrderedSet
+from CGRtools.files import RDFRead, RDFWrite, SDFWrite, SDFRead, SMILESRead
+from CGRtools.containers import MoleculeContainer, ReactionContainer
 
 
 class Standardizer:
@@ -209,15 +209,15 @@ class Standardizer:
                 raise Exception('Reaction {0}: Cannot check valence..'.format(reaction.meta[self._id_tag]))
             else:
                 return
-        try:
-            if not self._skip_tautomerize:
-                reaction = self._tautomerize(reaction)
-        except:
-            self.logger.exception('Reaction {0}: Cannot tautomerize..'.format(reaction.meta[self._id_tag]))
-            if not self._skip_errors:
-                raise Exception('Reaction {0}: Cannot tautomerize..'.format(reaction.meta[self._id_tag]))
-            else:
-                return
+        # try:
+        #     if not self._skip_tautomerize:
+        #         reaction = self._tautomerize(reaction)
+        # except:
+        #     self.logger.exception('Reaction {0}: Cannot tautomerize..'.format(reaction.meta[self._id_tag]))
+        #     if not self._skip_errors:
+        #         raise Exception('Reaction {0}: Cannot tautomerize..'.format(reaction.meta[self._id_tag]))
+        #     else:
+        #         return
         try:
             reaction.implicify_hydrogens()
         except:
@@ -500,70 +500,6 @@ class Standardizer:
                     if atom.isotope:
                         return True
         return False
-
-    def _tautomerize(self, reaction: ReactionContainer) -> ReactionContainer:
-        """
-        Perform ChemAxon tautomerization.
-        :param reaction: reaction that needs to be tautomerized
-        :return: ReactionContainer
-        """
-        new_molecules = []
-        for part in [reaction.reactants, reaction.reagents, reaction.products]:
-            tmp = []
-            for mol in part:
-                with io.StringIO() as f, SDFWrite(f) as i:
-                    i.write(mol)
-                    sdf = f.getvalue()
-                mol_handler = self._MolHandler(sdf)
-                mol_handler.clean(True, '2')
-                molecule = mol_handler.getMolecule()
-                self._standardizer.standardize(molecule)
-                new_mol_handler = self._MolHandler(molecule)
-                new_sdf = new_mol_handler.toFormat('SDF')
-                with io.StringIO('\n  ' + new_sdf.strip()) as f, SDFRead(f, remap=False) as i:
-                    new_mol = next(i)
-                tmp.append(new_mol)
-            new_molecules.append(tmp)
-        return ReactionContainer(reactants=tuple(new_molecules[0]), reagents=tuple(new_molecules[1]),
-                                 products=tuple(new_molecules[2]), meta=reaction.meta)
-
-    # def _dearomatize_by_RDKit(self, reaction: ReactionContainer) -> ReactionContainer:
-    #     """
-    #     Dearomatizes by RDKit (needs in case of some mappers, such as RXNMapper).
-    #     :param reaction: ReactionContainer
-    #     :return: ReactionContainer
-    #     """
-    #     with io.StringIO() as f, RDFWrite(f) as i:
-    #         i.write(reaction)
-    #         s = '\n'.join(f.getvalue().split('\n')[3:])
-    #         rxn = rdChemReactions.ReactionFromRxnBlock(s)
-    #         reactants, reagents, products = [], [], []
-    #         for mol in rxn.GetReactants():
-    #             try:
-    #                 Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_KEKULIZE, catchErrors=True)
-    #             except Chem.rdchem.KekulizeException:
-    #                 return reaction
-    #             with io.StringIO(Chem.MolToMolBlock(mol)) as f2, SDFRead(f2, remap=False) as sdf_i:
-    #                 reactants.append(next(sdf_i))
-    #         for mol in rxn.GetAgents():
-    #             try:
-    #                 Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_KEKULIZE, catchErrors=True)
-    #             except Chem.rdchem.KekulizeException:
-    #                 return reaction
-    #             with io.StringIO(Chem.MolToMolBlock(mol)) as f2, SDFRead(f2, remap=False) as sdf_i:
-    #                 reagents.append(next(sdf_i))
-    #         for mol in rxn.GetProducts():
-    #             try:
-    #                 Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_KEKULIZE, catchErrors=True)
-    #             except Chem.rdchem.KekulizeException:
-    #                 return reaction
-    #             with io.StringIO(Chem.MolToMolBlock(mol)) as f2, SDFRead(f2, remap=False) as sdf_i:
-    #                 products.append(next(sdf_i))
-    #
-    #     new_reaction = ReactionContainer(reactants=tuple(reactants), reagents=tuple(reagents), products=tuple(products),
-    #                                      meta=reaction.meta)
-    #
-    #     return new_reaction
 
 
 if __name__ == '__main__':

@@ -38,7 +38,8 @@ class Node:
         """
         Returns the SMILES of each retron in retrons_to_expand and new_retrons.
         """
-        return f"Retrons to expand: {self.retrons_to_expand}\n New retrons: {self.new_retrons}"
+        return (f"Retrons to expand: {self.retrons_to_expand}\n"
+                f"New retrons: {self.new_retrons}")
 
     def is_solved(self) -> bool:
         """

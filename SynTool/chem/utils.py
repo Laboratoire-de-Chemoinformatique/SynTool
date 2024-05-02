@@ -59,10 +59,8 @@ def unite_molecules(molecules: Iterable[MoleculeContainer]) -> MoleculeContainer
 
 def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
     """
-    Attempts to canonicalize a molecule, handling any exceptions.
-    This function tries to canonicalize the given molecule.
-    If the canonicalization process fails due to an InvalidAromaticRing exception,
-    it safely returns the original molecule.
+    Attempts to canonicalize a molecule, handling any exceptions. If the canonicalization process fails due to an
+    InvalidAromaticRing exception, it safely returns the original molecule.
 
     :param molecule: The given molecule to be canonicalized.
 
@@ -70,10 +68,10 @@ def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
     """
     molecule._atoms = dict(sorted(molecule._atoms.items()))
 
-    tmp = molecule.copy()
+    molecule_copy = molecule.copy()
     try:
-        tmp.canonicalize()
-        return tmp
+        molecule_copy.canonicalize()
+        return molecule_copy
     except InvalidAromaticRing:
         return molecule
 

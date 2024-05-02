@@ -1,5 +1,6 @@
+
 SynTool - Synthesis planning tool
-========
+========================================
 SynTool is a tool for chemical synthesis planning based on Monte-Carlo Tree Search (MCTS)
 with various implementations of policy and value functions.
 

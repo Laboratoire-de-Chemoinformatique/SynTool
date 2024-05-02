@@ -52,8 +52,6 @@ def create_policy_dataset(reaction_rules_path: str,
                 reaction_rules_path=reaction_rules_path,
                 reactions_path=molecules_or_reactions_path,
                 output_path=output_path)
-        else:
-            raise ValueError("Invalid dataset type. Must be 'ranking' or 'filtering'.")
 
     train_size = int(training_data_ratio * len(full_dataset))
     val_size = len(full_dataset) - train_size
