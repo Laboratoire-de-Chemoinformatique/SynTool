@@ -69,7 +69,7 @@ Each command has a description that can be called with ``syntool --help`` and ``
 
 
 Run training from scratch
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: bash
 
     cd tests
@@ -103,7 +103,7 @@ Run training from scratch
 
 
 Run retrosynthetic planning
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: bash
 
     cd tests
@@ -118,7 +118,7 @@ Run retrosynthetic planning
     syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules tests/reaction_rules.pickle --building_blocks tests/building_blocks.smi --policy_network tests/ranking_policy_network/weights/policy_network.ckpt --value_network tests/value_network/weights/value_network.ckpt --results_dir tests/planning
 
 Documentation
------------
+----------------------
 
 The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_
 
