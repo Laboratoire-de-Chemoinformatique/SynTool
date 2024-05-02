@@ -10,7 +10,7 @@ Installation
 Important: all versions require **python from 3.8 and up to 3.10**!
 
 Linux distributions
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 It requires only poetry 1.3.2. To install poetry, follow the example below, or the instructions on
 https://python-poetry.org/docs/#installation
