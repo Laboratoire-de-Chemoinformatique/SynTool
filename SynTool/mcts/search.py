@@ -47,18 +47,6 @@ def extract_tree_stats(tree, target):
             "newick_meta": newick_meta_line,
             "debug": debug}
 
-import pickle
-def save_list_of_trees(list_of_trees, output_file=None):
-    for tree in list_of_trees:
-        tree.policy_function = None
-        tree.value_function = None
-        tree.reaction_rules = None
-        tree.building_blocks = None
-        tree._tqdm = False
-
-    with open(output_file, "wb") as f:
-        pickle.dump(list_of_trees, f)
-
 def tree_search(
         targets_path: str,
         tree_config: TreeConfig,
@@ -109,7 +97,6 @@ def tree_search(
     # run search
     n_solved = 0
     extracted_routes = []
-    list_of_trees = []
 
     with open(targets_path, 'r') as targets, open(stats_file, "w", newline="\n") as csvfile:
 
@@ -132,8 +119,6 @@ def tree_search(
 
                 _ = list(tree)
 
-                list_of_trees.append(tree)
-
             except Exception as e:
                 extracted_routes.append([{"type": "mol", "smiles": target_smi, "in_stock": False, "children": []}])
                 statswriter.writerow({"target_smiles": target_smi,
@@ -144,7 +129,7 @@ def tree_search(
                                       "newick_tree": None,
                                       "newick_meta": None,
                                       "debug": e})
-                list_of_trees.append(None)
+
                 csvfile.flush()
                 continue
 
@@ -164,9 +149,6 @@ def tree_search(
             # save json routes
             with open(routes_file, 'w') as f:
                 json.dump(extracted_routes, f)
-
-            # save built trees
-            save_list_of_trees(list_of_trees, trees_file)
 
     print(f"Solved number of target molecules: {n_solved}")
 
