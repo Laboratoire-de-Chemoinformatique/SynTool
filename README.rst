@@ -1,5 +1,5 @@
 
-SynTool - Synthesis planning tool
+SynTool - a tool for synthesis planning
 ========================================
 SynTool is a tool for reaction data curation, reaction rules extraction, retrosynthetic models training,
 and retrosynthesis planning. This is a multilayered software allowing for processing any source of
@@ -60,16 +60,16 @@ To run a retrosynthesis planning in SynTool the reaction rules, trained retrosyn
 and building block molecules are needed.
 
 The planning command takes the file with the SMILES of target molecules listed one by one.
-Also, the target molecule can be provided in the SDF file.
+Also, the target molecule can be provided in the SDF format.
 
-If you use your custom building blocks, be sure to canonicalize them before.
+If you use your custom building blocks, be sure to canonicalize them before planning.
 
 .. code-block:: bash
 
     # download planning data
     syntool download_planning_data --root_dir planning_data
 
-    # standardize the building blocks
+    # canonicalize the building blocks
     syntool building_blocks --input planning_data/building_blocks.smi --output planning_data/building_blocks.smi
 
     # planning with rollout evaluation
@@ -81,7 +81,7 @@ If you use your custom building blocks, be sure to canonicalize them before.
 After retrosynthesis planning is finished, the visualized retrosynthesis routes can be fund in the results folder (planning_results/extracted_routes_html).
 
 Run retrosynthetic models training
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SynTool includes the full pipeline of reaction data curation, reaction rules extraction, and retrosynthetic models training.
 For more details consult the corresponding section in the documentation `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
