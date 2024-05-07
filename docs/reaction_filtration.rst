@@ -6,18 +6,18 @@ This page explains how to do a reaction filtration in SynTool.
 
 Introduction
 ---------------------------
-Reaction filtration is a crucial step in reaction data curation. It ensures the correctness of reactions
-used fo reaction rules extraction. The current version of SynTool includes 11 reaction filters (see below).
-In brackets it is showed how this filter should be listed in the configuration file to be activated.
+Reaction filtration is a crucial step in reaction data curation. It ensures the validity of reactions
+used for reaction rule extraction. The current version of SynTool includes 11 reaction filters (see below).
+In brackets, it is shown how this filter should be listed in the configuration file to be activated.
 
 The current available reaction filters in SynTool:
 
 .. table::
-    :widths: 40 50
+    :widths: 35 50
 
-    ================================== ============
+    ================================== =================================================================================
     Reaction filter                    Description
-    ================================== ============
+    ================================== =================================================================================
     compete_products_config            Checks if there are compete reactions
     dynamic_bonds_config               Checks if there is an unacceptable number of dynamic bonds in CGR
     small_molecules_config             Checks if there are only small molecules in the reaction or if there is only one small reactant or product
@@ -29,12 +29,12 @@ The current available reaction filters in SynTool:
     wrong_ch_breaking_config           Checks for incorrect C-C bond formation from breaking a C-H bond
     cc_sp3_breaking_config             Checks if there is C(sp3)-C bond breaking
     cc_ring_breaking_config            Checks if a reaction involves ring C-C bond breaking
-    ================================== ============
+    ================================== =================================================================================
 
 Configuration
 ---------------------------
 The current recommendation is to divide these filters into two groups (standard filters and standard + special filters),
-which can be set up by configuration files (these default parameters are recommended).
+which can be set up by configuration yaml files (these default parameters are recommended).
 
 Standard filters (4 filters):
 
@@ -64,7 +64,7 @@ Standard and special filters (4 + 3 filters):
     cc_sp3_breaking_config:
 
 **Important**: if the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
-Also, some filters requires additional parameters (e.g. `small_molecules_config`).
+Also, some filters requires additional parameters (e.g. ``small_molecules_config``).
 
 CLI
 ---------------------------

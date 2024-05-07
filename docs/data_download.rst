@@ -3,24 +3,43 @@
 Data download
 ===========================
 
-This page explains how to download data for retrosythetic models training and retrosynthesis planning in SynTool.
+This page explains how to download data for retrosynthetic models training and retrosynthesis planning in SynTool.
 
 Introduction
 ---------------------------
-For the training of the retrosynthetic models (policy and value network, reaction rules) the following types of data are needed:
+**Retrosynthetic models training.** For the training of the retrosynthetic models (policy and value network, reaction rules)
+the following types of data are needed:
 
-    - Reaction data – needed for reaction rules extraction and ranking policy network training.
-    - Molecule data – needed for filtering policy network training.
-    - Targets data – needed for value network training (targets for planning simulation in reinforcement-based tuning).
-    - Building blocks - needed for retrosynthesis planning simulations in reinforcement-based value network tuning.
+.. table::
+    :widths: 15 50
 
-For the retrosynthesis planning the following data and files are needed:
+    ======================= ============================================================================================
+    Data                    Description
+    ======================= ============================================================================================
+    Reaction data           Needed for reaction rules extraction and ranking policy network training
+    Molecule data           Needed for filtering policy network training
+    Targets data            Needed for value network training (targets for planning simulations in value network tuning)
+    Building blocks         Needed for retrosynthesis planning simulations in value network tuning
+    ======================= ============================================================================================
 
-    - Trained retrosynthetic models – already trained policy and value networks can be used in retrosynthesis planning.
-    - Reaction rules
-    - Building blocks
+**Retrosynthesis planning.** For the retrosynthesis planning the following data and files are needed:
 
-As a source of reaction and molecule data public database are used such as USPTO, ChEMBL, COCONUT.
+.. table::
+    :widths: 15 50
+
+    ======================= ============================================================================================
+    Data / Files            Description
+    ======================= ============================================================================================
+    Reaction rules          Extracted reaction rules for precursors dissection in retrosynthesis planning
+    Policy network          Trained ranking or filtering policy network for node expansion in tree search
+    Value network           Trained value neural network for node evaluation in tree search (optional, the default evaluation method is rollout)
+    Building blocks         Set of building block molecules, which are used as terminal materials in the retrosynthesis route planning
+    ======================= ============================================================================================
+
+As a source of reaction and molecule data public databases are used such as USPTO, ChEMBL, and COCONUT.
+
+**Important:** the current available data formats are SMILES (.smi) and RDF (.rdf) for reactions and SMILES (.smi) and SDF (.sdf) for molecules.
+The extracted reaction rules are stored as CGRTools objects in a pickle file and currently cannot be stored in text format (e.g. reaction SMARTS).
 
 Configuration
 ---------------------------
@@ -34,16 +53,14 @@ Data download can be performed with the below commands.
 
 .. code-block:: bash
 
-    syntool download_training_data --root_dir training_data
+    syntool download_training_data
 
-**Parameters**:
-    - `root_dir` - the path to the directory where the data files will be stored.
+By default, the files will be stored in the ``syntool_training_data`` directory in the current location (./).
 
 **Data download for retrosythesis planning**
 
 .. code-block:: bash
 
-    syntool download_planning_data --root_dir planning_data
+    syntool download_planning_data
 
-**Parameters**:
-    - `root_dir` - the path to the directory where the data files will be stored.
+By default, the files will be stored in the ``syntool_planning_data`` directory in the current location (./).

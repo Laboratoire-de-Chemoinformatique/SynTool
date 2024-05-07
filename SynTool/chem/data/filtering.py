@@ -799,9 +799,9 @@ def process_completed_batches(futures: Dict, result_file: str, pbar: tqdm,
 
 
 def filter_reactions(config: ReactionCheckConfig,
-                     reaction_data_path: str,
-                     result_reactions_file_name: str = "reaction_data_filtered.smi",
-                     append_results: bool = False,
+                     input_reaction_data_path: str,
+                     filtered_reaction_data_path: str = "reaction_data_filtered.smi",
+                     append_results: bool = True,
                      num_cpus: int = 1,
                      batch_size: int = 100) -> None:
 
@@ -810,8 +810,8 @@ def filter_reactions(config: ReactionCheckConfig,
     to specified files.
 
     :param config: ReactionCheckConfig object containing all filtration configuration settings.
-    :param reaction_data_path: Path to the reaction data file.
-    :param result_reactions_file_name: Name for the file that will contain filtered reactions.
+    :param input_reaction_data_path: Path to the reaction data file.
+    :param filtered_reaction_data_path: Name for the file that will contain filtered reactions.
     :param append_results: Flag indicating whether to append results to existing files.
     :param num_cpus: Number of CPUs to use for processing.
     :param batch_size: Size of the batch for processing reactions.
@@ -823,7 +823,7 @@ def filter_reactions(config: ReactionCheckConfig,
     ray.init(num_cpus=num_cpus, ignore_reinit_error=True, logging_level=logging.ERROR)
     max_concurrent_batches = num_cpus  # limit the number of concurrent batches
 
-    with ReactionReader(reaction_data_path) as reactions, ReactionWriter(result_reactions_file_name, append_results) as result_file:
+    with ReactionReader(input_reaction_data_path) as reactions, ReactionWriter(filtered_reaction_data_path, append_results) as result_file:
 
         pbar = tqdm(reactions, leave=True, desc="Number of reactions processed: ", bar_format='{desc}{n} [{elapsed}]')
 

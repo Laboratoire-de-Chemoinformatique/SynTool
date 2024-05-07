@@ -105,7 +105,6 @@ def run_policy_training(datamodule: LightningDataset,
         max_epochs=config.num_epoch,
         logger=False,
         gradient_clip_val=1.0,
-        enable_checkpointing=True,
         enable_progress_bar=True)
 
     trainer.fit(network, datamodule)

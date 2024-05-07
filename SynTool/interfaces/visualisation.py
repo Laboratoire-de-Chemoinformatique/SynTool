@@ -49,7 +49,8 @@ def extract_routes(tree: Tree, extended: bool = False) -> List[Dict[str, Any]]: 
     """
     target = tree.nodes[1].retrons_to_expand[0].molecule
     target_in_stock = tree.nodes[1].curr_retron.is_building_block(tree.building_blocks)
-    # Append encoded routes to list
+
+    # append encoded routes to list
     paths_block = []
     winning_nodes = []
     if extended:

@@ -84,7 +84,7 @@ Run retrosynthetic models training
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SynTool includes the full pipeline of reaction data curation, reaction rules extraction, and retrosynthetic models training.
-For more details consult the corresponding section in the documentation `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
+For more details consult the corresponding sections in the documentation `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
 
 Documentation
 ----------------------

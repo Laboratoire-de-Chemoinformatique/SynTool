@@ -29,35 +29,29 @@ def syntool():
 
 
 @syntool.command(name="download_planning_data")
-@click.option("--root_dir", required=True, type=click.Path(exists=True),
-              help="Path to the reaction data file to be mapped.")
-def download_planning_data_cli(root_dir: str = '.') -> None:
+def download_planning_data_cli() -> None:
     """
     Downloads data for retrosythesis planning (reaction/molecule data and trained neural networks).
     """
-    remote_id = "1ygq9BvQgH2Tq_rL72BvSOdASSSbPFTsL"
-    output = os.path.join(root_dir, "syntool_planning_data.zip")
+    remote_id = "1HFL8yT5i2wE82lNqB88wZ5OM2D9AsvXH"
+    data_archive = os.path.join("syntool_planning_data.zip")
     #
-    gdown.download(output=output, id=remote_id, quiet=False)
-    shutil.unpack_archive(output, root_dir)
-    #
-    os.remove(output)
+    gdown.download(output=data_archive, id=remote_id, quiet=False)
+    shutil.unpack_archive(data_archive)
+    os.remove(data_archive)
 
 
 @syntool.command(name='download_training_data')
-@click.option("--root_dir", required=True, type=click.Path(exists=True),
-              help="Path to the reaction database file that will be mapped.")
-def download_training_data_cli(root_dir: str = '.') -> None:
+def download_training_data_cli() -> None:
     """
     Downloads data for retrosythetic models training.
     """
-    remote_id = "1ckhO1l6xud0_bnC0rCDMkIlKRUMG_xs8"
-    output = os.path.join(root_dir, "syntool_training_data.zip")
+    remote_id = "1I2u4Zn-et-tlHmdLBAqclGiAiUuA1X5G"
+    data_archive = os.path.join("syntool_training_data.zip")
     #
-    gdown.download(output=output, id=remote_id, quiet=False)
-    shutil.unpack_archive(output, root_dir)
-    #
-    os.remove(output)
+    gdown.download(output=data_archive, id=remote_id, quiet=False)
+    shutil.unpack_archive(data_archive)
+    os.remove(data_archive)
 
 
 @syntool.command(name="building_blocks")
@@ -123,8 +117,8 @@ def reaction_filtering_cli(config_path: str, input_file: str, output_file: str,
     Filters erroneous reactions.
     """
     reaction_check_config = ReactionCheckConfig().from_yaml(config_path)
-    filter_reactions(config=reaction_check_config, reaction_data_path=input_file,
-                     result_reactions_file_name=output_file, append_results=append_results,
+    filter_reactions(config=reaction_check_config, input_reaction_data_path=input_file,
+                     filtered_reaction_data_path=output_file, append_results=append_results,
                      num_cpus=num_cpus, batch_size=batch_size)
 
 

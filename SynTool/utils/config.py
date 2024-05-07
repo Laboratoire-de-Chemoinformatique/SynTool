@@ -159,14 +159,14 @@ class RuleExtractionConfig(ConfigABC):
             "reaction_center": {
                 "neighbors": True,
                 "hybridization": True,
-                "implicit_hydrogens": True,
-                "ring_sizes": True,
+                "implicit_hydrogens": False,
+                "ring_sizes": False,
             },
             "environment": {
-                "neighbors": True,
-                "hybridization": True,
-                "implicit_hydrogens": True,
-                "ring_sizes": True,
+                "neighbors": False,
+                "hybridization": False,
+                "implicit_hydrogens": False,
+                "ring_sizes": False,
             },
         }
 

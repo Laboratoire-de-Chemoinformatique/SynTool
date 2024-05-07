@@ -9,10 +9,9 @@ Introduction
 ---------------------------
 The protocol for extraction of reaction rules from reactions in SynTool involves the following steps:
 
-    * Substructure Extraction - for each reactant and product in a given reaction, substructures containing the atoms of the reaction center and their immediate environment are extracted.
-    * Substructure Exchange -the reactant and product substructures are then exchanged.
-    * Reagents Handling - if the reaction includes reagents, they are not incorporated into the retro-rule.
-    * Label Preservation - all labels related to the atoms of the reaction center, such as hybridization, the number of neighbors, and the ring sizes in which the atoms participate, are preserved. For atoms in the first environment, only the sizes of rings are preserved.
+    1. The atom-to-atom mapping (AAM) in reaction must be established
+    2. Each atom in the reaction is labeled with set of properties such as hybridization, the number of neighbors, the charge, and the ring sizes in which the atoms participate.
+    3. Based on the reaction AAM, the atoms of reactants that change their properties in products are included to the reaction center of the reaction
 
 A reaction rule extracted by this protocol is applied to the product of the original reaction. If it successfully
 generates the reactants of the reaction, the reaction rule is considered valid.
@@ -20,7 +19,7 @@ generates the reactants of the reaction, the reaction rule is considered valid.
 Configuration
 ---------------------------
 
-The reaction rules extraction protocol can be adjusted with the configuration file:
+The reaction rules extraction protocol can be adjusted with the configuration yaml file:
 
 .. code-block:: yaml
 
@@ -54,9 +53,9 @@ The reaction rules extraction protocol can be adjusted with the configuration fi
 .. table::
     :widths: 30 10 50
 
-    ================================== ======= ============
+    ================================== ======= =========================================================================
     Parameter                          Default  Description
-    ================================== ======= ============
+    ================================== ======= =========================================================================
     multicenter_rules                  True    Determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False).
     as_query_container                 True    When set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching.
     reverse_rule                       True    If True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis.
@@ -72,7 +71,7 @@ The reaction rules extraction protocol can be adjusted with the configuration fi
     keep_metadata                      False   Preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.
     single_reactant_only               True    Limits the extracted reaction rules to those with only a single reactant molecule if True. The default is True.
     atom_info_retention                --      Dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.
-    ================================== ======= ============
+    ================================== ======= =========================================================================
 
 CLI
 ---------------------------
