@@ -84,6 +84,7 @@ SynTool can be accessed via the Python interface. For a better understanding of 
 the tutorials in `SynTool/tutorials`. Currently, two tutorials are available:
 
 ``tutorials/general_tutorial.ipynb`` – explains how to do a reaction rules extraction, policy network training, and retrosynthesis planning in SynTool.
+
 ``tutorials/planning_algorithms_tutorial.ipynb`` – explains how to do a retrosynthesis planning win various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
 
 
