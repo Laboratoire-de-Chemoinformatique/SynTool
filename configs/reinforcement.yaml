@@ -1,7 +1,7 @@
 tree:
   max_iterations: 100
   max_tree_size: 10000
-  max_time: 1200
+  max_time: 120
   max_depth: 9
   ucb_type: uct
   c_ucb: 0.1
@@ -15,15 +15,15 @@ node_evaluation:
   evaluation_agg: max
 node_expansion:
   top_rules: 50
-  rule_prob_threshold: 0.5
+  rule_prob_threshold: 0.0
   priority_rules_fraction: 0.5
 value_network:
   vector_dim: 512
-  batch_size: 5
+  batch_size: 1000
   dropout: 0.4
   learning_rate: 0.0005
   num_conv_layers: 5
   num_epoch: 100
 reinforcement:
-  batch_size: 15
+  batch_size: 100
   num_simulations: 1

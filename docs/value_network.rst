@@ -32,12 +32,12 @@ The network architecture and training hyperparameters can be adjusted in the tra
     tree:
       max_iterations: 100
       max_tree_size: 10000
-      max_time: 240
+      max_time: 120
       max_depth: 9
+      search_strategy: expansion_first
       ucb_type: uct
       c_ucb: 0.1
       backprop_type: muzero
-      search_strategy: expansion_first
       exclude_small: True
       min_mol_size: 6
       init_node_value: 0.5
@@ -58,7 +58,7 @@ The network architecture and training hyperparameters can be adjusted in the tra
       num_epoch: 100
       batch_size: 1000
     reinforcement:
-      batch_size: 15
+      batch_size: 100
       num_simulations: 1
 
 **Configuration parameters**:
@@ -99,8 +99,11 @@ CLI
 ---------------------------
 Value network training can be performed with the below command.
 
+**Important:** If you use your custom building blocks, be sure to canonicalize them before planning simulations in value network tuning.
+
 .. code-block:: bash
 
+    syntool building_blocks --input building_blocks_init.smi --output building_blocks.smi
     syntool reinforcement_value_network_training --config reinforcement.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network policy_network.ckpt --results_dir value_network
 
 **Parameters**:

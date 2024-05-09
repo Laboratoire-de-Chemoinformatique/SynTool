@@ -90,26 +90,28 @@ def run_policy_training(datamodule: LightningDataset,
 
     weights_path = results_path.joinpath("policy_network.ckpt")
 
-    network = PolicyNetwork(
-        vector_dim=config.vector_dim,
-        n_rules=datamodule.train_dataset.dataset.num_classes,
-        batch_size=config.batch_size,
-        dropout=config.dropout,
-        num_conv_layers=config.num_conv_layers,
-        learning_rate=config.learning_rate,
-        policy_type=config.policy_type)
+    with DisableLogger():
 
-    trainer = Trainer(
-        accelerator=accelerator,
-        devices=[0],
-        max_epochs=config.num_epoch,
-        logger=False,
-        gradient_clip_val=1.0,
-        enable_progress_bar=True)
+        network = PolicyNetwork(
+            vector_dim=config.vector_dim,
+            n_rules=datamodule.train_dataset.dataset.num_classes,
+            batch_size=config.batch_size,
+            dropout=config.dropout,
+            num_conv_layers=config.num_conv_layers,
+            learning_rate=config.learning_rate,
+            policy_type=config.policy_type)
 
-    trainer.fit(network, datamodule)
-    ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)
-    trainer.save_checkpoint(weights_path)
+        trainer = Trainer(
+            accelerator=accelerator,
+            devices=[0],
+            max_epochs=config.num_epoch,
+            logger=False,
+            gradient_clip_val=1.0,
+            enable_progress_bar=True)
+
+        trainer.fit(network, datamodule)
+        ba = round(trainer.logged_metrics['train_balanced_accuracy_y_step'].item(), 3)
+        trainer.save_checkpoint(weights_path)
 
     print(f'Policy network balanced accuracy: {ba}')
 

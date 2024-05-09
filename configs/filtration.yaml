@@ -1,6 +1,3 @@
-cc_ring_breaking_config:
-wrong_ch_breaking_config:
-cc_sp3_breaking_config:
 multi_center_config:
 no_reaction_config:
 dynamic_bonds_config:
@@ -8,3 +5,6 @@ dynamic_bonds_config:
   max_bonds_number: 6
 small_molecules_config:
   limit: 6
+cc_ring_breaking_config:
+wrong_ch_breaking_config:
+cc_sp3_breaking_config:

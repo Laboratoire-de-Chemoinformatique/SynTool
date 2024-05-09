@@ -28,10 +28,11 @@ The reaction rules extraction protocol can be adjusted with the configuration ya
     multicenter_rules: True
     as_query_container: True
     reverse_rule: True
+    reactor_validation: True
     include_func_groups: False
     func_groups_list:
     include_rings: False
-    keep_leaving_groups: True
+    keep_leaving_groups: False
     keep_incoming_groups: False
     keep_reagents: False
     keep_metadata: False
@@ -43,7 +44,7 @@ The reaction rules extraction protocol can be adjusted with the configuration ya
         implicit_hydrogens: False
         ring_sizes: False
       environment:
-        neighbors: True
+        neighbors: False
         hybridization: False
         implicit_hydrogens: False
         ring_sizes: False

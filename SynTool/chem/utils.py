@@ -236,21 +236,22 @@ def hash_from_reaction_rule(reaction_rule: ReactionContainer) -> hash:
     return hash((reactants_hash, reagents_hash, products_hash))
 
 
-def standardize_building_blocks(input_file: str, output_file: str) -> str:  # TODO reimplement with reader/writer
+def canonicalize_building_blocks(input_file: str, output_file: str) -> str:  # TODO reimplement with reader/writer
     """
     Canonicalizes custom building blocks.
 
     :param input_file: The path to the file that stores the original building blocks.
-    :param output_file: The path to the file that will store the canonicalazied building blocks.
+    :param output_file: The path to the file that will store the canonicalized building blocks.
 
-    :return: The path to the file with standardized building blocks.
+    :return: The path to the file with canonicalized building blocks.
     """
-
+    if input_file == output_file:
+        raise 'input_file name and output_file name cannot be the same.'
     with open(input_file, "r") as inp_file, open(output_file, "w") as out_file:
-        for smi in tqdm(inp_file):
+        for smi in tqdm(inp_file, desc="Number of building blocks processed: ", bar_format='{desc}{n} [{elapsed}]'):
             mol = smiles(smi)
             try:
-                mol.canonicalize()
+                mol = safe_canonicalization(mol)
             except:
                 continue
             out_file.write(f'{str(mol)}\n')

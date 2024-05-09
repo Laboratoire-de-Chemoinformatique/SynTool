@@ -260,11 +260,11 @@ def run_planning(targets_batch: list[MoleculeContainer],
     """
 
     search_batch = [(target, tree_config,
-                      policy_config, value_config,
-                      reaction_rules_path, building_blocks_path) for target in targets_batch]
+                     policy_config, value_config,
+                     reaction_rules_path, building_blocks_path) for target in targets_batch]
 
-    # print(f'\nProcess batch number {targets_batch_id}')
-    with Pool(1) as pool:
+    print(f'\nProcess batch number {targets_batch_id}')
+    with Pool(2) as pool:
         tree_list = pool.starmap(run_tree_search, search_batch)
 
     num_solved = sum([len(i.winning_nodes) > 0 for i in tree_list])

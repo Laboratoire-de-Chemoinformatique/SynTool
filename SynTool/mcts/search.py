@@ -34,26 +34,26 @@ def extract_tree_stats(tree, target):
     newick_meta_line = ";".join([f"{nid},{v[0]},{v[1]},{v[2]}" for nid, v in newick_meta.items()])
 
     if len(tree.winning_nodes) > 0:
-        debug = 'SOLVED'
+        debug = 'IS_SOLVED'
     else:
-        debug = 'NOT SOLVED'
+        debug = 'NOT_SOLVED'
 
     return {"target_smiles": target.meta['init_smiles'],
-            "tree_size": len(tree),
-            "search_time": round(tree.curr_time, 1),
+            "num_routes": len(tree.winning_nodes),
+            "num_nodes": len(tree),
             "num_iter": tree.curr_iteration,
-            "found_paths": len(tree.winning_nodes),
+            "search_time": round(tree.curr_time, 1),
             "newick_tree": newick_tree,
             "newick_meta": newick_meta_line,
-            "debug": debug}
+            "debug_info": debug}
 
 def tree_search(
         targets_path: str,
-        tree_config: TreeConfig,
+        search_config: dict,
         policy_config: PolicyNetworkConfig,
         reaction_rules_path: str,
         building_blocks_path: str,
-        value_weights_path: str = None,
+        value_network_path: str = None,
         results_root: str = "search_results") -> None:
 
     """
@@ -61,11 +61,11 @@ def tree_search(
     logging the results and statistics.
 
     :param targets_path: The path to the file containing the target molecules (in SDF or SMILES format).
-    :param tree_config: The config object containing the configuration for the tree search.
+    :param search_config: The config object containing the configuration for the tree search.
     :param policy_config: The config object containing the configuration for the policy.
     :param reaction_rules_path: The path to the file containing reaction rules.
     :param building_blocks_path: The path to the file containing building blocks.
-    :param value_weights_path: The path to the file containing value weights (optional).
+    :param value_network_path: The path to the file containing value weights (optional).
     :param results_root: The name of the folder where the results of the tree search will be saved.
 
     :return: None.
@@ -79,18 +79,17 @@ def tree_search(
     # output files
     stats_file = results_root.joinpath("tree_search_stats.csv")
     routes_file = results_root.joinpath("extracted_routes.json")
-    trees_file = results_root.joinpath("list_of_trees.pickle")
     retropaths_folder = results_root.joinpath("extracted_routes_html")
     retropaths_folder.mkdir(exist_ok=True)
 
     # stats header
-    stats_header = ["target_smiles", "tree_size", "search_time",
-                    "found_paths", "num_iter",  "newick_tree", "newick_meta", "debug"]
+    stats_header = ["target_smiles", "num_routes", "num_nodes", "num_iter",
+                    "search_time", "newick_tree", "newick_meta", "debug_info"]
 
     # config
     policy_function = PolicyFunction(policy_config=policy_config)
-    if tree_config.evaluation_type == 'gcn':
-        value_function = ValueFunction(weights_path=value_weights_path)
+    if search_config["evaluation_type"] == 'gcn':
+        value_function = ValueFunction(weights_path=value_network_path)
     else:
         value_function = None
 
@@ -98,6 +97,8 @@ def tree_search(
     n_solved = 0
     extracted_routes = []
 
+    tree_config = TreeConfig.from_dict(search_config) # TODO add search config class
+    tree_config.silent = True
     with open(targets_path, 'r') as targets, open(stats_file, "w", newline="\n") as csvfile:
 
         statswriter = csv.DictWriter(csvfile, delimiter=",", fieldnames=stats_header)
@@ -106,7 +107,6 @@ def tree_search(
         for ti, target_smi in tqdm(enumerate(targets), leave=True, desc="Number of target molecules processed: ",
                                    bar_format='{desc}{n} [{elapsed}]'):
             target_smi = target_smi.strip()
-            print(f'Search for {target_smi}')
             try:
                 # run search
                 tree = Tree(
@@ -122,13 +122,13 @@ def tree_search(
             except Exception as e:
                 extracted_routes.append([{"type": "mol", "smiles": target_smi, "in_stock": False, "children": []}])
                 statswriter.writerow({"target_smiles": target_smi,
-                                      "tree_size": None,
-                                      "search_time": None,
+                                      "num_routes": None,
+                                      "num_nodes": None,
                                       "num_iter": None,
-                                      "found_paths": None,
+                                      "search_time": None,
                                       "newick_tree": None,
                                       "newick_meta": None,
-                                      "debug": e})
+                                      "debug_info": e}) # TODO create a default dict before, avoid duplication here
 
                 csvfile.flush()
                 continue
@@ -150,5 +150,5 @@ def tree_search(
             with open(routes_file, 'w') as f:
                 json.dump(extracted_routes, f)
 
-    print(f"Solved number of target molecules: {n_solved}")
+    print(f"Number of solved target molecules: {n_solved}")
 

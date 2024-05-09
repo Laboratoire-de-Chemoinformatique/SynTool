@@ -48,15 +48,16 @@ The retrosynthesis planning algorithm can be adjusted by the configuration yaml 
     tree:
       max_iterations: 100
       max_tree_size: 10000
-      max_time: 1200
+      max_time: 120
       max_depth: 9
+      search_strategy: expansion_first
       ucb_type: uct
       c_ucb: 0.1
       backprop_type: muzero
-      search_strategy: expansion_first
       exclude_small: True
       init_node_value: 0.5
       min_mol_size: 6
+      epsilon: 0
       silent: True
     node_evaluation:
       evaluation_type: rollout
@@ -100,7 +101,7 @@ If you use your custom building blocks, be sure to canonicalize them before plan
 
 .. code-block:: bash
 
-    syntool building_blocks --input building_blocks_init.smi --output building_blocks_stand.smi
+    syntool building_blocks --input building_blocks_init.smi --output building_blocks.smi
     syntool planning --config planning.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks_stand.smi --policy_network policy_network.ckpt --results_dir planning
 
 **Parameters**:

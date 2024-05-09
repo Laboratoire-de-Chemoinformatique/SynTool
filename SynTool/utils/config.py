@@ -209,9 +209,7 @@ class RuleExtractionConfig(ConfigABC):
         if params["func_groups_list"] is not None and not all(
             isinstance(group, (MoleculeContainer, QueryContainer))
             for group in params["func_groups_list"]):
-            raise ValueError(
-                "func_groups_list must be a list of MoleculeContainer or QueryContainer objects."
-            )
+            raise ValueError("func_groups_list must be a list of MoleculeContainer or QueryContainer objects.")
 
         if not isinstance(params["include_rings"], bool):
             raise ValueError("include_rings must be a boolean.")
@@ -260,6 +258,77 @@ class RuleExtractionConfig(ConfigABC):
                 for subkey, subvalue in value.items():
                     if not isinstance(subvalue, bool):
                         raise ValueError(f"Value for {subkey} in {key} of atom_info_retention must be boolean.")
+
+
+@dataclass
+class PolicyNetworkConfig(ConfigABC):
+    """
+    Configuration class for the policy network.
+
+    :ivar vector_dim: Dimension of the input vectors.
+    :ivar batch_size: Number of samples per batch.
+    :ivar dropout: Dropout rate for regularization.
+    :ivar learning_rate: Learning rate for the optimizer.
+    :ivar num_conv_layers: Number of convolutional layers in the network.
+    :ivar num_epoch: Number of training epochs.
+    :ivar policy_type: Mode of operation, either 'filtering' or 'ranking'.
+    """
+
+    policy_type: str = "ranking"
+    vector_dim: int = 256
+    batch_size: int = 500
+    dropout: float = 0.4
+    learning_rate: float = 0.008
+    num_conv_layers: int = 5
+    num_epoch: int = 100
+    weights_path: str = None
+
+    # for filtering policy
+    priority_rules_fraction: float = 0.5
+    rule_prob_threshold: float = 0.0
+    top_rules: int = 50
+
+    @staticmethod
+    def from_dict(config_dict: Dict[str, Any]) -> 'PolicyNetworkConfig':
+        return PolicyNetworkConfig(**config_dict)
+
+    @staticmethod
+    def from_yaml(file_path: str) -> 'PolicyNetworkConfig':
+        with open(file_path, 'r') as file:
+            config_dict = yaml.safe_load(file)
+        return PolicyNetworkConfig.from_dict(config_dict)
+
+    def _validate_params(self, params: Dict[str, Any]):
+
+        if params['policy_type'] not in ["filtering", "ranking"]:
+            raise ValueError("policy_type must be either 'filtering' or 'ranking'.")
+
+        if not isinstance(params['vector_dim'], int) or params['vector_dim'] <= 0:
+            raise ValueError("vector_dim must be a positive integer.")
+
+        if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
+            raise ValueError("batch_size must be a positive integer.")
+
+        if not isinstance(params['num_conv_layers'], int) or params['num_conv_layers'] <= 0:
+            raise ValueError("num_conv_layers must be a positive integer.")
+
+        if not isinstance(params['num_epoch'], int) or params['num_epoch'] <= 0:
+            raise ValueError("num_epoch must be a positive integer.")
+
+        if not isinstance(params['dropout'], float) or not (0.0 <= params['dropout'] <= 1.0):
+            raise ValueError("dropout must be a float between 0.0 and 1.0.")
+
+        if not isinstance(params['learning_rate'], float) or params['learning_rate'] <= 0.0:
+            raise ValueError("learning_rate must be a positive float.")
+
+        if not isinstance(params['priority_rules_fraction'], float) or params['priority_rules_fraction'] < 0.0:
+            raise ValueError("priority_rules_fraction must be a non-negative positive float.")
+
+        if not isinstance(params['rule_prob_threshold'], float) or params['rule_prob_threshold'] < 0.0:
+            raise ValueError("rule_prob_threshold must be a non-negative float.")
+
+        if not isinstance(params['top_rules'], int) or params['top_rules'] <= 0:
+            raise ValueError("top_rules must be a positive integer.")
 
 
 @dataclass
@@ -343,78 +412,6 @@ class TreeConfig(ConfigABC):
                 f"Invalid search_strategy: {params['search_strategy']}: "
                 f"Allowed values are 'expansion_first', 'evaluation_first'"
             )
-
-
-@dataclass
-class PolicyNetworkConfig(ConfigABC):
-    """
-    Configuration class for the policy network.
-
-    :ivar vector_dim: Dimension of the input vectors.
-    :ivar batch_size: Number of samples per batch.
-    :ivar dropout: Dropout rate for regularization.
-    :ivar learning_rate: Learning rate for the optimizer.
-    :ivar num_conv_layers: Number of convolutional layers in the network.
-    :ivar num_epoch: Number of training epochs.
-    :ivar policy_type: Mode of operation, either 'filtering' or 'ranking'.
-    """
-
-    policy_type: str = "ranking"
-    vector_dim: int = 256
-    batch_size: int = 500
-    dropout: float = 0.4
-    learning_rate: float = 0.008
-    num_conv_layers: int = 5
-    num_epoch: int = 100
-    weights_path: str = None
-
-    # for filtering policy
-    priority_rules_fraction: float = 0.5
-    rule_prob_threshold: float = 0.0
-    top_rules: int = 50
-
-    @staticmethod
-    def from_dict(config_dict: Dict[str, Any]) -> 'PolicyNetworkConfig':
-        return PolicyNetworkConfig(**config_dict)
-
-    @staticmethod
-    def from_yaml(file_path: str) -> 'PolicyNetworkConfig':
-        with open(file_path, 'r') as file:
-            config_dict = yaml.safe_load(file)
-        return PolicyNetworkConfig.from_dict(config_dict)
-
-    def _validate_params(self, params: Dict[str, Any]):
-
-        if params['policy_type'] not in ["filtering", "ranking"]:
-            raise ValueError("policy_type must be either 'filtering' or 'ranking'.")
-
-        if not isinstance(params['vector_dim'], int) or params['vector_dim'] <= 0:
-            raise ValueError("vector_dim must be a positive integer.")
-
-        if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
-            raise ValueError("batch_size must be a positive integer.")
-
-        if not isinstance(params['num_conv_layers'], int) or params['num_conv_layers'] <= 0:
-            raise ValueError("num_conv_layers must be a positive integer.")
-
-        if not isinstance(params['num_epoch'], int) or params['num_epoch'] <= 0:
-            raise ValueError("num_epoch must be a positive integer.")
-
-        if not isinstance(params['dropout'], float) or not (0.0 <= params['dropout'] <= 1.0):
-            raise ValueError("dropout must be a float between 0.0 and 1.0.")
-
-        if not isinstance(params['learning_rate'], float) or params['learning_rate'] <= 0.0:
-            raise ValueError("learning_rate must be a positive float.")
-
-        if not isinstance(params['priority_rules_fraction'], float) or params['priority_rules_fraction'] < 0.0:
-            raise ValueError("priority_rules_fraction must be a non-negative positive float.")
-
-        if not isinstance(params['rule_prob_threshold'], float) or params['rule_prob_threshold'] < 0.0:
-            raise ValueError("rule_prob_threshold must be a non-negative float.")
-
-        if not isinstance(params['top_rules'], int) or params['top_rules'] <= 0:
-            raise ValueError("top_rules must be a positive integer.")
-
 
 @dataclass
 class ValueNetworkConfig(ConfigABC):

@@ -11,7 +11,7 @@ import gdown
 from pathlib import Path
 from SynTool.chem.data.standardizing import reactions_cleaner
 from SynTool.chem.data.filtering import filter_reactions, ReactionCheckConfig
-from SynTool.chem.utils import standardize_building_blocks
+from SynTool.chem.utils import canonicalize_building_blocks
 from SynTool.chem.reaction_rules.extraction import extract_rules_from_reactions
 from SynTool.mcts.search import tree_search
 from SynTool.ml.training.reinforcement import run_reinforcement_tuning
@@ -63,7 +63,7 @@ def building_blocks_cli(input_file: str, output_file: str) -> None:
     """
     Standardizes building blocks.
     """
-    standardize_building_blocks(input_file=input_file, output_file=output_file)
+    canonicalize_building_blocks(input_file=input_file, output_file=output_file)
 
 
 @syntool.command(name="reaction_mapping")
@@ -85,7 +85,7 @@ def reaction_mapping_cli(input_file: str, output_file: str) -> None:
               help="Path to the file with reactions to be standardized.")
 @click.option("--output", "output_file", type=click.Path(),
               help="Path to the file where standardized reactions will be stored.")
-@click.option("--num_cpus", default=8, type=int,
+@click.option("--num_cpus", default=4, type=int,
               help="The number of CPUs to use for processing.")
 def reaction_standardizing_cli(config_path: str, input_file: str, output_file: str, num_cpus: int) -> None:
     """
@@ -105,21 +105,16 @@ def reaction_standardizing_cli(config_path: str, input_file: str, output_file: s
               help="Path to the file with reactions to be filtered.")
 @click.option("--output", "output_file", default=Path("./"), type=click.Path(),
               help="Path to the file where successfully filtered reactions will be stored.")
-@click.option("--append_results", is_flag=True, default=False,
-              help="If True, results will be appended to existing file.")
-@click.option("--batch_size", default=100, type=int,
-              help="The size of the batch for processing reactions.")
-@click.option("--num_cpus", default=8, type=int,
+@click.option("--num_cpus", default=4, type=int,
               help="The number of CPUs to use for processing.")
-def reaction_filtering_cli(config_path: str, input_file: str, output_file: str,
-                           append_results: bool, batch_size: int, num_cpus: int):
+def reaction_filtering_cli(config_path: str, input_file: str, output_file: str, num_cpus: int):
     """
     Filters erroneous reactions.
     """
     reaction_check_config = ReactionCheckConfig().from_yaml(config_path)
     filter_reactions(config=reaction_check_config, input_reaction_data_path=input_file,
-                     filtered_reaction_data_path=output_file, append_results=append_results,
-                     num_cpus=num_cpus, batch_size=batch_size)
+                     filtered_reaction_data_path=output_file, append_results=True,
+                     num_cpus=num_cpus, batch_size=100)
 
 
 @syntool.command(name="rule_extracting")
@@ -129,18 +124,15 @@ def reaction_filtering_cli(config_path: str, input_file: str, output_file: str,
               help="Path to the file with reactions for reaction rules extraction.")
 @click.option("--output", "output_file", required=True, type=click.Path(),
               help="Path to the file where extracted reaction rules will be stored.")
-@click.option("--batch_size", default=100, type=int,
-              help="The size of the batch for processing reactions.")
 @click.option("--num_cpus", default=4, type=int,
               help="The number of CPUs to use for processing.")
-def rule_extracting_cli(config_path: str, input_file: str, output_file: str,
-                        num_cpus: int, batch_size: int):
+def rule_extracting_cli(config_path: str, input_file: str, output_file: str, num_cpus: int):
     """
     Reaction rules extraction.
     """
     reaction_rule_config = RuleExtractionConfig.from_yaml(config_path)
     extract_rules_from_reactions(config=reaction_rule_config, reaction_file=input_file, rules_file_name=output_file,
-                                 num_cpus=num_cpus, batch_size=batch_size)
+                                 num_cpus=num_cpus, batch_size=100)
 
 
 @syntool.command(name="supervised_ranking_policy_training")
@@ -160,6 +152,7 @@ def supervised_ranking_policy_training_cli(config_path: str, reaction_data: str,
     Ranking policy network training.
     """
     policy_config = PolicyNetworkConfig.from_yaml(config_path)
+    policy_config.policy_type = 'ranking'
     policy_dataset_file = os.path.join(results_dir, 'policy_dataset.dt')
 
     datamodule = create_policy_dataset(reaction_rules_path=reaction_rules,
@@ -190,8 +183,9 @@ def supervised_filtering_policy_training_cli(config_path: str, molecule_data: st
     """
 
     policy_config = PolicyNetworkConfig.from_yaml(config_path)
-
+    policy_config.policy_type = 'filtering'
     policy_dataset_file = os.path.join(results_dir, 'policy_dataset.ckpt')
+
     datamodule = create_policy_dataset(reaction_rules_path=reaction_rules,
                                        molecules_or_reactions_path=molecule_data,
                                        output_path=policy_dataset_file,
@@ -270,15 +264,15 @@ def planning_cli(config_path: str, targets: str, reaction_rules: str, building_b
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)
 
-    tree_config = TreeConfig.from_dict({**config['tree'], **config['node_evaluation']})
+    search_config = {**config['tree'], **config['node_evaluation']}
     policy_config = PolicyNetworkConfig.from_dict({**config['node_expansion'], **{'weights_path': policy_network}})
 
     tree_search(targets_path=targets,
-                tree_config=tree_config,
+                search_config=search_config,
                 policy_config=policy_config,
                 reaction_rules_path=reaction_rules,
                 building_blocks_path=building_blocks,
-                value_weights_path=value_network,
+                value_network_path=value_network,
                 results_root=results_dir)
 
 

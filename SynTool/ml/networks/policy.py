@@ -19,7 +19,7 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
     Policy network.
     """
 
-    def __init__(self, n_rules: int, vector_dim: int, policy_type: str = "filtering", *args, **kwargs):
+    def __init__(self, n_rules: int, vector_dim: int, policy_type: str = "ranking", *args, **kwargs):
         """
         Initializes a policy network with the given number of reaction rules (output dimension) and vector graph
         embedding dimension, and creates linear layers for predicting the regular and priority reaction rules.
@@ -49,14 +49,14 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
         x = self.embedder(batch, self.batch_size)
         y = self.y_predictor(x)
 
+        if self.policy_type == "ranking":
+            y = torch.softmax(y, dim=-1)
+            return y
+
         if self.policy_type == "filtering":
             y = torch.sigmoid(y)
             priority = torch.sigmoid(self.priority_predictor(x))
             return y, priority
-
-        elif self.policy_type == "ranking":
-            y = torch.softmax(y, dim=-1)
-            return y
 
     def _get_loss(self, batch: Batch) -> Dict[str, Tensor]:
         """
@@ -89,12 +89,11 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
 
             true_priority = batch.y_priority.float()
             pred_priority = self.priority_predictor(x)
-
             loss_priority = binary_cross_entropy_with_logits(pred_priority, true_priority)
+
             loss = loss_y + loss_priority
 
             true_priority = true_priority.long()
-
             ba_priority = (recall(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules) +
                            specificity(pred_priority, true_priority, task="multilabel", num_labels=self.n_rules)) / 2
 

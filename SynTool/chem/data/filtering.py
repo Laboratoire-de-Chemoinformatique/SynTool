@@ -502,7 +502,7 @@ class ReactionCheckConfig(ConfigABC):
     :attribute cc_ring_breaking_config: Configuration for CC ring breaking checking.
     """
 
-    # Configuration for reaction checkers
+    # configuration for reaction checkers
     dynamic_bonds_config: Optional[DynamicBondsConfig] = None
     small_molecules_config: Optional[SmallMoleculesConfig] = None
     strange_carbons_config: Optional[StrangeCarbonsConfig] = None
@@ -515,7 +515,7 @@ class ReactionCheckConfig(ConfigABC):
     cc_sp3_breaking_config: Optional[CCsp3BreakingConfig] = None
     cc_ring_breaking_config: Optional[CCRingBreakingConfig] = None
 
-    # Other configuration parameters
+    # other configuration parameters
     rebalance_reaction: bool = False
     remove_reagents: bool = True
     reagents_max_size: int = 7
@@ -587,7 +587,7 @@ class ReactionCheckConfig(ConfigABC):
         cc_ring_breaking_config = (CCRingBreakingConfig()
             if "cc_ring_breaking_config" in config_dict else None)
 
-        # Extract other simple configuration parameters
+        # extract other simple configuration parameters
         rebalance_reaction = config_dict.get("rebalance_reaction", False)
         remove_reagents = config_dict.get("remove_reagents", True)
         reagents_max_size = config_dict.get("reagents_max_size", 7)

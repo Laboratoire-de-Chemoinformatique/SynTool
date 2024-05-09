@@ -34,7 +34,7 @@ Reaction data standardization can be adjusted with the bellow configuration yaml
     skip_errors: True
     keep_unbalanced_ions: False
     keep_reagents: False
-    action_on_isotopes: True
+    action_on_isotopes: False
 
 **Configuration parameters**:
 
@@ -48,7 +48,7 @@ Reaction data standardization can be adjusted with the bellow configuration yaml
     skip_errors                        True    If True, will ignore some errors during the reaction processes
     keep_unbalanced_ions               False   If True, will keep reactions with unbalanced ions
     keep_reagents                      False   If True, will keep reagents from the reactions
-    action_on_isotopes                 True    If True, will ignore reactions with isotopes
+    action_on_isotopes                 False   If True, will ignore reactions with isotopes
     ================================== ======= =========================================================================
 
 CLI
