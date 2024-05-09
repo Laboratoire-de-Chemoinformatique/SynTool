@@ -85,7 +85,7 @@ the tutorials in `SynTool/tutorials`. Currently, two tutorials are available:
 
 ``tutorials/general_tutorial.ipynb`` – explains how to do a reaction rules extraction, policy network training, and retrosynthesis planning in SynTool.
 
-``tutorials/planning_algorithms_tutorial.ipynb`` – explains how to do a retrosynthesis planning win various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
+``tutorials/planning_algorithms_tutorial.ipynb`` – explains how to do a retrosynthesis planning with various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
 
 
 Graphical user interface
@@ -104,5 +104,5 @@ The current version of GUI now is under development.
 Documentation
 ----------------------
 
-The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_
+The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
 
