@@ -36,30 +36,61 @@
 <p>This page explains how to do a reaction filtration in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>Reaction filtration is a crucial step in reaction data curation. It ensures the correctness of reactions
-used fo reaction rules extraction. The current version of SynTool includes 11 reaction filters (see below).
-In brackets it is showed how this filter should be listed in the configuration file to be activated.</p>
+<p>Reaction filtration is a crucial step in reaction data curation. It ensures the validity of reactions
+used for reaction rule extraction. The current version of SynTool includes 11 reaction filters (see below).
+In brackets, it is shown how this filter should be listed in the configuration file to be activated.</p>
 <p>The current available reaction filters in SynTool:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>CompeteProductsChecker</cite> (<cite>compete_products_config</cite>) - checks if there are compete reactions.</p></li>
-<li><p><cite>DynamicBondsChecker</cite> (<cite>dynamic_bonds_config</cite>) - checks if there is an unacceptable number of dynamic bonds in CGR.</p></li>
-<li><p><cite>SmallMoleculesChecker</cite> (<cite>small_molecules_config</cite>) - checks if there are only small molecules in the reaction or if there is only one small reactant or product.</p></li>
-<li><p><cite>CGRConnectedComponentsChecker</cite> (<cite>cgr_connected_components_config</cite>) - checks if CGR contains unrelated components (without reagents).</p></li>
-<li><p><cite>RingsChangeChecker</cite> (<cite>rings_change_config</cite>) - checks if there is changing rings number in the reaction.</p></li>
-<li><p><cite>StrangeCarbonsChecker</cite> (<cite>strange_carbons_config</cite>) - checks if there are ‘strange’ carbons in the reaction.</p></li>
-<li><p><cite>NoReactionChecker</cite> (<cite>no_reaction_config</cite>) - checks if there is no reaction in the provided reaction container.</p></li>
-<li><p><cite>MultiCenterChecker</cite> (<cite>multi_center_config</cite>) - checks if there is a multicenter reaction.</p></li>
-<li><p><cite>WrongCHBreakingChecker</cite> (<cite>wrong_ch_breaking_config</cite>) - checks for incorrect C-C bond formation from breaking a C-H bond.</p></li>
-<li><p><cite>CCsp3BreakingChecker</cite> (<cite>cc_sp3_breaking_config</cite>) - checks if there is C(sp3)-C bond breaking.</p></li>
-<li><p><cite>CCRingBreakingChecker</cite> (<cite>cc_ring_breaking_config</cite>) - checks if a reaction involves ring C-C bond breaking.</p></li>
-</ul>
-</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41.2%" />
+<col style="width: 58.8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Reaction filter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>compete_products_config</p></td>
+<td><p>Checks if there are compete reactions</p></td>
+</tr>
+<tr class="row-odd"><td><p>dynamic_bonds_config</p></td>
+<td><p>Checks if there is an unacceptable number of dynamic bonds in CGR</p></td>
+</tr>
+<tr class="row-even"><td><p>small_molecules_config</p></td>
+<td><p>Checks if there are only small molecules in the reaction or if there is only one small reactant or product</p></td>
+</tr>
+<tr class="row-odd"><td><p>cgr_connected_components_config</p></td>
+<td><p>Checks if CGR contains unrelated components (without reagents)</p></td>
+</tr>
+<tr class="row-even"><td><p>rings_change_config</p></td>
+<td><p>Checks if there is changing rings number in the reaction</p></td>
+</tr>
+<tr class="row-odd"><td><p>strange_carbons_config</p></td>
+<td><p>Checks if there are ‘strange’ carbons in the reaction</p></td>
+</tr>
+<tr class="row-even"><td><p>no_reaction_config</p></td>
+<td><p>Checks if there is no reaction in the provided reaction container</p></td>
+</tr>
+<tr class="row-odd"><td><p>multi_center_config</p></td>
+<td><p>Checks if there is a multicenter reaction</p></td>
+</tr>
+<tr class="row-even"><td><p>wrong_ch_breaking_config</p></td>
+<td><p>Checks for incorrect C-C bond formation from breaking a C-H bond</p></td>
+</tr>
+<tr class="row-odd"><td><p>cc_sp3_breaking_config</p></td>
+<td><p>Checks if there is C(sp3)-C bond breaking</p></td>
+</tr>
+<tr class="row-even"><td><p>cc_ring_breaking_config</p></td>
+<td><p>Checks if a reaction involves ring C-C bond breaking</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
 <p>The current recommendation is to divide these filters into two groups (standard filters and standard + special filters),
-which can be set up by configuration files (these default parameters are recommended).</p>
+which can be set up by configuration yaml files (these default parameters are recommended).</p>
 <p>Standard filters (4 filters):</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">multi_center_config</span><span class="p">:</span>
 <span class="nt">no_reaction_config</span><span class="p">:</span>
@@ -84,7 +115,7 @@ which can be set up by configuration files (these default parameters are recomme
 </pre></div>
 </div>
 <p><strong>Important</strong>: if the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
-Also, some filters requires additional parameters (e.g. <cite>small_molecules_config</cite>).</p>
+Also, some filters requires additional parameters (e.g. <code class="docutils literal notranslate"><span class="pre">small_molecules_config</span></code>).</p>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
@@ -94,9 +125,9 @@ Also, some filters requires additional parameters (e.g. <cite>small_molecules_co
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be filtered.</p></li>
-<li><p><cite>output</cite> - the path to the file (.smi or .rdf) where filtered reactions to be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - the path to the file (.smi or .rdf) with reactions to be filtered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - the path to the file (.smi or .rdf) where filtered reactions to be stored.</p></li>
 </ul>
 </dd>
 </dl>

@@ -38,28 +38,28 @@
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>The protocol for extraction of reaction rules from reactions in SynTool involves the following steps:</p>
 <blockquote>
-<div><ul class="simple">
-<li><p>Substructure Extraction - for each reactant and product in a given reaction, substructures containing the atoms of the reaction center and their immediate environment are extracted.</p></li>
-<li><p>Substructure Exchange -the reactant and product substructures are then exchanged.</p></li>
-<li><p>Reagents Handling - if the reaction includes reagents, they are not incorporated into the retro-rule.</p></li>
-<li><p>Label Preservation - all labels related to the atoms of the reaction center, such as hybridization, the number of neighbors, and the ring sizes in which the atoms participate, are preserved. For atoms in the first environment, only the sizes of rings are preserved.</p></li>
-</ul>
+<div><ol class="arabic simple">
+<li><p>The atom-to-atom mapping (AAM) in reaction must be established</p></li>
+<li><p>Each atom in the reaction is labeled with set of properties such as hybridization, the number of neighbors, the charge, and the ring sizes in which the atoms participate.</p></li>
+<li><p>Based on the reaction AAM, the atoms of reactants that change their properties in products are included to the reaction center of the reaction</p></li>
+</ol>
 </div></blockquote>
 <p>A reaction rule extracted by this protocol is applied to the product of the original reaction. If it successfully
 generates the reactants of the reaction, the reaction rule is considered valid.</p>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>The reaction rules extraction protocol can be adjusted with the configuration file:</p>
+<p>The reaction rules extraction protocol can be adjusted with the configuration yaml file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">environment_atom_count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 <span class="nt">min_popularity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 <span class="nt">multicenter_rules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">as_query_container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">reverse_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">reactor_validation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">include_func_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="nt">func_groups_list</span><span class="p">:</span>
 <span class="nt">include_rings</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
-<span class="nt">keep_leaving_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">keep_leaving_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="nt">keep_incoming_groups</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="nt">keep_reagents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="nt">keep_metadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
@@ -71,32 +71,88 @@ generates the reactants of the reaction, the reaction rule is considered valid.<
 <span class="w">    </span><span class="nt">implicit_hydrogens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="w">    </span><span class="nt">ring_sizes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="w">  </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">neighbors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">    </span><span class="nt">neighbors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="w">    </span><span class="nt">hybridization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="w">    </span><span class="nt">implicit_hydrogens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="w">    </span><span class="nt">ring_sizes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 </pre></div>
 </div>
 <p><strong>Configuration parameters</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>multicenter_rules</cite> - determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False). The default is True.</p></li>
-<li><p><cite>as_query_container</cite> - when set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching. The default is True.</p></li>
-<li><p><cite>reverse_rule</cite> - if True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis. The default is True.</p></li>
-<li><p><cite>reactor_validation</cite> - activates the validation of each generated rule in a chemical reactor to confirm the accurate generation of products from reactants when set to True. The default is True.</p></li>
-<li><p><cite>include_func_groups</cite> - if True, specific functional groups are included in the reaction rule in addition to the reaction center and its environment. The default is False.</p></li>
-<li><p><cite>func_groups_list</cite> - specifies a list of functional groups to be included when include_func_groups is True.</p></li>
-<li><p><cite>include_rings</cite> - includes ring structures in the reaction rules connected to the reaction center atoms if set to True. The default is False.</p></li>
-<li><p><cite>keep_leaving_groups</cite> - keeps the leaving groups in the extracted reaction rule when set to True. The default is False.</p></li>
-<li><p><cite>keep_incoming_groups</cite> - retains incoming groups in the extracted reaction rule if set to True. The default is False.</p></li>
-<li><p><cite>keep_reagents</cite> - includes reagents in the extracted reaction rule when True. The default is False.</p></li>
-<li><p><cite>environment_atom_count</cite> - sets the number of layers of atoms around the reaction center to be included in the rule. A value of 0 includes only the reaction center, 1 includes the first surrounding layer, and so on. The default is 1.</p></li>
-<li><p><cite>min_popularity</cite> - establishes the minimum number of times a rule must be applied to be included in further analysis. The default is 3.</p></li>
-<li><p><cite>keep_metadata</cite> - preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.</p></li>
-<li><p><cite>single_reactant_only</cite> - limits the extracted rules to those with only a single reactant molecule if True. The default is True.</p></li>
-<li><p><cite>atom_info_retention</cite> - dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.</p></li>
-</ul>
-</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33.3%" />
+<col style="width: 11.1%" />
+<col style="width: 55.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>multicenter_rules</p></td>
+<td><p>True</p></td>
+<td><p>Determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False).</p></td>
+</tr>
+<tr class="row-odd"><td><p>as_query_container</p></td>
+<td><p>True</p></td>
+<td><p>When set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching.</p></td>
+</tr>
+<tr class="row-even"><td><p>reverse_rule</p></td>
+<td><p>True</p></td>
+<td><p>If True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis.</p></td>
+</tr>
+<tr class="row-odd"><td><p>reactor_validation</p></td>
+<td><p>True</p></td>
+<td><p>Activates the validation of each generated rule in a chemical reactor to confirm the accurate generation of products from reactants when set to True.</p></td>
+</tr>
+<tr class="row-even"><td><p>include_func_groups</p></td>
+<td><p>False</p></td>
+<td><p>If True, specific functional groups are included in the reaction rule in addition to the reaction center and its environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p>func_groups_list</p></td>
+<td><p>[]</p></td>
+<td><p>Specifies a list of functional groups to be included when include_func_groups is True.</p></td>
+</tr>
+<tr class="row-even"><td><p>include_rings</p></td>
+<td><p>False</p></td>
+<td><p>Includes ring structures in the reaction rules connected to the reaction center atoms if set to True.</p></td>
+</tr>
+<tr class="row-odd"><td><p>keep_leaving_groups</p></td>
+<td><p>False</p></td>
+<td><p>Keeps the leaving groups in the extracted reaction rule when set to True. The default is False.</p></td>
+</tr>
+<tr class="row-even"><td><p>keep_incoming_groups</p></td>
+<td><p>False</p></td>
+<td><p>Retains incoming groups in the extracted reaction rule if set to True. The default is False.</p></td>
+</tr>
+<tr class="row-odd"><td><p>keep_reagents</p></td>
+<td><p>False</p></td>
+<td><p>Includes reagents in the extracted reaction rule when True. The default is False.</p></td>
+</tr>
+<tr class="row-even"><td><p>environment_atom_count</p></td>
+<td><p>1</p></td>
+<td><p>Determines the number of layers of atoms around the reaction center to be included in the reaction rule. A value of 0 includes only the reaction center, 1 includes the first surrounding layer, and so on.</p></td>
+</tr>
+<tr class="row-odd"><td><p>min_popularity</p></td>
+<td><p>3</p></td>
+<td><p>Determines the minimum number of occurrences of a reaction rule in the reaction dataset. The default is 3.</p></td>
+</tr>
+<tr class="row-even"><td><p>keep_metadata</p></td>
+<td><p>False</p></td>
+<td><p>Preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.</p></td>
+</tr>
+<tr class="row-odd"><td><p>single_reactant_only</p></td>
+<td><p>True</p></td>
+<td><p>Limits the extracted reaction rules to those with only a single reactant molecule if True. The default is True.</p></td>
+</tr>
+<tr class="row-even"><td><p>atom_info_retention</p></td>
+<td><p>–</p></td>
+<td><p>Dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
@@ -106,9 +162,9 @@ generates the reactants of the reaction, the reaction rule is considered valid.<
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
-<li><p><cite>output</cite> - the path to the file (.pickle) where extracted reactions rules will be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - the path to the file (.pickle) where extracted reactions rules will be stored.</p></li>
 </ul>
 </dd>
 </dl>

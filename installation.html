@@ -33,26 +33,26 @@
             
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
-<p>Important: all versions require <strong>python from 3.8 and up to 3.10</strong>!</p>
+<p><strong>Important-1:</strong> all versions require <strong>python from 3.8 and up to 3.10</strong>!</p>
+<p><strong>Important-2:</strong> currently for neural networks training GPU is necessary!</p>
 <section id="linux-distributions">
 <h2>Linux distributions<a class="headerlink" href="#linux-distributions" title="Link to this heading">¶</a></h2>
-<p>It requires only poetry 1.3.2. To install poetry, follow the example below, or the instructions on
-<a class="reference external" href="https://python-poetry.org/docs/#installation">https://python-poetry.org/docs/#installation</a></p>
-<p>For example, on Ubuntu we can install miniconda and set an environment in which we will install poetry with the following commands:</p>
+<p>SynTool can be installed by the following steps:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># install miniconda</span>
 wget<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash<span class="w"> </span>Miniconda3-latest-Linux-x86_64.sh
 
-<span class="c1"># install poetry</span>
+<span class="c1"># create a new environment and poetry</span>
 conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>syntool<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="s2">&quot;poetry=1.3.2&quot;</span><span class="w"> </span><span class="s2">&quot;python=3.10&quot;</span><span class="w"> </span>-y
 conda<span class="w"> </span>activate<span class="w"> </span>syntool
 
-<span class="c1"># install SynTool</span>
+<span class="c1"># clone SynTool</span>
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Laboratoire-de-Chemoinformatique/Syntool.git
 
-<span class="c1"># navigate to the SynTool folder and run the following command:</span>
+<span class="c1"># navigate to the SynTool folder and install all the dependencies</span>
 <span class="nb">cd</span><span class="w"> </span>SynTool/
-poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>cpu
+poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>gpu
+conda<span class="w"> </span>activate<span class="w"> </span>syntool
 </pre></div>
 </div>
 <p>If Poetry fails with error, a possible solution is to update the bashrc file with the following command:</p>
@@ -63,8 +63,8 @@ poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="
 </section>
 <section id="optional">
 <h2>Optional<a class="headerlink" href="#optional" title="Link to this heading">¶</a></h2>
-<p>After installation, one can add the SynTool environment in their Jupyter platform:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>ipykernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="w"> </span>synto<span class="w"> </span>--display-name<span class="w"> </span><span class="s2">&quot;syntool&quot;</span>
+<p>After installation, one can add the syntool environment in their Jupyter platform:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>ipykernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="w"> </span>syntool<span class="w"> </span>--display-name<span class="w"> </span><span class="s2">&quot;syntool&quot;</span>
 </pre></div>
 </div>
 </section>

@@ -37,99 +37,176 @@
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>In SynTool retrosynthesis planning module combines the search algorithm (MCTS), reaction rules, and policy function for
 their prediction in node expansion and value function (rollout function or value network) in node evaluation.
-The planning is coupled with a visualization module for the display of found retrosynthetic routes.</p>
+The planning is coupled with a visualization module for the display of found retrosynthesis routes.</p>
+</section>
+<section id="tree-search">
+<h2>Tree search<a class="headerlink" href="#tree-search" title="Link to this heading">¶</a></h2>
+<p>The retrosynthesis planning in SynTool is executed with the MCTS algorithm. The nodes in the MCTS algorithm are expanded
+by the expansion function predicting reaction rules applicable to the current precursor and evaluated by
+the evaluation function navigating the tree exploration in the promising directions. The tree search is limited
+by tree parameters: number of iterations, time of the search, and size of the tree (total number of nodes).
+Retrosynthesis planning in SynTool can be performed using two search strategies:
+the evaluation-first and the expansion-first strategy.</p>
+<p><strong>Expansion-first strategy.</strong> In the expansion-first strategy, each newly created node is assigned a predefined constant value.
+This approach is characterized by a more stochastic selection of nodes for expansion but allows for a reduction in the
+computational resources.</p>
+<p><strong>Evaluation-first strategy.</strong> In the evaluation-first strategy, each newly created node immediately is evaluated with
+the evaluation function, which allows for more exhaustive tree exploration. Although the node evaluation in the
+evaluation-first strategy imposes an additional computational overhead, this problem can be overcome by the application
+of fast evaluation functions, such as one approximated by a value neural network.</p>
+<p><strong>Rollout evaluation.</strong> The current implementation of rollout evaluation in SynTool is described here. For the given precursor,
+a policy network predicts a set of applicable reaction rules sorted by their predicted probability. Then all reaction rules
+are applied one by one and the first successfully applied reaction rule from this set generates new precursors. Then, the policy network
+predicts the reaction rules for obtained precursors. This dissection proceeds until the stop criterion is reached with the corresponding value:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If the precursor is a building_block, return 1.0</p></li>
+<li><p>If the reaction is not successful, return -1.0 (all predicted reaction rules are not applicable).</p></li>
+<li><p>If the reaction is successful, but the generated precursors are not the building_blocks and cannot be generated without exceeding the maximum tree depth, return -0.5.</p></li>
+<li><p>If the reaction is successful, but the precursors are not the building_blocks and cannot be generated, return -1.0.</p></li>
+</ul>
+</div></blockquote>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>The retrosynthesis planning algorithm can be adjusted by the configuration file:</p>
+<p>The retrosynthesis planning algorithm can be adjusted by the configuration yaml file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tree</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
 <span class="w">  </span><span class="nt">max_tree_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
-<span class="w">  </span><span class="nt">max_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1200</span>
+<span class="w">  </span><span class="nt">max_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
 <span class="w">  </span><span class="nt">max_depth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+<span class="w">  </span><span class="nt">search_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expansion_first</span>
 <span class="w">  </span><span class="nt">ucb_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uct</span>
 <span class="w">  </span><span class="nt">c_ucb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
 <span class="w">  </span><span class="nt">backprop_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">muzero</span>
-<span class="w">  </span><span class="nt">search_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expansion_first</span>
 <span class="w">  </span><span class="nt">exclude_small</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="w">  </span><span class="nt">init_node_value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
 <span class="w">  </span><span class="nt">min_mol_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">  </span><span class="nt">epsilon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
 <span class="w">  </span><span class="nt">silent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">node_evaluation</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">evaluation_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rollout</span>
 <span class="w">  </span><span class="nt">evaluation_agg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">max</span>
 <span class="nt">node_expansion</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">top_rules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
-<span class="w">  </span><span class="nt">rule_prob_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">  </span><span class="nt">rule_prob_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
 <span class="w">  </span><span class="nt">priority_rules_fraction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
 </pre></div>
 </div>
 <p><strong>Configuration parameters</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>tree/max_iterations</cite> - the maximum number of iterations the tree search algorithm will perform.</p></li>
-<li><p><cite>tree/max_tree_size</cite> - the maximum number of nodes that can be created in the search tree.</p></li>
-<li><p><cite>tree/max_time</cite> - the maximum time (in seconds) for the tree search execution.</p></li>
-<li><p><cite>tree/max_depth</cite> - the maximum depth of the tree, controlling how far the search can go from the root node.</p></li>
-<li><p><cite>tree/ucb_type</cite> - the type of Upper Confidence Bound (UCB) used in the tree search. Options include “puct” (predictive UCB), “uct” (standard UCB), and “value”.</p></li>
-<li><p><cite>tree/c_ucb</cite> - the parameter controlling the exploration-exploitation balance in UCB, which influences how much the algorithm favors the exploration of new paths versus the exploitation of known paths.</p></li>
-<li><p><cite>tree/backprop_type</cite> - the backpropagation method used during the tree search. Options are “muzero” (model-based approach) and “cumulative” (cumulative reward approach).</p></li>
-<li><p><cite>tree/search_strategy</cite> - the strategy for navigating the tree. Options are “expansion_first” (prioritizing the expansion of new nodes) and “evaluation_first” (prioritizing the evaluation of new nodes).</p></li>
-<li><p><cite>tree/exclude_small</cite> - if True, excludes small molecules from the tree, typically focusing on more complex molecules.</p></li>
-<li><p><cite>tree/init_node_value</cite> - the initial value for newly created nodes in the tree. This can impact how nodes are prioritized during the search.</p></li>
-<li><p><cite>tree/epsilon</cite> - this parameter is used in the epsilon-greedy strategy during node selection, representing the probability of choosing a random action for exploration. A higher value leads to more exploration.</p></li>
-<li><p><cite>tree/min_mol_size</cite> - the minimum size of a molecule (in terms of the number of heavy atoms) to be considered in the search. Molecules smaller than this threshold are typically considered readily available building blocks.</p></li>
-<li><p><cite>tree/silent</cite> - if True, suppresses the progress logging of the tree search.</p></li>
-<li><p><cite>node_evaluation/evaluation_agg</cite> - the way the evaluation scores are aggregated. Options are “max” (using the maximum score) and “average” (using the average score).</p></li>
-<li><p><cite>node_evaluation/evaluation_type</cite> - the method used for node evaluation. Options include “random” (random number between 0 and 1), “rollout” (using rollout simulations), and “gcn” (graph convolutional networks).</p></li>
-<li><p><cite>node_expansion/top_rules</cite> - the maximum amount of rules to be selected for node expansion from the list of predicted reaction rules.</p></li>
-<li><p><cite>node_expansion/rule_prob_threshold</cite> - the reaction rules with predicted probability lower than this parameter will be discarded.</p></li>
-<li><p><cite>node_expansion/priority_rules_fraction</cite> - the fraction of priority rules in comparison to th regular rules.</p></li>
-</ul>
-</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 42.9%" />
+<col style="width: 9.5%" />
+<col style="width: 47.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>tree:max_iterations</p></td>
+<td><p>100</p></td>
+<td><p>The maximum number of iterations the tree search algorithm will perform</p></td>
+</tr>
+<tr class="row-odd"><td><p>tree:max_tree_size</p></td>
+<td><p>10000</p></td>
+<td><p>The maximum number of nodes that can be created in the search tree</p></td>
+</tr>
+<tr class="row-even"><td><p>tree:max_time</p></td>
+<td><p>240</p></td>
+<td><p>The maximum time (in seconds) for the tree search execution</p></td>
+</tr>
+<tr class="row-odd"><td><p>tree:max_depth</p></td>
+<td><p>9</p></td>
+<td><p>The maximum depth of the tree, controlling how far the search can go from the root node</p></td>
+</tr>
+<tr class="row-even"><td><p>tree:ucb_type</p></td>
+<td><p>uct</p></td>
+<td><p>The type of Upper Confidence Bound (UCB) used in the tree search. Options include “puct” (predictive UCB), “uct” (standard UCB), and “value” (the initial node value)</p></td>
+</tr>
+<tr class="row-odd"><td><p>tree:backprop_type</p></td>
+<td><p>muzero</p></td>
+<td><p>The backpropagation method used during the tree search. Options are “muzero” (model-based approach) and “cumulative” (cumulative reward approach)</p></td>
+</tr>
+<tr class="row-even"><td><p>tree:search_strategy</p></td>
+<td><p>expansion_first</p></td>
+<td><p>The strategy for navigating the tree. Options are “expansion_first” (prioritizing the expansion of new nodes) and “evaluation_first” (prioritizing the evaluation of existing nodes)</p></td>
+</tr>
+<tr class="row-odd"><td><p>tree:exclude_small</p></td>
+<td><p>True</p></td>
+<td><p>If True, excludes small molecules from the tree, typically focusing on more complex molecules</p></td>
+</tr>
+<tr class="row-even"><td><p>tree:min_mol_size</p></td>
+<td><p>6</p></td>
+<td><p>The minimum size of a molecule (the number of heavy atoms) to be considered in the search. Molecules smaller than this threshold are typically considered readily available building blocks</p></td>
+</tr>
+<tr class="row-odd"><td><p>tree:init_node_value</p></td>
+<td><p>0.5</p></td>
+<td><p>The initial value for newly created nodes in the tree (for expansion_first search strategy)</p></td>
+</tr>
+<tr class="row-even"><td><p>tree:epsilon</p></td>
+<td><p>0</p></td>
+<td><p>This parameter is used in the epsilon-greedy strategy during the node selection, representing the probability of choosing a random action for exploration. A higher value leads to more exploration</p></td>
+</tr>
+<tr class="row-odd"><td><p>tree:silent</p></td>
+<td><p>True</p></td>
+<td><p>If True, suppresses the progress logging of the tree search</p></td>
+</tr>
+<tr class="row-even"><td><p>node_evaluation:evaluation_agg</p></td>
+<td><p>max</p></td>
+<td><p>The way the evaluation scores are aggregated. Options are “max” (using the maximum score) and “average” (using the average score)</p></td>
+</tr>
+<tr class="row-odd"><td><p>node_evaluation:evaluation_type</p></td>
+<td><p>rollout</p></td>
+<td><p>The method used for node evaluation. Options include “random” (random number between 0 and 1), “rollout” (using rollout simulations), and “gcn” (graph convolutional networks)</p></td>
+</tr>
+<tr class="row-even"><td><p>node_expansion:top_rules</p></td>
+<td><p>50</p></td>
+<td><p>The maximum amount of rules to be selected for node expansion from the list of predicted reaction rules</p></td>
+</tr>
+<tr class="row-odd"><td><p>node_expansion:rule_prob_threshold</p></td>
+<td><p>0.0</p></td>
+<td><p>The reaction rules with predicted probability lower than this parameter will be discarded</p></td>
+</tr>
+<tr class="row-even"><td><p>node_expansion:priority_rules_fraction</p></td>
+<td><p>0.5</p></td>
+<td><p>The fraction of priority rules in comparison to the regular rules (only for filtering policy)</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
-<p>Retrosynthesis planning can be performed with the below command.</p>
-<p><strong>Retrosynthesis planning with rollout evaluation</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>planning<span class="w"> </span>--config<span class="w"> </span>planning.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks.smi<span class="w"> </span>--policy_network<span class="w"> </span>policy_network.ckpt<span class="w"> </span>--results_dir<span class="w"> </span>planning
+<p>Retrosynthesis planning can be performed with the below command.
+If you use your custom building blocks, be sure to canonicalize them before planning.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>building_blocks<span class="w"> </span>--input<span class="w"> </span>building_blocks_init.smi<span class="w"> </span>--output<span class="w"> </span>building_blocks.smi
+syntool<span class="w"> </span>planning<span class="w"> </span>--config<span class="w"> </span>planning.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks_stand.smi<span class="w"> </span>--policy_network<span class="w"> </span>policy_network.ckpt<span class="w"> </span>--results_dir<span class="w"> </span>planning
 </pre></div>
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>targets</cite> - the path to the file with target molecule for retrosynthesis planning.</p></li>
-<li><p><cite>reaction_rules</cite> - the path to the file with reaction rules.</p></li>
-<li><p><cite>building_blocks</cite> - the path to the file with building blocks.</p></li>
-<li><p><cite>policy_network</cite> - the path to the file with trained policy network (ranking or filtering).</p></li>
-<li><p><cite>results_dir</cite> - the path to the directory where the trained value network will be to be stored.</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>Retrosynthesis planning with value network evaluation</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>planning<span class="w"> </span>--config<span class="w"> </span>planning.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks.smi<span class="w"> </span>--policy_network<span class="w"> </span>policy_network.ckpt<span class="w"> </span>--value_network<span class="w"> </span>value_network.ckpt<span class="w"> </span>--results_dir<span class="w"> </span>planning
-</pre></div>
-</div>
-<dl class="simple">
-<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>targets</cite> - the path to the file with target molecule for retrosynthesis planning.</p></li>
-<li><p><cite>reaction_rules</cite> - the path to the file with reaction rules.</p></li>
-<li><p><cite>building_blocks</cite> - the path to the file with building blocks.</p></li>
-<li><p><cite>policy_network</cite> - the path to the file with trained policy network (ranking or filtering).</p></li>
-<li><p><cite>value_network</cite> - the path to the file with trained value network (ranking or filtering).</p></li>
-<li><p><cite>results_dir</cite> - the path to the directory where the trained value network will be to be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">targets</span></code> - the path to the file with target molecule for retrosynthesis planning.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reaction_rules</span></code> - the path to the file with reaction rules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_blocks</span></code> - the path to the file with building blocks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">policy_network</span></code> - the path to the file with trained policy network (ranking or filtering).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value_network</span></code> - the path to the file with trained value network if available (default is None).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results_dir</span></code> - the path to the directory where the trained value network will be to be stored.</p></li>
 </ul>
 </dd>
 </dl>
 </section>
 <section id="results-analysis">
 <h2>Results analysis<a class="headerlink" href="#results-analysis" title="Link to this heading">¶</a></h2>
-<p>After the retrosynthesis planning is finished, the user will see the folder containing the results. This folder will contain the following subfolders/files:</p>
+<p>After the retrosynthesis planning is finished, the planning results will be stored to the determined directory.
+This directory will contain the following directories/files:</p>
 <ul class="simple">
 <li><p><cite>tree_search_stats.csv</cite> – the CSV table with planning statistics.</p></li>
 <li><p><cite>extracted_routes.json</cite> – the retrosynthesis routes extracted from the search trees. Can be used for route analysis with programming utils.</p></li>
-<li><p><cite>extracted_routes</cite> – the folder containing html files with visualized retrosynthesis routes extracted from the search trees. Can be used for the visual analysis of the extracted retrosynthesis routes.</p></li>
+<li><p><cite>extracted_routes_html</cite> – the directory containing html files with visualized retrosynthesis routes extracted from the search trees. Can be used for the visual analysis of the extracted retrosynthesis routes.</p></li>
 </ul>
 </section>
 </section>
@@ -163,6 +240,7 @@ The planning is coupled with a visualization module for the display of found ret
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Retrosynthesis planning</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tree-search">Tree search</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#results-analysis">Results analysis</a></li>

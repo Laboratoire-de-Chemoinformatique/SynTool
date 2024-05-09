@@ -33,27 +33,65 @@
             
   <section id="data-download">
 <span id="id1"></span><h1>Data download<a class="headerlink" href="#data-download" title="Link to this heading">¶</a></h1>
-<p>This page explains how to download data for retrosythetic models training and retrosynthesis planning in SynTool.</p>
+<p>This page explains how to download data for retrosynthetic models training and retrosynthesis planning in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>For the training of the retrosynthetic models (policy and value network, reaction rules) the following types of data are needed:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Reaction data – needed for reaction rules extraction and ranking policy network training.</p></li>
-<li><p>Molecule data – needed for filtering policy network training.</p></li>
-<li><p>Targets data – needed for value network training (targets for planning simulation in reinforcement-based tuning).</p></li>
-<li><p>Building blocks - needed for retrosynthesis planning simulations in reinforcement-based value network tuning.</p></li>
-</ul>
-</div></blockquote>
-<p>For the retrosynthesis planning the following data and files are needed:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Trained retrosynthetic models – already trained policy and value networks can be used in retrosynthesis planning.</p></li>
-<li><p>Reaction rules</p></li>
-<li><p>Building blocks</p></li>
-</ul>
-</div></blockquote>
-<p>As a source of reaction and molecule data public database are used such as USPTO, ChEMBL, COCONUT.</p>
+<p><strong>Retrosynthetic models training.</strong> For the training of the retrosynthetic models (policy and value network, reaction rules)
+the following types of data are needed:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23.1%" />
+<col style="width: 76.9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Data</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Reaction data</p></td>
+<td><p>Needed for reaction rules extraction and ranking policy network training</p></td>
+</tr>
+<tr class="row-odd"><td><p>Molecule data</p></td>
+<td><p>Needed for filtering policy network training</p></td>
+</tr>
+<tr class="row-even"><td><p>Targets data</p></td>
+<td><p>Needed for value network training (targets for planning simulations in value network tuning)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Building blocks</p></td>
+<td><p>Needed for retrosynthesis planning simulations in value network tuning</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Retrosynthesis planning.</strong> For the retrosynthesis planning the following data and files are needed:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23.1%" />
+<col style="width: 76.9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Data / Files</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Reaction rules</p></td>
+<td><p>Extracted reaction rules for precursors dissection in retrosynthesis planning</p></td>
+</tr>
+<tr class="row-odd"><td><p>Policy network</p></td>
+<td><p>Trained ranking or filtering policy network for node expansion in tree search</p></td>
+</tr>
+<tr class="row-even"><td><p>Value network</p></td>
+<td><p>Trained value neural network for node evaluation in tree search (optional, the default evaluation method is rollout)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Building blocks</p></td>
+<td><p>Set of building block molecules, which are used as terminal materials in the retrosynthesis route planning</p></td>
+</tr>
+</tbody>
+</table>
+<p>As a source of reaction and molecule data public databases are used such as USPTO, ChEMBL, and COCONUT.</p>
+<p><strong>Important:</strong> the current available data formats are SMILES (.smi) and RDF (.rdf) for reactions and SMILES (.smi) and SDF (.sdf) for molecules.
+The extracted reaction rules are stored as CGRTools objects in a pickle file and currently cannot be stored in text format (e.g. reaction SMARTS).</p>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
@@ -63,25 +101,15 @@
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
 <p>Data download can be performed with the below commands.</p>
 <p><strong>Data download for retrosynthetic models training</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>download_training_data<span class="w"> </span>--root_dir<span class="w"> </span>training_data
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>download_training_data
 </pre></div>
 </div>
-<dl class="simple">
-<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>root_dir</cite> - the path to the directory where the data files will be stored.</p></li>
-</ul>
-</dd>
-</dl>
+<p>By default, the files will be stored in the <code class="docutils literal notranslate"><span class="pre">syntool_training_data</span></code> directory in the current location (./).</p>
 <p><strong>Data download for retrosythesis planning</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>download_planning_data<span class="w"> </span>--root_dir<span class="w"> </span>training_data
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>download_planning_data
 </pre></div>
 </div>
-<dl class="simple">
-<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>root_dir</cite> - the path to the directory where the data files will be stored.</p></li>
-</ul>
-</dd>
-</dl>
+<p>By default, the files will be stored in the <code class="docutils literal notranslate"><span class="pre">syntool_planning_data</span></code> directory in the current location (./).</p>
 </section>
 </section>
 

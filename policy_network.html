@@ -36,49 +36,77 @@
 <p>This page explains how to do a policy network training in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>The tree nodes in MCTS are expanded by an expansion function approximated by a policy neural network.
-The policy network is composed of two parts: molecular representation and prediction parts. The first part is
-responsible for creating a numerical representation of molecule structure (Graph Convolution Network (GCN) blocks
-and summation over atoms). The prediction part depends on the type of policy network: filtering or ranking policy
-network.  The prediction part is formed from two linear layers with a sigmoid activation function that assigns the probabilities
-for the “regular”, as well as “priority” reaction rules, which include such transformations as cyclization. These two vectors are then
-combined with a coefficient α ranging from 0 to 1. This approach ensures that the priority reaction rules receive the
-highest score, followed by other regular reaction rules. In addition, if the reaction rule splits the molecule into two or more
-structures with several heavy atoms of more than 6 or opens a cycle, the priority vector gets a positive class, otherwise negative.
-All the reaction rules predicted by the policy neural network are sorted by probability and the top N of them are selected
-to be applied to the current intermediate product in the MCTS expansion step.</p>
-<p><strong>Ranking policy network</strong>. The ranking policy network is trained on a reaction dataset as a multi-class classification. Each reaction corresponds
-to a vector in which the position of the positive class corresponds to a reaction rule extracted from that reaction.
-All other extracted reaction rules are assigned as negative classes. The size of the class vector corresponds to the
-total number of reaction rules. This approach biases the ranking policy network to prioritize reaction rules that are
-likely to produce reactions similar to real ones.</p>
-<p><strong>Filtering policy network</strong>. In the filtering policy network, the multi-class regular and priority vectors for training
-the filtering policy network are obtained by applying all reaction rules to the set of training molecules
-(these molecules can be extracted from any database). If the reaction rule is successfully applied and creates a new precursor,
-it will be assigned a positive class in the regular reaction rules vector, otherwise a negative class.</p>
+<p>The tree nodes in MCTS are expanded by an expansion function approximated by a policy graph neu-ral network.
+The policy network is composed of two parts: molecular representation and reaction rule prediction parts.
+In the representation part, the molecular graph is converted to a single vector by graph convolutional layers.
+The training set structure and the prediction part architecture depend on the type of policy network,
+particularly the ranking or filtering policy network.</p>
+<p><strong>Ranking policy network</strong>. The training dataset for ranking policy network consists of pairs of reactions and
+corresponding reaction rules extracted from it. The products of the reaction are transformed to the CGR encoded
+as a molecular graph with the one-hot encoded label vector where the positive label corresponds to the reaction rule.
+The prediction part is terminated with the softmax function generating the “probability of successful application” of
+each reaction rule to a given input molecular graph, which can be used for the reaction rules “ranking”.</p>
+<p><strong>Filtering policy network</strong>. The training dataset for the filtering policy is formed by the application of all
+reaction rules to the training molecules. The labels vector is filled with positive labels in positions corresponding
+to the successfully applied reaction rules. The prediction part of the filtering policy is formed from two linear layers
+with a sigmoid function that assigns the probabilities for the “regular”, as well as “priority” reac-tion rules
+(cyclization reaction rules). These two vectors are then combined with a coefficient α ranging from 0 to 1.
+This approach ensures that the priority reaction rules receive the highest score, followed by other regular reaction rules.
+The filtering policy network requires much more computational resources for the generating of the training dataset than
+the ranking policy but can be used with any set of reaction rules because the original reaction dataset is not needed.
+This allows for the portability of reaction rules extracted with another software from any source of reaction data.</p>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>The ranking/filtering network architecture and training hyperparameters can be adjusted in the training configuration file below.</p>
+<p>The ranking or filtering policy network architecture and training hyperparameters can be adjusted in the training configuration yaml file below.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">vector_dim</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
-<span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
-<span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
-<span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0005</span>
 <span class="nt">num_conv_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0005</span>
+<span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
 <span class="nt">num_epoch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
 </pre></div>
 </div>
 <p><strong>Configuration parameters</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>vector_dim</cite> - the dimension of the hidden layers.</p></li>
-<li><p><cite>batch_size</cite> - the size of the batch of input molecular graphs.</p></li>
-<li><p><cite>dropout</cite> - the dropout value.</p></li>
-<li><p><cite>learning_rate</cite> - the learning rate.</p></li>
-<li><p><cite>num_conv_layers</cite> - the number of convolutional layers.</p></li>
-<li><p><cite>num_epoch</cite> - the number of training epochs.</p></li>
-</ul>
-</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 12.5%" />
+<col style="width: 62.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>vector_dim</p></td>
+<td><p>512</p></td>
+<td><p>The dimension of the hidden layers</p></td>
+</tr>
+<tr class="row-odd"><td><p>num_conv_layers</p></td>
+<td><p>5</p></td>
+<td><p>The number of convolutional layers</p></td>
+</tr>
+<tr class="row-even"><td><p>learning_rate</p></td>
+<td><p>0.0005</p></td>
+<td><p>The learning rate</p></td>
+</tr>
+<tr class="row-odd"><td><p>dropout</p></td>
+<td><p>0.4</p></td>
+<td><p>The dropout value</p></td>
+</tr>
+<tr class="row-even"><td><p>num_epoch</p></td>
+<td><p>100</p></td>
+<td><p>The number of training epochs</p></td>
+</tr>
+<tr class="row-odd"><td><p>batch_size</p></td>
+<td><p>1000</p></td>
+<td><p>The size of the training batch of input molecular graphs</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
@@ -89,10 +117,10 @@ it will be assigned a positive class in the regular reaction rules vector, other
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>reaction_data</cite> - the path to the file with reactions for ranking policy training.</p></li>
-<li><p><cite>reaction_rules</cite> - the path to the file with extracted reaction rules.</p></li>
-<li><p><cite>results_dir</cite> - the path to the directory where the trained policy network will be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reaction_data</span></code> - the path to the file with reactions for ranking policy training.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reaction_rules</span></code> - the path to the file with extracted reaction rules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results_dir</span></code> - the path to the directory where the trained policy network will be stored.</p></li>
 </ul>
 </dd>
 </dl>
@@ -102,10 +130,10 @@ it will be assigned a positive class in the regular reaction rules vector, other
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>molecule_data</cite> - the path to the file with molecules for filtering policy training.</p></li>
-<li><p><cite>reaction_rules</cite> - the path to the file with extracted reaction rules.</p></li>
-<li><p><cite>results_dir</cite> - the path to the directory where the trained policy network will be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">molecule_data</span></code> - the path to the file with molecules for filtering policy training.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reaction_rules</span></code> - the path to the file with extracted reaction rules.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results_dir</span></code> - the path to the directory where the trained policy network will be stored.</p></li>
 </ul>
 </dd>
 </dl>

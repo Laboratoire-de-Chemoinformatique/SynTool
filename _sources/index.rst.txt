@@ -1,6 +1,8 @@
 SynTool
 ========
-SynTool (SYNthesis planning TOol) is a tool for computer-aided retrosynthesis planning.
+SynTool is a tool for reaction data curation, reaction rules extraction, retrosynthetic models training,
+and retrosynthesis planning. This is a multilayered software allowing for processing any source of
+reaction data and building a ready-to-use retrosynthesis planner.
 
 Introduction
 ---------------------------
@@ -15,15 +17,16 @@ Software
 ---------------------------
 SynTool is based on the original Python packages for reaction chemoinformatics. Here is the core software:
 
-    - `CGRTools` – a core open-source library for reaction data processing and manipulation.
-    - `chython` – this package is a fork of CGRtools and includes some additional functionalities.
-    - `chytorch-rxnmap` – a package for reactions mapping.
+    - ``CGRTools`` – a core open-source library for reaction data processing and manipulation.
+    - ``chython`` – this library is a fork of CGRtools and includes some additional functionalities.
+    - ``chytorch-rxnmap`` – a package for reaction atom-to-atom mapping.
 
-Also, SynTool includes some special modules, that can also be used separately:
+Also, SynTool includes some original modules, that can also be used separately:
 
-    - Reaction standardization module – a separate module in SynTool for reaction standardization. This is a copy of another open-source code based on CGRTools functionality.
-    - Reaction rules extraction module – an original module of SynTool and based on the CGRTools package.
+    - Reaction standardization module – an original module in SynTool for reaction standardization.
     - Reaction filtration module – includes the collection of original reaction filters for discarding erroneous and suspicious reactions.
+    - Reaction rules extraction module – an original module of SynTool for reaction rules extraction.
+    - Machine learning module - a module for policy and value neural network training. Based on the PyTorch framework.
 
 SynTool pipeline
 ---------------------------
@@ -32,7 +35,7 @@ curation, reaction rules extraction, and retrosynthesis planning with Monte-Carl
 neural networks for node expansion and evaluation in MCTS. SynTool can be used for training retrosynthetic models from any
 source of reaction data. Below, the main steps of this pipeline are listed.
 
-**1. Data download.**
+**1. Data download**
 
 Reaction data (USPTO dataset) and other supplementary data for retrosynthetic models training and retrosynthesis planning
 can be easily downloaded.

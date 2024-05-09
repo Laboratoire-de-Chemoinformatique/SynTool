@@ -37,19 +37,24 @@
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>The reaction data are standardized using an original protocol for reaction data curation
-published earlier [<a class="reference external" href="https://doi.org/10.1002/minf.202100119">https://doi.org/10.1002/minf.202100119</a>].</p>
-<dl class="simple">
-<dt>This protocol includes several steps such as:</dt><dd><ul class="simple">
+published earlier [<a class="reference external" href="https://doi.org/10.1002/minf.202100119">https://doi.org/10.1002/minf.202100119</a>]. This protocol includes two layers:
+standardization of individual molecules (reactants, reagents, products) and reaction standardization.
+Steps for standardization of individual molecules include functional group standardization, aromatization/kekulization,
+valence checking, hydrogens manipulation, cleaning isotopes, and radicals, etc.
+The reaction standardization layer includes reaction role assignment, reaction equation balancing,
+and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions are removed.</p>
+<p>This protocol includes several steps such as:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>transform functional groups, kekulize</p></li>
-<li><p>check for radicals (remove if something was found), isotopes, regroup ions</p></li>
-<li><p>check valences (remove if something is wrong)</p></li>
-<li><p>aromatize (thiele method)</p></li>
-<li><p>fix mapping (for symmetric functional groups) if such is in</p></li>
-<li><p>remove unchanged parts, explicit hydrogens</p></li>
-<li><p>remove reaction duplicate</p></li>
+<li><p>check for radicals, isotopes, regroup ions</p></li>
+<li><p>check valences</p></li>
+<li><p>aromatize</p></li>
+<li><p>fix mapping (for symmetric functional groups)</p></li>
+<li><p>remove unchanged parts of the reaction, explicit hydrogens</p></li>
+<li><p>remove reaction duplicates</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
@@ -58,19 +63,45 @@ published earlier [<a class="reference external" href="https://doi.org/10.1002/m
 <span class="nt">skip_errors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
 <span class="nt">keep_unbalanced_ions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 <span class="nt">keep_reagents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
-<span class="nt">action_on_isotopes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">action_on_isotopes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
 </pre></div>
 </div>
 <p><strong>Configuration parameters</strong>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>ignore_mapping</cite> - if True, will ignore the original mapping in the file.</p></li>
-<li><p><cite>skip_errors</cite> - if True, will ignore some errors during the reaction processes.</p></li>
-<li><p><cite>keep_unbalanced_ions</cite> - if True, will keep reactions with unbalanced ions.</p></li>
-<li><p><cite>keep_reagents</cite> - if True, will keep reagents from the reactions.</p></li>
-<li><p><cite>action_on_isotopes</cite> - if True, will ignore reactions with isotopes.</p></li>
-</ul>
-</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33.3%" />
+<col style="width: 11.1%" />
+<col style="width: 55.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ignore_mapping</p></td>
+<td><p>True</p></td>
+<td><p>If True, will ignore the original mapping in the file</p></td>
+</tr>
+<tr class="row-odd"><td><p>skip_errors</p></td>
+<td><p>True</p></td>
+<td><p>If True, will ignore some errors during the reaction processes</p></td>
+</tr>
+<tr class="row-even"><td><p>keep_unbalanced_ions</p></td>
+<td><p>False</p></td>
+<td><p>If True, will keep reactions with unbalanced ions</p></td>
+</tr>
+<tr class="row-odd"><td><p>keep_reagents</p></td>
+<td><p>False</p></td>
+<td><p>If True, will keep reagents from the reactions</p></td>
+</tr>
+<tr class="row-even"><td><p>action_on_isotopes</p></td>
+<td><p>False</p></td>
+<td><p>If True, will ignore reactions with isotopes</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
@@ -80,9 +111,9 @@ published earlier [<a class="reference external" href="https://doi.org/10.1002/m
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
-<li><p><cite>config</cite> - the path to the configuration file.</p></li>
-<li><p><cite>input</cite> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
-<li><p><cite>output</cite> - the path to the file (.smi or .rdf) where standardized reactions will be stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - the path to the file (.smi or .rdf) where standardized reactions will be stored.</p></li>
 </ul>
 </dd>
 </dl>
