@@ -40,7 +40,7 @@ If Poetry fails with error, a possible solution is to update the bashrc file wit
     echo 'export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring' >> ~/.bashrc
     exec "bash"
 
-After installation, one can add the syntool environment in their Jupyter platform:
+After installation, one can add the ``syntool`` environment in their Jupyter platform:
 
 .. code-block:: bash
 
@@ -65,15 +65,15 @@ If you use your custom building blocks, be sure to canonicalize them before plan
     syntool download_planning_data
 
     # canonicalize building blocks
-    syntool building_blocks --input planning_data/building_blocks_init.smi --output planning_data/building_blocks.smi
+    syntool building_blocks --input building_blocks_custom.smi --output planning_data/building_blocks.smi
 
     # planning with rollout evaluation
     syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --results_dir planning_results
 
     # planning with value network evaluation
-    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/filtering_policy_network.ckpt --value_network planning_data/value_network.ckpt --results_dir planning_results
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --value_network planning_data/value_network.ckpt --results_dir planning_results
 
-After retrosynthesis planning is finished, the visualized retrosynthesis routes can be fund in the results folder (planning_results/extracted_routes_html).
+After retrosynthesis planning is finished, the visualized retrosynthesis routes can be fund in the results folder (``planning_results/extracted_routes_html``).
 
 SynTool includes the full pipeline of reaction data curation, reaction rules extraction, and retrosynthetic models training.
 For more details consult the corresponding sections in the documentation `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
@@ -83,8 +83,8 @@ Tutorials
 SynTool can be accessed via the Python interface. For a better understanding of SynTool and its functionalities consult
 the tutorials in `SynTool/tutorials`. Currently, two tutorials are available:
 
-    - `SynTool/tutorials/general_tutorial.ipynb` – explains how to do a reaction rules extraction, policy network training, and retrosynthesis planning in SynTool.
-    - `SynTool/tutorials/planning_algorithms_tutorial.ipynb` – explains how to do a retrosynthesis planning win various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
+``tutorials/general_tutorial.ipynb`` – explains how to do a reaction rules extraction, policy network training, and retrosynthesis planning in SynTool.
+``tutorials/planning_algorithms_tutorial.ipynb`` – explains how to do a retrosynthesis planning win various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
 
 
 Graphical user interface
