@@ -8,7 +8,9 @@ reaction data and building a ready-to-use retrosynthesis planner.
 Installation
 ------------
 
-Important: all versions require **python from 3.8 and up to 3.10**!
+**Important-1:** all versions require **python from 3.8 and up to 3.10**!
+
+**Important-2:** currently for neural networks training GPU is necessary!
 
 Linux distributions
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -85,7 +87,7 @@ the tutorials in `SynTool/tutorials`. Currently, two tutorials are available:
 
 ``tutorials/general_tutorial.ipynb`` – explains how to do a reaction rules extraction, policy network training, and retrosynthesis planning in SynTool.
 
-``tutorials/planning_algorithms_tutorial.ipynb`` – explains how to do a retrosynthesis planning with various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
+``tutorials/planning_tutorial.ipynb`` – explains how to do a retrosynthesis planning with various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
 
 
 Graphical user interface

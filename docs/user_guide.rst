@@ -36,7 +36,7 @@ This is why it is recommended to set no more than 4 CPUs for steps related to th
 The filtering policy network in its current implementation requires a lot of computational resources and its training is
 practically feasible with > 30 CPUs and several dozen GB of RAM. The bottleneck of the current implementation is the preparation
 of the training dataset, particularly the generation of binary vectors if successfully applied reaction rules to each training
-molecule – on average, this step takes about 1.6 sec for one molecule (for around 10k reaction rules). Thus, with limited computational
+molecule – on average, this step takes about 0.8 sec for one molecule (for around 24k reaction rules). Thus, with limited computational
 resources, it is recommended to use a ranking policy network.
 
 **5. Ranking and filtering policy networks -2**
