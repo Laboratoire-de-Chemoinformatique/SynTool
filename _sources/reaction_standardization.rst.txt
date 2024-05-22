@@ -14,42 +14,22 @@ valence checking, hydrogens manipulation, cleaning isotopes, and radicals, etc.
 The reaction standardization layer includes reaction role assignment, reaction equation balancing,
 and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions are removed.
 
-This protocol includes several steps such as:
+This current default protocol includes several steps such as:
 
-    * transform functional groups, kekulize
-    * check for radicals, isotopes, regroup ions
-    * check valences
-    * aromatize
-    * fix mapping (for symmetric functional groups)
-    * remove unchanged parts of the reaction, explicit hydrogens
-    * remove reaction duplicates
+    1. Standardization of functional groups
+    2. Transform molecules to Kekule form when possible
+    3. Check atom valences
+    4. Remove hydrogen atoms
+    5. Check and clean isotope atoms when possible
+    6. Split ions in reaction when possible
+    7. Transform molecules to aromatic form when possible
+    8. Fix atom-to-atom mapping in reaction when needed and possible
+    9. Remove unchanged parts in reaction
+    10. Remove duplicate reactions
 
 Configuration
 ---------------------------
-Reaction data standardization can be adjusted with the bellow configuration yaml file (these default parameters are recommended).
-
-.. code-block:: yaml
-
-    ignore_mapping: True
-    skip_errors: True
-    keep_unbalanced_ions: False
-    keep_reagents: False
-    action_on_isotopes: False
-
-**Configuration parameters**:
-
-.. table::
-    :widths: 30 10 50
-
-    ================================== ======= =========================================================================
-    Parameter                          Default  Description
-    ================================== ======= =========================================================================
-    ignore_mapping                     True    If True, will ignore the original mapping in the file
-    skip_errors                        True    If True, will ignore some errors during the reaction processes
-    keep_unbalanced_ions               False   If True, will keep reactions with unbalanced ions
-    keep_reagents                      False   If True, will keep reagents from the reactions
-    action_on_isotopes                 False   If True, will ignore reactions with isotopes
-    ================================== ======= =========================================================================
+Reaction standardization does not require any special configuration in the current version of SynTool.
 
 CLI
 ---------------------------
@@ -57,10 +37,9 @@ Reaction standardization can be performed with the below command.
 
 .. code-block:: bash
 
-    syntool reaction_standardizing --config standardization.yaml --input reaction_data_mapped.smi --output reaction_data_standardized.smi
+    syntool reaction_standardizing --input reaction_data_mapped.smi --output reaction_data_standardized.smi
 
 **Parameters**:
-    - ``config`` - the path to the configuration file.
     - ``input`` - the path to the file (.smi or .rdf) with reactions to be standardized.
     - ``output`` - the path to the file (.smi or .rdf) where standardized reactions will be stored.
 
