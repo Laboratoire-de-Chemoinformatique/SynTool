@@ -1,51 +1,60 @@
-"""
-Module containing basic pytorch architectures of policy and value neural networks.
-"""
+"""Module containing basic pytorch architectures of policy and value neural networks."""
 
+from abc import ABC, abstractmethod
+from typing import Dict, List, Tuple, Union
 
 import torch
 from adabelief_pytorch import AdaBelief
 from pytorch_lightning import LightningModule
-from torch.nn import Linear, Module, Dropout, ModuleList, GELU, ModuleDict
+from torch import Tensor
+from torch.nn import GELU, Dropout, Linear, Module, ModuleDict, ModuleList
 from torch.nn.functional import relu
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch_geometric.data.batch import Batch
 from torch_geometric.nn.conv import GCNConv
 from torch_geometric.nn.pool import global_add_pool
-from torch_geometric.data.batch import Batch
-from torch import Tensor
-from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Tuple
 
 
 class GraphEmbedding(Module):
-    """
-    Needed to convert molecule atom vectors to the single vector using graph convolution.
-    """
+    """Needed to convert molecule atom vectors to the single vector using graph
+    convolution."""
 
-    def __init__(self, vector_dim: int = 512, dropout: float = 0.4, num_conv_layers: int = 5):
+    def __init__(
+        self, vector_dim: int = 512, dropout: float = 0.4, num_conv_layers: int = 5
+    ):
+        """Initializes a graph convolutional module. Needed to convert molecule atom
+        vectors to the single vector using graph convolution.
+
+        :param vector_dim: The dimensionality of the hidden layers and output layer of
+            graph convolution module.
+        :param dropout: Dropout is a regularization technique used in neural networks to
+            prevent overfitting. It randomly sets a fraction of input units to 0 at each
+            update during training time.
+        :param num_conv_layers: The number of convolutional layers in a graph
+            convolutional module.
         """
-        Initializes a graph convolutional module. Needed to convert molecule atom vectors to the single vector
-        using graph convolution.
 
-        :param vector_dim: The dimensionality of the hidden layers and output layer of graph convolution module.
-        :param dropout: Dropout is a regularization technique used in neural networks to prevent overfitting.
-        It randomly sets a fraction of input units to 0 at each update during training time.
-        :param num_conv_layers: The number of convolutional layers in a graph convolutional module.
-        """
-
-        super(GraphEmbedding, self).__init__()
+        super().__init__()
         self.expansion = Linear(11, vector_dim)
         self.dropout = Dropout(dropout)
-        self.gcn_convs = ModuleList([GCNConv(vector_dim, vector_dim, improved=True, ) for _ in range(num_conv_layers)])
+        self.gcn_convs = ModuleList(
+            [
+                GCNConv(
+                    vector_dim,
+                    vector_dim,
+                    improved=True,
+                )
+                for _ in range(num_conv_layers)
+            ]
+        )
 
     def forward(self, graph: Batch, batch_size: int) -> Tensor:
-        """
-        Takes a graph as input and performs graph convolution on it.
+        """Takes a graph as input and performs graph convolution on it.
 
-        :param graph: The batch of molecular graphs, where each atom is represented by the atom/bond vector.
+        :param graph: The batch of molecular graphs, where each atom is represented by
+            the atom/bond vector.
         :param batch_size: The size of the batch.
-
-        :return: . # TODO what is return
+        :return: Graph embedding.
         """
         atoms, connections = graph.x.float(), graph.edge_index.long()
         atoms = torch.log(atoms + 1)
@@ -57,24 +66,36 @@ class GraphEmbedding(Module):
 
 
 class GraphEmbeddingConcat(GraphEmbedding, Module):
-    def __init__(self, vector_dim: int = 512, dropout: float = 0.4, num_conv_layers: int = 8):
-        super(GraphEmbeddingConcat, self).__init__()
+    """Needed to concat."""  # TODO for what ?
+
+    def __init__(
+        self, vector_dim: int = 512, dropout: float = 0.4, num_conv_layers: int = 8
+    ):
+        super().__init__()
 
         gcn_dim = vector_dim // num_conv_layers
 
         self.expansion = Linear(11, gcn_dim)
         self.dropout = Dropout(dropout)
-        self.gcn_convs = ModuleList([ModuleDict({"gcn": GCNConv(gcn_dim, gcn_dim, improved=True), "activation": GELU()})
-                                     for _ in range(num_conv_layers)])
+        self.gcn_convs = ModuleList(
+            [
+                ModuleDict(
+                    {
+                        "gcn": GCNConv(gcn_dim, gcn_dim, improved=True),
+                        "activation": GELU(),
+                    }
+                )
+                for _ in range(num_conv_layers)
+            ]
+        )
 
     def forward(self, graph: Batch, batch_size: int) -> Tensor:
-        """
-        Takes a graph as input and performs graph convolution on it.
+        """Takes a graph as input and performs graph convolution on it.
 
-        :param graph: The batch of molecular graphs, where each atom is represented by the atom/bond vector.
+        :param graph: The batch of molecular graphs, where each atom is represented by
+            the atom/bond vector.
         :param batch_size: The size of the batch.
-
-        :return: . # TODO what is return
+        :return: Graph embedding.
         """
 
         atoms, connections = graph.x.float(), graph.edge_index.long()
@@ -94,22 +115,31 @@ class GraphEmbeddingConcat(GraphEmbedding, Module):
 
 
 class MCTSNetwork(LightningModule, ABC):
-    """
-    Basic class for policy and value networks.
-    """
+    """Basic class for policy and value networks."""
 
-    def __init__(self, vector_dim: int, batch_size: int, dropout: float = 0.4,
-                 num_conv_layers: int = 5, learning_rate: float = 0.001, gcn_concat: bool = False):
-        """
-        The basic class for MCTS graph convolutional neural networks (policy and value network).
+    def __init__(
+        self,
+        vector_dim: int,
+        batch_size: int,
+        dropout: float = 0.4,
+        num_conv_layers: int = 5,
+        learning_rate: float = 0.001,
+        gcn_concat: bool = False,
+    ):
+        """The basic class for MCTS graph convolutional neural networks (policy and
+        value network).
 
-        :param vector_dim: The dimensionality of the hidden layers and output layer of graph convolution module.
-        :param dropout: Dropout is a regularization technique used in neural networks to prevent overfitting.
-        :param num_conv_layers: The number of convolutional layers in a graph convolutional module.
-        :param learning_rate: The learning rate determines how quickly the model learns from the training data.
+        :param vector_dim: The dimensionality of the hidden layers and output layer of
+            graph convolution module.
+        :param dropout: Dropout is a regularization technique used in neural networks to
+            prevent overfitting.
+        :param num_conv_layers: The number of convolutional layers in a graph
+            convolutional module.
+        :param learning_rate: The learning rate determines how quickly the model learns
+            from the training data.
         :param gcn_concat: ???. #TODO explain
         """
-        super(MCTSNetwork, self).__init__()
+        super().__init__()
         if gcn_concat:
             self.embedder = GraphEmbeddingConcat(vector_dim, dropout, num_conv_layers)
         else:
@@ -119,21 +149,19 @@ class MCTSNetwork(LightningModule, ABC):
 
     @abstractmethod
     def forward(self, batch: Batch) -> Tensor:
-        """
-        The forward function takes a batch of input data and performs forward propagation through the neural network.
+        """The forward function takes a batch of input data and performs forward
+        propagation through the neural network.
 
-        :param batch: The batch of molecular graphs processed together in a single forward pass through the neural network.
+        :param batch: The batch of molecular graphs processed together in a single
+            forward pass through the neural network.
         """
-        ...
 
     @abstractmethod
     def _get_loss(self, batch: Batch) -> Tensor:
-        """
-        Calculate the loss for a given batch of data.
+        """Calculate the loss for a given batch of data.
 
         :param batch: The batch of input data that is used to compute the loss.
         """
-        ...
 
     def training_step(self, batch: Batch, batch_idx: int) -> Tensor:
         """
@@ -171,18 +199,33 @@ class MCTSNetwork(LightningModule, ABC):
         for name, value in metrics.items():
             self.log('test_' + name, value, on_epoch=True, batch_size=self.batch_size)
 
-    def configure_optimizers(self) -> Tuple[List[AdaBelief], List[Dict[str, Union[bool, str, ReduceLROnPlateau]]]]:
+    def configure_optimizers(
+        self,
+    ) -> Tuple[List[AdaBelief], List[Dict[str, Union[bool, str, ReduceLROnPlateau]]]]:
+        """Returns an optimizer and a learning rate scheduler for training a model using
+        the AdaBelief optimizer and ReduceLROnPlateau scheduler.
+
+        :return: The optimizer and a scheduler.
         """
-        Returns an optimizer and a learning rate scheduler for training a model using the AdaBelief optimizer
-        and ReduceLROnPlateau scheduler.
 
-        :return:  The optimizer and a scheduler.
-        """
+        optimizer = AdaBelief(
+            self.parameters(),
+            lr=self.lr,
+            eps=1e-16,
+            betas=(0.9, 0.999),
+            weight_decouple=True,
+            rectify=True,
+            weight_decay=0.01,
+            print_change_log=False,
+        )
 
-        optimizer = AdaBelief(self.parameters(), lr=self.lr, eps=1e-16, betas=(0.9, 0.999), weight_decouple=True,
-                              rectify=True, weight_decay=0.01, print_change_log=False)
-
-        lr_scheduler = ReduceLROnPlateau(optimizer, patience=3, factor=0.8, min_lr=5e-5, verbose=True)
-        scheduler = {'scheduler': lr_scheduler, 'reduce_on_plateau': True, 'monitor': 'val_loss'}
+        lr_scheduler = ReduceLROnPlateau(
+            optimizer, patience=3, factor=0.8, min_lr=5e-5, verbose=True
+        )
+        scheduler = {
+            "scheduler": lr_scheduler,
+            "reduce_on_plateau": True,
+            "monitor": "val_loss",
+        }
 
         return [optimizer], [scheduler]

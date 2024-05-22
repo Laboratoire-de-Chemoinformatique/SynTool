@@ -1,6 +1,7 @@
+from CGRtools.containers import MoleculeContainer
 from .node import *
 from .tree import *
-from CGRtools.containers import MoleculeContainer
+
 
 MoleculeContainer.depict_settings(aam=False)
 

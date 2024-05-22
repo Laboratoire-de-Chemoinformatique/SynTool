@@ -1,36 +1,39 @@
-"""
-Module containing a class that represents a policy function for node expansion in the tree search.
-"""
+"""Module containing a class that represents a policy function for node expansion in the
+tree search."""
+
+from typing import Iterator, List, Tuple, Union
 
 import torch
 import torch_geometric
+from CGRtools.reactor.reactor import Reactor
+
 from SynTool.chem.retron import Retron
 from SynTool.ml.networks.policy import PolicyNetwork
 from SynTool.ml.training import mol_to_pyg
 from SynTool.utils.config import PolicyNetworkConfig
-from CGRtools.reactor.reactor import Reactor
-from typing import Iterator, List, Tuple, Union
 
 
-class PolicyFunction:
-    """
-    Policy function implemented as a policy neural network for node expansion in tree search.
-    """
+class PolicyNetworkFunction:
+    """Policy function implemented as a policy neural network for node expansion in tree
+    search."""
 
-    def __init__(self, policy_config: PolicyNetworkConfig, compile: bool = False) -> None:
-        """
-        Initializes the expansion function (ranking or filter policy network).
+    def __init__(
+        self, policy_config: PolicyNetworkConfig, compile: bool = False
+    ) -> None:
+        """Initializes the expansion function (ranking or filter policy network).
 
         :param policy_config: An expansion policy configuration.
-        :param compile: XX # TODO what is compile # TODO2 compile is a bad variable name - is a builtin function name
+        :param compile: Is supposed to speed up the training with model compilation.
         """
 
         self.config = policy_config
 
-        policy_net = PolicyNetwork.load_from_checkpoint(self.config.weights_path,
-                                                        map_location=torch.device("cpu"),
-                                                        batch_size=1,
-                                                        dropout=0)
+        policy_net = PolicyNetwork.load_from_checkpoint(
+            self.config.weights_path,
+            map_location=torch.device("cpu"),
+            batch_size=1,
+            dropout=0,
+        )
 
         policy_net = policy_net.eval()
         if compile:
@@ -38,15 +41,16 @@ class PolicyFunction:
         else:
             self.policy_net = policy_net
 
-    def predict_reaction_rules(self, retron: Retron, reaction_rules: List[Reactor]
-                               ) -> Iterator[Union[Iterator, Iterator[Tuple[float, Reactor, int]]]]:
-        """
-        The policy function predicts the list of reaction rules for a given retron.
+    def predict_reaction_rules(
+        self, retron: Retron, reaction_rules: List[Reactor]
+    ) -> Iterator[Union[Iterator, Iterator[Tuple[float, Reactor, int]]]]:
+        """The policy function predicts the list of reaction rules for a given retron.
 
         :param retron: The current retron for which the reaction rules are predicted.
-        :param reaction_rules: The list of reaction rules from which applicable reaction rules are predicted and selected.
-
-        :return: Yielding the predicted probability for the reaction rule, reaction rule and reaction rule id.
+        :param reaction_rules: The list of reaction rules from which applicable reaction
+            rules are predicted and selected.
+        :return: Yielding the predicted probability for the reaction rule, reaction rule
+            and reaction rule id.
         """
 
         pyg_graph = mol_to_pyg(retron.molecule, canonicalize=False)
@@ -67,7 +71,10 @@ class PolicyFunction:
             probs = (1 - priority_coef) * probs + priority_coef * priority
 
         sorted_probs, sorted_rules = torch.sort(probs, descending=True)
-        sorted_probs, sorted_rules = (sorted_probs[: self.config.top_rules], sorted_rules[: self.config.top_rules])
+        sorted_probs, sorted_rules = (
+            sorted_probs[: self.config.top_rules],
+            sorted_rules[: self.config.top_rules],
+        )
 
         if self.policy_net.policy_type == "filtering":
             sorted_probs = torch.softmax(sorted_probs, -1)
@@ -75,5 +82,7 @@ class PolicyFunction:
         sorted_probs, sorted_rules = sorted_probs.tolist(), sorted_rules.tolist()
 
         for prob, rule_id in zip(sorted_probs, sorted_rules):
-            if prob > self.config.rule_prob_threshold:  # TODO it will destroy all search if it is not correct (>0.5)
+            if (
+                prob > self.config.rule_prob_threshold
+            ):  # search may fail if rule_prob_threshold is too low (recommended value is 0.5)
                 yield prob, reaction_rules[rule_id], rule_id

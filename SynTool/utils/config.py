@@ -1,136 +1,81 @@
-"""
-Module containing configuration classes.
-"""
+"""Module containing configuration classes."""
 
-import yaml
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from CGRtools.containers import MoleculeContainer, QueryContainer
 from typing import Any, Dict, List, Union
-from abc import ABC, abstractmethod
+
+import yaml
+from CGRtools.containers import MoleculeContainer, QueryContainer
 
 
 @dataclass
 class ConfigABC(ABC):
-    """
-    Abstract base class for configuration classes.
-    """
+    """Abstract base class for configuration classes."""
 
     @staticmethod
     @abstractmethod
     def from_dict(config_dict: Dict[str, Any]):
-        """
-        Create an instance of the configuration from a dictionary.
-        """
-        pass
+        """Create an instance of the configuration from a dictionary."""
 
     def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the configuration into a dictionary.
-        """
-        return {k: str(v) if isinstance(v, Path) else v for k, v in self.__dict__.items()}
+        """Convert the configuration into a dictionary."""
+        return {
+            k: str(v) if isinstance(v, Path) else v for k, v in self.__dict__.items()
+        }
 
     @staticmethod
     @abstractmethod
     def from_yaml(file_path: str):
-        """
-        Deserialize a YAML file into a configuration object.
-        """
-        pass
+        """Deserialize a YAML file into a configuration object."""
 
     def to_yaml(self, file_path: str):
-        """
-        Serializes the configuration to a YAML file.
+        """Serializes the configuration to a YAML file.
 
         :param file_path: The path to the output YAML file.
         """
-        with open(file_path, "w") as file:
+        with open(file_path, "w", encoding="utf-8") as file:
             yaml.dump(self.to_dict(), file)
 
     @abstractmethod
     def _validate_params(self, params: Dict[str, Any]):
-        """
-        Validate configuration parameters.
-        """
-        pass
+        """Validate configuration parameters."""
 
     def __post_init__(self):
-        """
-        Validates the configuration parameters.
-        """
+        """Validates the configuration parameters."""
         # call _validate_params method after initialization
         params = self.to_dict()
         self._validate_params(params)
 
 
 @dataclass
-class ReactionStandardizationConfig(ConfigABC):
-    """
-    Configuration class for standardizing reactions.
-    """
-
-    ignore_mapping: bool = True
-    skip_errors: bool = True
-    keep_unbalanced_ions: bool = False
-    keep_reagents: bool = False
-    action_on_isotopes: bool = False
-
-    def __post_init__(self):
-        super().__post_init__()
-        self._validate_params(self.to_dict())
-
-    @staticmethod
-    def from_dict(config_dict: Dict[str, Any]) -> "ReactionStandardizationConfig":
-        return ReactionStandardizationConfig(**config_dict)
-
-    @staticmethod
-    def from_yaml(file_path: str) -> "ReactionStandardizationConfig":
-        with open(file_path, "r") as file:
-            config_dict = yaml.safe_load(file)
-        return ReactionStandardizationConfig.from_dict(config_dict)
-
-    def _validate_params(self, params: Dict[str, Any]) -> None:
-        if not isinstance(params["ignore_mapping"], bool):
-            raise ValueError("ignore_mapping must be a boolean.")
-
-        if not isinstance(params["skip_errors"], bool):
-            raise ValueError("skip_errors must be a boolean.")
-
-        if not isinstance(params["keep_unbalanced_ions"], bool):
-            raise ValueError("keep_unbalanced_ions must be a boolean.")
-
-        if not isinstance(params["keep_reagents"], bool):
-            raise ValueError("keep_reagents must be a boolean.")
-
-        if not isinstance(params["action_on_isotopes"], bool):
-            raise ValueError("action_on_isotopes must be a boolean.")
-
-
-@dataclass
 class RuleExtractionConfig(ConfigABC):
-    """
-    Configuration class for extracting reaction rules.
+    """Configuration class for extracting reaction rules.
 
     :ivar multicenter_rules: If True, extracts a single rule encompassing all centers.
-                             If False, extracts separate reaction rules for each reaction center in a multicenter reaction.
-    :ivar as_query_container: If True, the extracted rules are generated as QueryContainer objects,
-                              analogous to SMARTS objects for pattern matching in chemical structures.
-    :ivar reverse_rule: If True, reverses the direction of the reaction for rule extraction.
-    :ivar reactor_validation: If True, validates each generated rule in a chemical reactor to ensure correct
-                              generation of products from reactants.
-    :ivar include_func_groups: If True, includes specific functional groups in the reaction rule in addition
-                               to the reaction center and its environment.
-    :ivar func_groups_list: A list of functional groups to be considered when include_func_groups is True.
-    :ivar include_rings: If True, includes ring structures in the reaction rules.
-    :ivar keep_leaving_groups: If True, retains leaving groups in the extracted reaction rule.
-    :ivar keep_incoming_groups: If True, retains incoming groups in the extracted reaction rule.
-    :ivar keep_reagents: If True, includes reagents in the extracted reaction rule.
-    :ivar environment_atom_count: Defines the size of the environment around the reaction center to be included
-                                  in the rule (0 for only the reaction center, 1 for the first environment, etc.).
-    :ivar min_popularity: Minimum number of times a rule must be applied to be considered for further analysis.
-    :ivar keep_metadata: If True, retains metadata associated with the reaction in the extracted rule.
-    :ivar single_reactant_only: If True, includes only reaction rules with a single reactant molecule.
-    :ivar atom_info_retention: Controls the amount of information about each atom to retain ('none', 'reaction_center', or 'all').
+    If False, extracts separate reaction rules for each reaction center in a multicenter
+    reaction. :ivar as_query_container: If True, the extracted rules are generated as
+    QueryContainer objects,                           analogous to SMARTS objects for
+    pattern matching in chemical structures. :ivar reverse_rule: If True, reverses the
+    direction of the reaction for rule extraction. :ivar reactor_validation: If True,
+    validates each generated rule in a chemical reactor to ensure correct
+    generation of products from reactants. :ivar include_func_groups: If True, includes
+    specific functional groups in the reaction rule in addition
+    to the reaction center and its environment. :ivar func_groups_list: A list of
+    functional groups to be considered when include_func_groups is True. :ivar
+    include_rings: If True, includes ring structures in the reaction rules. :ivar
+    keep_leaving_groups: If True, retains leaving groups in the extracted reaction rule.
+    :ivar keep_incoming_groups: If True, retains incoming groups in the extracted
+    reaction rule. :ivar keep_reagents: If True, includes reagents in the extracted
+    reaction rule. :ivar environment_atom_count: Defines the size of the environment
+    around the reaction center to be included                               in the rule
+    (0 for only the reaction center, 1 for the first environment, etc.). :ivar
+    min_popularity: Minimum number of times a rule must be applied to be considered for
+    further analysis. :ivar keep_metadata: If True, retains metadata associated with the
+    reaction in the extracted rule. :ivar single_reactant_only: If True, includes only
+    reaction rules with a single reactant molecule. :ivar atom_info_retention: Controls
+    the amount of information about each atom to retain ('none', 'reaction_center', or
+    'all').
     """
 
     multicenter_rules: bool = True
@@ -138,7 +83,9 @@ class RuleExtractionConfig(ConfigABC):
     reverse_rule: bool = True
     reactor_validation: bool = True
     include_func_groups: bool = False
-    func_groups_list: List[Union[MoleculeContainer, QueryContainer]] = field(default_factory=list)
+    func_groups_list: List[Union[MoleculeContainer, QueryContainer]] = field(
+        default_factory=list
+    )
     include_rings: bool = False
     keep_leaving_groups: bool = False
     keep_incoming_groups: bool = False
@@ -185,7 +132,7 @@ class RuleExtractionConfig(ConfigABC):
     @staticmethod
     def from_yaml(file_path: str) -> "RuleExtractionConfig":
 
-        with open(file_path, "r") as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             config_dict = yaml.safe_load(file)
         return RuleExtractionConfig.from_dict(config_dict)
 
@@ -208,8 +155,11 @@ class RuleExtractionConfig(ConfigABC):
 
         if params["func_groups_list"] is not None and not all(
             isinstance(group, (MoleculeContainer, QueryContainer))
-            for group in params["func_groups_list"]):
-            raise ValueError("func_groups_list must be a list of MoleculeContainer or QueryContainer objects.")
+            for group in params["func_groups_list"]
+        ):
+            raise ValueError(
+                "func_groups_list must be a list of MoleculeContainer or QueryContainer objects."
+            )
 
         if not isinstance(params["include_rings"], bool):
             raise ValueError("include_rings must be a boolean.")
@@ -242,13 +192,20 @@ class RuleExtractionConfig(ConfigABC):
             required_keys = {"reaction_center", "environment"}
             if not required_keys.issubset(params["atom_info_retention"]):
                 missing_keys = required_keys - set(params["atom_info_retention"].keys())
-                raise ValueError(f"atom_info_retention missing required keys: {missing_keys}")
+                raise ValueError(
+                    f"atom_info_retention missing required keys: {missing_keys}"
+                )
 
             for key, value in params["atom_info_retention"].items():
                 if key not in required_keys:
                     raise ValueError(f"Unexpected key in atom_info_retention: {key}")
 
-                expected_subkeys = {"neighbors", "hybridization", "implicit_hydrogens", "ring_sizes"}
+                expected_subkeys = {
+                    "neighbors",
+                    "hybridization",
+                    "implicit_hydrogens",
+                    "ring_sizes",
+                }
                 if not isinstance(value, dict) or not expected_subkeys.issubset(value):
                     missing_subkeys = expected_subkeys - set(value.keys())
                     raise ValueError(
@@ -257,20 +214,19 @@ class RuleExtractionConfig(ConfigABC):
 
                 for subkey, subvalue in value.items():
                     if not isinstance(subvalue, bool):
-                        raise ValueError(f"Value for {subkey} in {key} of atom_info_retention must be boolean.")
+                        raise ValueError(
+                            f"Value for {subkey} in {key} of atom_info_retention must be boolean."
+                        )
 
 
 @dataclass
 class PolicyNetworkConfig(ConfigABC):
-    """
-    Configuration class for the policy network.
+    """Configuration class for the policy network.
 
-    :ivar vector_dim: Dimension of the input vectors.
-    :ivar batch_size: Number of samples per batch.
-    :ivar dropout: Dropout rate for regularization.
-    :ivar learning_rate: Learning rate for the optimizer.
-    :ivar num_conv_layers: Number of convolutional layers in the network.
-    :ivar num_epoch: Number of training epochs.
+    :ivar vector_dim: Dimension of the input vectors. :ivar batch_size: Number of
+    samples per batch. :ivar dropout: Dropout rate for regularization. :ivar
+    learning_rate: Learning rate for the optimizer. :ivar num_conv_layers: Number of
+    convolutional layers in the network. :ivar num_epoch: Number of training epochs.
     :ivar policy_type: Mode of operation, either 'filtering' or 'ranking'.
     """
 
@@ -289,73 +245,92 @@ class PolicyNetworkConfig(ConfigABC):
     top_rules: int = 50
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]) -> 'PolicyNetworkConfig':
+    def from_dict(config_dict: Dict[str, Any]) -> "PolicyNetworkConfig":
         return PolicyNetworkConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str) -> 'PolicyNetworkConfig':
-        with open(file_path, 'r') as file:
+    def from_yaml(file_path: str) -> "PolicyNetworkConfig":
+        with open(file_path, "r", encoding="utf-8") as file:
             config_dict = yaml.safe_load(file)
         return PolicyNetworkConfig.from_dict(config_dict)
 
     def _validate_params(self, params: Dict[str, Any]):
 
-        if params['policy_type'] not in ["filtering", "ranking"]:
+        if params["policy_type"] not in ["filtering", "ranking"]:
             raise ValueError("policy_type must be either 'filtering' or 'ranking'.")
 
-        if not isinstance(params['vector_dim'], int) or params['vector_dim'] <= 0:
+        if not isinstance(params["vector_dim"], int) or params["vector_dim"] <= 0:
             raise ValueError("vector_dim must be a positive integer.")
 
-        if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
+        if not isinstance(params["batch_size"], int) or params["batch_size"] <= 0:
             raise ValueError("batch_size must be a positive integer.")
 
-        if not isinstance(params['num_conv_layers'], int) or params['num_conv_layers'] <= 0:
+        if (
+            not isinstance(params["num_conv_layers"], int)
+            or params["num_conv_layers"] <= 0
+        ):
             raise ValueError("num_conv_layers must be a positive integer.")
 
-        if not isinstance(params['num_epoch'], int) or params['num_epoch'] <= 0:
+        if not isinstance(params["num_epoch"], int) or params["num_epoch"] <= 0:
             raise ValueError("num_epoch must be a positive integer.")
 
-        if not isinstance(params['dropout'], float) or not (0.0 <= params['dropout'] <= 1.0):
+        if not isinstance(params["dropout"], float) or not (
+            0.0 <= params["dropout"] <= 1.0
+        ):
             raise ValueError("dropout must be a float between 0.0 and 1.0.")
 
-        if not isinstance(params['learning_rate'], float) or params['learning_rate'] <= 0.0:
+        if (
+            not isinstance(params["learning_rate"], float)
+            or params["learning_rate"] <= 0.0
+        ):
             raise ValueError("learning_rate must be a positive float.")
 
-        if not isinstance(params['priority_rules_fraction'], float) or params['priority_rules_fraction'] < 0.0:
-            raise ValueError("priority_rules_fraction must be a non-negative positive float.")
+        if (
+            not isinstance(params["priority_rules_fraction"], float)
+            or params["priority_rules_fraction"] < 0.0
+        ):
+            raise ValueError(
+                "priority_rules_fraction must be a non-negative positive float."
+            )
 
-        if not isinstance(params['rule_prob_threshold'], float) or params['rule_prob_threshold'] < 0.0:
+        if (
+            not isinstance(params["rule_prob_threshold"], float)
+            or params["rule_prob_threshold"] < 0.0
+        ):
             raise ValueError("rule_prob_threshold must be a non-negative float.")
 
-        if not isinstance(params['top_rules'], int) or params['top_rules'] <= 0:
+        if not isinstance(params["top_rules"], int) or params["top_rules"] <= 0:
             raise ValueError("top_rules must be a positive integer.")
 
 
 @dataclass
 class TreeConfig(ConfigABC):
-    """
-    Configuration class for the tree search algorithm.
+    """Configuration class for the tree search algorithm.
 
-    :ivar max_iterations: The number of iterations to run the algorithm for, defaults to 100.
-    :ivar max_tree_size: The maximum number of nodes in the tree, defaults to 10000.
-    :ivar max_time: The time limit (in seconds) for the algorithm to run, defaults to 600.
-    :ivar max_depth: The maximum depth of the tree, defaults to 6.
-    :ivar ucb_type: Type of UCB used in the search algorithm. Options are "puct", "uct", "value", defaults to "uct".
-    :ivar c_ucb: The exploration-exploitation balance coefficient used in Upper Confidence Bound (UCB), defaults to 0.1.
-    :ivar backprop_type: Type of backpropagation algorithm. Options are "muzero", "cumulative", defaults to "muzero".
-    :ivar search_strategy: The strategy used for tree search. Options are "expansion_first", "evaluation_first", defaults to "expansion_first".
-    :ivar exclude_small: Whether to exclude small molecules during the search, defaults to True.
-    :ivar evaluation_agg: Method for aggregating evaluation scores. Options are "max", "average", defaults to "max".
-    :ivar evaluation_type: The method used for evaluating nodes. Options are "random", "rollout", "gcn", defaults to "gcn".
-    :ivar init_node_value: Initial value for a new node, defaults to 0.0.
-    :ivar epsilon: A parameter in the epsilon-greedy search strategy representing the chance of random selection
-    of reaction rules during the selection stage in Monte Carlo Tree Search,
-    specifically during Upper Confidence Bound estimation.
-    It balances between exploration and exploitation, defaults to 0.0.
-    :ivar min_mol_size: Defines the minimum size of a molecule that is have to be synthesized.
-    Molecules with 6 or fewer heavy atoms are assumed to be building blocks by definition,
-    thus setting the threshold for considering larger molecules in the search, defaults to 6.
-    :ivar silent: Whether to suppress progress output, defaults to False.
+    :ivar max_iterations: The number of iterations to run the algorithm for, defaults to
+    100. :ivar max_tree_size: The maximum number of nodes in the tree, defaults to
+    10000. :ivar max_time: The time limit (in seconds) for the algorithm to run,
+    defaults to 600. :ivar max_depth: The maximum depth of the tree, defaults to 6.
+    :ivar ucb_type: Type of UCB used in the search algorithm. Options are "puct", "uct",
+    "value", defaults to "uct". :ivar c_ucb: The exploration-exploitation balance
+    coefficient used in Upper Confidence Bound (UCB), defaults to 0.1. :ivar
+    backprop_type: Type of backpropagation algorithm. Options are "muzero",
+    "cumulative", defaults to "muzero". :ivar search_strategy: The strategy used for
+    tree search. Options are "expansion_first", "evaluation_first", defaults to
+    "expansion_first". :ivar exclude_small: Whether to exclude small molecules during
+    the search, defaults to True. :ivar evaluation_agg: Method for aggregating
+    evaluation scores. Options are "max", "average", defaults to "max". :ivar
+    evaluation_type: The method used for evaluating nodes. Options are "random",
+    "rollout", "gcn", defaults to "gcn". :ivar init_node_value: Initial value for a new
+    node, defaults to 0.0. :ivar epsilon: A parameter in the epsilon-greedy search
+    strategy representing the chance of random selection of reaction rules during the
+    selection stage in Monte Carlo Tree Search, specifically during Upper Confidence
+    Bound estimation. It balances between exploration and exploitation, defaults to 0.0.
+    :ivar min_mol_size: Defines the minimum size of a molecule that is have to be
+    synthesized. Molecules with 6 or fewer heavy atoms are assumed to be building blocks
+    by definition, thus setting the threshold for considering larger molecules in the
+    search, defaults to 6. :ivar silent: Whether to suppress progress output, defaults
+    to False.
     """
 
     max_iterations: int = 100
@@ -380,26 +355,37 @@ class TreeConfig(ConfigABC):
 
     @staticmethod
     def from_yaml(file_path: str) -> "TreeConfig":
-        with open(file_path, "r") as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             config_dict = yaml.safe_load(file)
         return TreeConfig.from_dict(config_dict)
 
     def _validate_params(self, params):
         if params["ucb_type"] not in ["puct", "uct", "value"]:
-            raise ValueError("Invalid ucb_type. Allowed values are 'puct', 'uct', 'value'.")
+            raise ValueError(
+                "Invalid ucb_type. Allowed values are 'puct', 'uct', 'value'."
+            )
         if params["backprop_type"] not in ["muzero", "cumulative"]:
-            raise ValueError("Invalid backprop_type. Allowed values are 'muzero', 'cumulative'.")
+            raise ValueError(
+                "Invalid backprop_type. Allowed values are 'muzero', 'cumulative'."
+            )
         if params["evaluation_type"] not in ["random", "rollout", "gcn"]:
-            raise ValueError("Invalid evaluation_type. Allowed values are 'random', 'rollout', 'gcn'.")
+            raise ValueError(
+                "Invalid evaluation_type. Allowed values are 'random', 'rollout', 'gcn'."
+            )
         if params["evaluation_agg"] not in ["max", "average"]:
-            raise ValueError("Invalid evaluation_agg. Allowed values are 'max', 'average'.")
+            raise ValueError(
+                "Invalid evaluation_agg. Allowed values are 'max', 'average'."
+            )
         if not isinstance(params["c_ucb"], float):
             raise TypeError("c_ucb must be a float.")
         if not isinstance(params["max_depth"], int) or params["max_depth"] < 1:
             raise ValueError("max_depth must be a positive integer.")
         if not isinstance(params["max_tree_size"], int) or params["max_tree_size"] < 1:
             raise ValueError("max_tree_size must be a positive integer.")
-        if not isinstance(params["max_iterations"], int) or params["max_iterations"] < 1:
+        if (
+            not isinstance(params["max_iterations"], int)
+            or params["max_iterations"] < 1
+        ):
             raise ValueError("max_iterations must be a positive integer.")
         if not isinstance(params["max_time"], int) or params["max_time"] < 1:
             raise ValueError("max_time must be a positive integer.")
@@ -413,17 +399,15 @@ class TreeConfig(ConfigABC):
                 f"Allowed values are 'expansion_first', 'evaluation_first'"
             )
 
+
 @dataclass
 class ValueNetworkConfig(ConfigABC):
-    """
-    Configuration class for the value network.
+    """Configuration class for the value network.
 
-    :ivar vector_dim: Dimension of the input vectors.
-    :ivar batch_size: Number of samples per batch.
-    :ivar dropout: Dropout rate for regularization.
-    :ivar learning_rate: Learning rate for the optimizer.
-    :ivar num_conv_layers: Number of convolutional layers in the network.
-    :ivar num_epoch: Number of training epochs.
+    :ivar vector_dim: Dimension of the input vectors. :ivar batch_size: Number of
+    samples per batch. :ivar dropout: Dropout rate for regularization. :ivar
+    learning_rate: Learning rate for the optimizer. :ivar num_conv_layers: Number of
+    convolutional layers in the network. :ivar num_epoch: Number of training epochs.
     """
 
     weights_path: str = None
@@ -435,44 +419,51 @@ class ValueNetworkConfig(ConfigABC):
     num_epoch: int = 100
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]) -> 'ValueNetworkConfig':
+    def from_dict(config_dict: Dict[str, Any]) -> "ValueNetworkConfig":
         return ValueNetworkConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str) -> 'ValueNetworkConfig':
-        with open(file_path, 'r') as file:
+    def from_yaml(file_path: str) -> "ValueNetworkConfig":
+        with open(file_path, "r", encoding="utf-8") as file:
             config_dict = yaml.safe_load(file)
         return ValueNetworkConfig.from_dict(config_dict)
 
     def to_yaml(self, file_path: str):
-        with open(file_path, 'w') as file:
+        with open(file_path, "w", encoding="utf-8") as file:
             yaml.dump(self.to_dict(), file)
 
     def _validate_params(self, params: Dict[str, Any]):
 
-        if not isinstance(params['vector_dim'], int) or params['vector_dim'] <= 0:
+        if not isinstance(params["vector_dim"], int) or params["vector_dim"] <= 0:
             raise ValueError("vector_dim must be a positive integer.")
 
-        if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
+        if not isinstance(params["batch_size"], int) or params["batch_size"] <= 0:
             raise ValueError("batch_size must be a positive integer.")
 
-        if not isinstance(params['num_conv_layers'], int) or params['num_conv_layers'] <= 0:
+        if (
+            not isinstance(params["num_conv_layers"], int)
+            or params["num_conv_layers"] <= 0
+        ):
             raise ValueError("num_conv_layers must be a positive integer.")
 
-        if not isinstance(params['num_epoch'], int) or params['num_epoch'] <= 0:
+        if not isinstance(params["num_epoch"], int) or params["num_epoch"] <= 0:
             raise ValueError("num_epoch must be a positive integer.")
 
-        if not isinstance(params['dropout'], float) or not (0.0 <= params['dropout'] <= 1.0):
+        if not isinstance(params["dropout"], float) or not (
+            0.0 <= params["dropout"] <= 1.0
+        ):
             raise ValueError("dropout must be a float between 0.0 and 1.0.")
 
-        if not isinstance(params['learning_rate'], float) or params['learning_rate'] <= 0.0:
+        if (
+            not isinstance(params["learning_rate"], float)
+            or params["learning_rate"] <= 0.0
+        ):
             raise ValueError("learning_rate must be a positive float.")
 
 
 @dataclass
 class ReinforcementConfig(ConfigABC):
-    """
-    Configuration class for the reinforcement network training.
+    """Configuration class for the reinforcement network training.
 
     :ivar batch_size: The number of targets per batch in the planning simulation step.
     :ivar num_simulations: The number of planning simulations.
@@ -482,33 +473,32 @@ class ReinforcementConfig(ConfigABC):
     num_simulations: int = 1
 
     @staticmethod
-    def from_dict(config_dict: Dict[str, Any]) -> 'ReinforcementConfig':
+    def from_dict(config_dict: Dict[str, Any]) -> "ReinforcementConfig":
         return ReinforcementConfig(**config_dict)
 
     @staticmethod
-    def from_yaml(file_path: str) -> 'ReinforcementConfig':
-        with open(file_path, 'r') as file:
+    def from_yaml(file_path: str) -> "ReinforcementConfig":
+        with open(file_path, "r", encoding="utf-8") as file:
             config_dict = yaml.safe_load(file)
         return ReinforcementConfig.from_dict(config_dict)
 
     def _validate_params(self, params: Dict[str, Any]):
 
-        if not isinstance(params['batch_size'], int) or params['batch_size'] <= 0:
+        if not isinstance(params["batch_size"], int) or params["batch_size"] <= 0:
             raise ValueError("batch_size must be a positive integer.")
 
 
-def convert_config_to_dict(config_attr: ConfigABC, config_type) -> Dict:
-    """
-    Converts a configuration attribute to a dictionary if it's either a dictionary
-    or an instance of a specified configuration type.
+def convert_config_to_dict(config_attr: ConfigABC, config_type) -> Dict | None:
+    """Converts a configuration attribute to a dictionary if it's either a dictionary or
+    an instance of a specified configuration type.
 
     :param config_attr: The configuration attribute to be converted.
     :param config_type: The type to check against for conversion.
-
-    :return: The configuration attribute as a dictionary, or None if it's not an instance of the given type or dict.
+    :return: The configuration attribute as a dictionary, or None if it's not an
+        instance of the given type or dict.
     """
     if isinstance(config_attr, dict):
         return config_attr
-    elif isinstance(config_attr, config_type):
+    if isinstance(config_attr, config_type):
         return config_attr.to_dict()
     return None

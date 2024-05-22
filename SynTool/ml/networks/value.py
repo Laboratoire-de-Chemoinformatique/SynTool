@@ -1,43 +1,40 @@
-"""
-Module containing main class for value network.
-"""
+"""Module containing main class for value network."""
+
+from abc import ABC
+from typing import Any, Dict
 
 import torch
-from abc import ABC
 from pytorch_lightning import LightningModule
+from torch import Tensor
 from torch.nn import Linear
 from torch.nn.functional import binary_cross_entropy_with_logits
-from torchmetrics.functional.classification import binary_recall, binary_specificity, binary_f1_score
-from torch import Tensor
 from torch_geometric.data.batch import Batch
+from torchmetrics.functional.classification import (binary_f1_score,
+                                                    binary_recall,
+                                                    binary_specificity)
+
 from SynTool.ml.networks.modules import MCTSNetwork
-from typing import Any, Dict
 
 
 class ValueNetwork(MCTSNetwork, LightningModule, ABC):
-    """
-    Value network.
-    """
+    """Value network."""
 
     def __init__(self, vector_dim: int, *args: Any, **kwargs: Any) -> None:
-        """
-        Initializes a value network, and creates linear layer for predicting the synthesisability of given retron
-        represented by molecular graph.
+        """Initializes a value network, and creates linear layer for predicting the
+        synthesisability of given retron represented by molecular graph.
 
         :param vector_dim: The dimensionality of the output linear layer.
         """
-        super(ValueNetwork, self).__init__(vector_dim, *args, **kwargs)
+        super().__init__(vector_dim, *args, **kwargs)
         self.save_hyperparameters()
         self.predictor = Linear(vector_dim, 1)
 
     def forward(self, batch) -> torch.Tensor:
-        """
-        Takes a batch of molecular graphs, applies a graph convolution returns the synthesisability
-        (probability given by sigmoid function) of a given retron represented by molecular graph precessed by
-        graph convolution.
+        """Takes a batch of molecular graphs, applies a graph convolution returns the
+        synthesisability (probability given by sigmoid function) of a given retron
+        represented by molecular graph precessed by graph convolution.
 
         :param batch: The batch of molecular graphs.
-
         :return: The predicted synthesisability (between 0 and 1).
         """
 
@@ -46,12 +43,12 @@ class ValueNetwork(MCTSNetwork, LightningModule, ABC):
         return x
 
     def _get_loss(self, batch: Batch) -> Dict[str, Tensor]:
-        """
-        Calculates the loss and various classification metrics for a given batch for the retron synthesysability prediction.
+        """Calculates the loss and various classification metrics for a given batch for
+        the retron synthesysability prediction.
 
         :param batch: The batch of molecular graphs.
-
-        :return: The dictionary with loss value and balanced accuracy of retron synthesysability prediction.
+        :return: The dictionary with loss value and balanced accuracy of retron
+            synthesysability prediction.
         """
 
         true_y = batch.y.float()
@@ -62,5 +59,5 @@ class ValueNetwork(MCTSNetwork, LightningModule, ABC):
         true_y = true_y.long()
         ba = (binary_recall(pred_y, true_y) + binary_specificity(pred_y, true_y)) / 2
         f1 = binary_f1_score(pred_y, true_y)
-        metrics = {'loss': loss, 'balanced_accuracy': ba, 'f1_score': f1}
+        metrics = {"loss": loss, "balanced_accuracy": ba, "f1_score": f1}
         return metrics

@@ -1,90 +1,62 @@
-"""
-Module containing functions for reactions mapping.
-"""
+"""Module containing functions for reactions mapping."""
 
+from CGRtools import smiles as smiles_cgrtools
+from chython import ReactionContainer
+from chython import smiles as smiles_chython
 from tqdm import tqdm
-from os.path import splitext
-from pathlib import Path
-from chython import smiles, RDFRead, RDFWrite, ReactionContainer
-from chython.exceptions import IncorrectSmiles
+
+from SynTool.utils.files import ReactionReader, ReactionWriter
+from SynTool.utils.logging import GeneralException
 
 
-def remove_reagents_and_map(reaction: ReactionContainer, keep_reagent: bool = False) -> ReactionContainer:
-    """
-    Maps atoms of the reaction using chytorch.
+def map_and_remove_reagents(reaction: ReactionContainer) -> ReactionContainer:
+    """Maps atoms of the reaction using chytorch.
 
     :param reaction: Reaction to be mapped.
-    :param keep_reagent: Whenever to remove reagent or not.
-
     :return: Mapped reaction or None.
     """
 
     try:
         reaction.reset_mapping()
-    except:
-        reaction.reset_mapping()  # successive reset_mapping works
-    if not keep_reagent:
-        try:
-            reaction.remove_reagents()
-        except:
-            return None
+        reaction.remove_reagents()
+    except GeneralException:
+        return None
+
     return reaction
 
 
-def remove_reagents_and_map_from_file(input_file: str, output_file: str, keep_reagent: bool = False) -> None:
-    """
-    Reads a file of reactions and maps atoms of the reactions using chytorch.
+def map_and_remove_reagents_from_file(input_file: str, output_file: str) -> None:
+    """Reads a file of reactions and maps atoms of the reactions using chytorch. This
+    function does not use the ReactionReader/ReactionWriter classes, because they are
+    not compatible with chython.
 
     :param input_file: The path and name of the input file.
     :param output_file: The path and name of the output file.
-    :param keep_reagent: Whenever to remove reagent or not.
-
     :return: None.
     """
-    input_file = str(Path(input_file).resolve(strict=True))
-    _, input_ext = splitext(input_file)
-    if input_ext == ".smi":
-        input_file = open(input_file, "r")
-    elif input_ext == ".rdf":
-        input_file = RDFRead(input_file, indexable=True)
-    else:
-        raise ValueError("File extension not recognized. File:", input_file, "- Please use smi or rdf file")
-    enumerator = input_file if input_ext == ".rdf" else input_file.readlines()
 
-    _, out_ext = splitext(output_file)
-    if out_ext == ".smi":
-        output_file = open(output_file, "w")
-    elif out_ext == ".rdf":
-        output_file = RDFWrite(output_file)
-    else:
-        raise ValueError("File extension not recognized. File:", output_file, "- Please use smi or rdf file")
+    if input_file == output_file:
+        raise ValueError("input_file name and output_file name cannot be the same.")
 
-    mapping_errors = 0
-    parsing_errors = 0
-    for reaction_smi in tqdm(enumerator, desc="Number of reactions processed: ", bar_format='{desc}{n} [{elapsed}]'):
-        try:
-            reaction = smiles(reaction_smi.strip('\n')) if input_ext == ".smi" else reaction_smi
-        except IncorrectSmiles:
-            parsing_errors += 1
-            continue
-        try:
-            reaction_mapped = remove_reagents_and_map(reaction, keep_reagent)
-        except:
+    n_mapped = 0
+    with ReactionReader(input_file) as inp_file, ReactionWriter(
+        output_file
+    ) as out_file:
+        for cgrtools_reaction in tqdm(
+            inp_file,
+            desc="Number of reactions processed: ",
+            bar_format="{desc}{n} [{elapsed}]",
+        ):
             try:
-                reaction_mapped = remove_reagents_and_map(smiles(str(reaction)), keep_reagent)
+                chython_reaction = smiles_chython(str(cgrtools_reaction))
+                reaction_mapped = map_and_remove_reagents(chython_reaction)
+                if reaction_mapped:
+                    reaction_mapped_cgrtools = smiles_cgrtools(
+                        format(chython_reaction, "m")
+                    )
+                    out_file.write(reaction_mapped_cgrtools)
+                n_mapped += 1
             except:
-                mapping_errors += 1
                 continue
-        if reaction_mapped:
-            reaction_smi_mapped = format(reaction, "m") + "\n" if out_ext == ".smi" else reaction
-            output_file.write(reaction_smi_mapped)
-        else:
-            mapping_errors += 1
 
-    input_file.close()
-    output_file.close()
-
-    if parsing_errors:
-        print(parsing_errors, "reactions couldn't be parsed")
-    if mapping_errors:
-        print(mapping_errors, "reactions couldn't be mapped")
+    print(f"Number of mapped reactions: {n_mapped}")

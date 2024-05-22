@@ -1,55 +1,55 @@
-"""
-Module containing functions for preparation of the training sets for policy and value network.
-"""
+"""Module containing functions for preparation of the training sets for policy and value
+network."""
 
 import os
+import pickle
+from abc import ABC
+from typing import Any, Dict, List, Optional, Tuple
+
 import ray
 import torch
-import pickle
-from tqdm import tqdm
-from abc import ABC
-from ray.util.queue import Queue, Empty
-from pathlib import Path
-from torch import Tensor
-from torch_geometric.data import Data, InMemoryDataset
-from torch_geometric.data.makedirs import makedirs
-from torch_geometric.transforms import ToUndirected
-from torch_geometric.data.data import Data
 from CGRtools import smiles
 from CGRtools.containers import MoleculeContainer
 from CGRtools.exceptions import InvalidAromaticRing
 from CGRtools.reactor import Reactor
-from SynTool.utils.loading import load_reaction_rules
+from ray.util.queue import Empty, Queue
+from torch import Tensor
+from torch_geometric.data import InMemoryDataset
+from torch_geometric.data.data import Data
+from torch_geometric.data.makedirs import makedirs
+from torch_geometric.transforms import ToUndirected
+from tqdm import tqdm
+
 from SynTool.chem.utils import unite_molecules
 from SynTool.utils.files import ReactionReader
-from typing import List, Optional, Dict, Tuple, Any
+from SynTool.utils.loading import load_reaction_rules
+from SynTool.utils.logging import GeneralException
 
 
 class ValueNetworkDataset(InMemoryDataset, ABC):
-    """
-    Value network dataset.
-    """
+    """Value network dataset."""
 
     def __init__(self, extracted_retrons: Dict[str, float]) -> None:
-        """
-        Initializes a value network dataset object.
+        """Initializes a value network dataset object.
 
-        :param extracted_retrons: The dictionary with the extracted from the built search trees retrons and their labels.
+        :param extracted_retrons: The dictionary with the extracted from the built
+            search trees retrons and their labels.
         """
         super().__init__(None, None, None)
 
         if extracted_retrons:
-            self.data, self.slices = self.graphs_from_extracted_retrons(extracted_retrons)
+            self.data, self.slices = self.graphs_from_extracted_retrons(
+                extracted_retrons
+            )
 
     @staticmethod
     def mol_to_graph(molecule: MoleculeContainer, label: float) -> Optional[Data]:
-        """
-        Takes a molecule as input, and converts the molecule to a PyTorch geometric graph,
-        assigns the reward value (label) to the graph, and returns the graph.
+        """Takes a molecule as input, and converts the molecule to a PyTorch geometric
+        graph, assigns the reward value (label) to the graph, and returns the graph.
 
         :param molecule: The input molecule.
-        :param label: The label (solved/unsolved routes in the tree) of the molecule (retron).
-
+        :param label: The label (solved/unsolved routes in the tree) of the molecule
+            (retron).
         :return: A PyTorch Geometric graph representation of a molecule.
         """
         if len(molecule) > 2:
@@ -57,15 +57,17 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
             if pyg:
                 pyg.y = torch.tensor([label])
                 return pyg
-            else:
-                return None
 
-    def graphs_from_extracted_retrons(self, extracted_retrons: Dict[str, float]) -> Tuple[Data, Dict]:
-        """
-        Converts the extracted from the search trees retrons to the PyTorch geometric graphs.
+        return None
 
-        :param extracted_retrons: The dictionary with the extracted from the built search trees retrons and their labels.
+    def graphs_from_extracted_retrons(
+        self, extracted_retrons: Dict[str, float]
+    ) -> Tuple[Data, Dict]:
+        """Converts the extracted from the search trees retrons to the PyTorch geometric
+        graphs.
 
+        :param extracted_retrons: The dictionary with the extracted from the built
+            search trees retrons and their labels.
         :return: The PyTorch geometric graphs and slices.
         """
         processed_data = []
@@ -79,17 +81,16 @@ class ValueNetworkDataset(InMemoryDataset, ABC):
 
 
 class RankingPolicyDataset(InMemoryDataset):
-    """
-    Ranking policy network dataset.
-    """
+    """Ranking policy network dataset."""
 
     def __init__(self, reactions_path: str, reaction_rules_path: str, output_path: str):
-        """
-        Initializes a policy network dataset.
+        """Initializes a policy network dataset.
 
-        :param reactions_path: The path to the file containing the reaction data used for extraction of reaction rules.
+        :param reactions_path: The path to the file containing the reaction data used
+            for extraction of reaction rules.
         :param reaction_rules_path: The path to the file containing the reaction rules.
-        :param output_path: The output path to the file where policy network dataset will be saved.
+        :param output_path: The output path to the file where policy network dataset
+            will be saved.
         """
         super().__init__(None, None, None)
 
@@ -107,9 +108,8 @@ class RankingPolicyDataset(InMemoryDataset):
         return self._infer_num_classes(self._data.y_rules)
 
     def prepare_data(self) -> Tuple[Data, Dict[str, Tensor]]:
-        """
-        Prepares data by loading reaction rules, initializing Ray, preprocessing the molecules, collating the data,
-        and returning the data and slices. # TODO not descriptive explanation
+        """Prepares data by loading reaction rules, preprocessing the molecules,
+        collating the data, and returning the data and slices.
 
         :return: The PyTorch geometric graphs and slices.
         """
@@ -127,15 +127,20 @@ class RankingPolicyDataset(InMemoryDataset):
         list_of_graphs = []
         with ReactionReader(self.reactions_path) as reactions:
 
-            for reaction_id, reaction in tqdm(enumerate(reactions), desc="Number of reactions processed: ",
-                                              bar_format='{desc}{n} [{elapsed}]'):
+            for reaction_id, reaction in tqdm(
+                enumerate(reactions),
+                desc="Number of reactions processed: ",
+                bar_format="{desc}{n} [{elapsed}]",
+            ):
 
                 rule_id = reaction_rule_pairs.get(reaction_id)
                 if rule_id:
-                    try:  # TODO force solution <= MENDEL INFO doesnt have cadmium prop (Cd)
+                    try:  #  MENDEL_INFO does not contain cadmium (Cd) properties
                         molecule = unite_molecules(reaction.products)
                         pyg_graph = mol_to_pyg(molecule)
-                    except: # TODO TypeError: can't assign a NoneType to a torch.ByteTensor
+                    except (
+                        GeneralException
+                    ):  # TypeError: can't assign a NoneType to a torch.ByteTensor
                         continue
 
                     if pyg_graph is not None:
@@ -153,19 +158,23 @@ class RankingPolicyDataset(InMemoryDataset):
 
 
 class FilteringPolicyDataset(InMemoryDataset):
-    """
-    Filtering policy network dataset.
-    """
+    """Filtering policy network dataset."""
 
-    def __init__(self, molecules_path: str, reaction_rules_path: str, output_path: str, num_cpus: int) -> None:
-        """
-        Initializes a policy network dataset object.
+    def __init__(
+        self,
+        molecules_path: str,
+        reaction_rules_path: str,
+        output_path: str,
+        num_cpus: int,
+    ) -> None:
+        """Initializes a policy network dataset object.
 
-        :param molecules_path: The path to the file containing the molecules for reaction rule appliance.
+        :param molecules_path: The path to the file containing the molecules for
+            reaction rule appliance.
         :param reaction_rules_path: The path to the file containing the reaction rules.
-        :param output_path: The output path to the file where policy network dataset will be stored.
+        :param output_path: The output path to the file where policy network dataset
+            will be stored.
         :param num_cpus: The number of CPUs to be used for the dataset preparation.
-
         :return: None.
         """
         super().__init__(None, None, None)
@@ -186,9 +195,8 @@ class FilteringPolicyDataset(InMemoryDataset):
         return self._data.y_rules.shape[1]
 
     def prepare_data(self) -> Tuple[Data, Dict]:
-        """
-        Prepares data by loading reaction rules, initializing Ray, preprocessing the molecules, collating the data,
-        and returning the data and slices.
+        """Prepares data by loading reaction rules, initializing Ray, preprocessing the
+        molecules, collating the data, and returning the data and slices.
 
         :return: The PyTorch geometric graphs and slices.
         """
@@ -199,11 +207,17 @@ class FilteringPolicyDataset(InMemoryDataset):
 
         to_process = Queue(maxsize=self.batch_size * self.num_cpus)
         processed_data = []
-        results_ids = [preprocess_filtering_policy_molecules.remote(to_process, reaction_rules_ids) for _ in range(self.num_cpus)]
+        results_ids = [
+            preprocess_filtering_policy_molecules.remote(to_process, reaction_rules_ids)
+            for _ in range(self.num_cpus)
+        ]
 
-        with open(self.molecules_path, "r") as inp_data:
-            for molecule in tqdm(inp_data.read().splitlines(), desc="Number of molecules processed: ",
-                                 bar_format='{desc}{n} [{elapsed}]'):
+        with open(self.molecules_path, "r", encoding="utf-8") as inp_data:
+            for molecule in tqdm(
+                inp_data.read().splitlines(),
+                desc="Number of molecules processed: ",
+                bar_format="{desc}{n} [{elapsed}]",
+            ):
 
                 to_process.put(molecule)
 
@@ -224,15 +238,17 @@ class FilteringPolicyDataset(InMemoryDataset):
         return data, slices
 
 
-def reaction_rules_appliance(molecule: MoleculeContainer, reaction_rules: List[Reactor]) -> Tuple[List[int], List[int]]:
-    """
-    Applies each reaction rule from the list of reaction rules to a given molecule and returns the indexes of
-    the successfully applied regular and prioritized reaction rules.
+def reaction_rules_appliance(
+    molecule: MoleculeContainer, reaction_rules: List[Reactor]
+) -> Tuple[List[int], List[int]]:
+    """Applies each reaction rule from the list of reaction rules to a given molecule
+    and returns the indexes of the successfully applied regular and prioritized reaction
+    rules.
 
     :param molecule: The input molecule.
     :param reaction_rules: The list of reaction rules.
-
-    :return: The two lists of indexes of successfully applied regular reaction rules and priority reaction rules.
+    :return: The two lists of indexes of successfully applied regular reaction rules and
+        priority reaction rules.
     """
 
     applied_rules, priority_rules = [], []
@@ -245,23 +261,26 @@ def reaction_rules_appliance(molecule: MoleculeContainer, reaction_rules: List[R
             tmp = [molecule.copy()]
             for reaction in rule(tmp):
                 for prod in reaction.products:
-
                     prod.kekule()
                     if prod.check_valence():
                         break
-                    else:
-                        rule_applied = True
+                    rule_applied = True
 
                     # check priority rules
                     if len(reaction.products) > 1:
                         # check coupling retro manual
                         if all(len(mol) > 6 for mol in reaction.products):
-                            if sum(len(mol) for mol in reaction.products) - len(reaction.reactants[0]) < 6:
+                            if (
+                                sum(len(mol) for mol in reaction.products)
+                                - len(reaction.reactants[0])
+                                < 6
+                            ):
                                 rule_prioritized = True
                     else:
                         # check cyclization retro manual
                         if sum(len(mol.sssr) for mol in reaction.products) < sum(
-                                len(mol.sssr) for mol in reaction.reactants):
+                            len(mol.sssr) for mol in reaction.reactants
+                        ):
                             rule_prioritized = True
             #
             if rule_applied:
@@ -269,21 +288,23 @@ def reaction_rules_appliance(molecule: MoleculeContainer, reaction_rules: List[R
                 #
                 if rule_prioritized:
                     priority_rules.append(i)
-        except:
+        except GeneralException:
             continue
 
     return applied_rules, priority_rules
 
 
 @ray.remote
-def preprocess_filtering_policy_molecules(to_process: Queue, reaction_rules: List[Reactor]) -> List[Optional[Data]]:
-    """
-    Preprocesses a list of molecules by applying reaction rules and converting molecules into PyTorch geometric graphs.
-    Successfully applied reaction rules are converted to binary vectors for policy network training.
+def preprocess_filtering_policy_molecules(
+    to_process: Queue, reaction_rules: List[Reactor]
+) -> List[Optional[Data]]:
+    """Preprocesses a list of molecules by applying reaction rules and converting
+    molecules into PyTorch geometric graphs. Successfully applied reaction rules are
+    converted to binary vectors for policy network training.
 
-    :param to_process: The queue containing SMILES of molecules to be converted to the training data.
+    :param to_process: The queue containing SMILES of molecules to be converted to the
+        training data.
     :param reaction_rules: The list of reaction rules.
-
     :return: The list of PyGraph objects.
     """
 
@@ -295,10 +316,22 @@ def preprocess_filtering_policy_molecules(to_process: Queue, reaction_rules: Lis
                 continue
 
             # reaction reaction_rules application
-            applied_rules, priority_rules = reaction_rules_appliance(molecule, reaction_rules)
+            applied_rules, priority_rules = reaction_rules_appliance(
+                molecule, reaction_rules
+            )
 
-            y_rules = torch.sparse_coo_tensor([applied_rules], torch.ones(len(applied_rules)), (len(reaction_rules),), dtype=torch.uint8)
-            y_priority = torch.sparse_coo_tensor([priority_rules], torch.ones(len(priority_rules)), (len(reaction_rules),), dtype=torch.uint8)
+            y_rules = torch.sparse_coo_tensor(
+                [applied_rules],
+                torch.ones(len(applied_rules)),
+                (len(reaction_rules),),
+                dtype=torch.uint8,
+            )
+            y_priority = torch.sparse_coo_tensor(
+                [priority_rules],
+                torch.ones(len(priority_rules)),
+                (len(reaction_rules),),
+                dtype=torch.uint8,
+            )
 
             y_rules = torch.unsqueeze(y_rules, 0)
             y_priority = torch.unsqueeze(y_priority, 0)
@@ -317,8 +350,7 @@ def preprocess_filtering_policy_molecules(to_process: Queue, reaction_rules: Lis
 
 
 def atom_to_vector(atom: Any) -> Tensor:
-    """
-    Given an atom, return a vector of length 8 with the following information:
+    """Given an atom, return a vector of length 8 with the following information:
 
     1. Atomic number
     2. Period
@@ -347,14 +379,14 @@ def atom_to_vector(atom: Any) -> Tensor:
 
 
 def bonds_to_vector(molecule: MoleculeContainer, atom_ind: int) -> Tensor:
-    """
-    Takes a molecule and an atom index as input, and returns a vector representing the bond orders of the atom's bonds.
+    """Takes a molecule and an atom index as input, and returns a vector representing
+    the bond orders of the atom's bonds.
 
     :param molecule: The given molecule.
-    :param atom_ind: The index of the atom in the molecule to be converted to the bond vector.
-
-    :return: The torch tensor of size 3, with each element representing the order of bonds connected to the atom
-    with the given index in the molecule.
+    :param atom_ind: The index of the atom in the molecule to be converted to the bond
+        vector.
+    :return: The torch tensor of size 3, with each element representing the order of
+        bonds connected to the atom with the given index in the molecule.
     """
 
     vector = torch.zeros(3, dtype=torch.uint8)
@@ -364,11 +396,10 @@ def bonds_to_vector(molecule: MoleculeContainer, atom_ind: int) -> Tensor:
 
 
 def mol_to_matrix(molecule: MoleculeContainer) -> Tensor:
-    """
-    Given a molecule, it returns a vector of shape (max_atoms, 12) where each row is an atom and each column is a feature.
+    """Given a molecule, it returns a vector of shape (max_atoms, 12) where each row is
+    an atom and each column is a feature.
 
     :param molecule: The molecule to be converted to a vector
-
     :return: The atoms vectors array.
     """
 
@@ -381,18 +412,18 @@ def mol_to_matrix(molecule: MoleculeContainer) -> Tensor:
     return atoms_vectors
 
 
-def mol_to_pyg(molecule: MoleculeContainer, canonicalize: bool = True) -> Optional[Data]:
-    """
-    Takes a list of molecules and returns a list of PyTorch Geometric graphs, a one-hot encoded vectors of the atoms,
-    and a matrices of the bonds.
+def mol_to_pyg(
+    molecule: MoleculeContainer, canonicalize: bool = True
+) -> Optional[Data]:
+    """Takes a list of molecules and returns a list of PyTorch Geometric graphs, a one-
+    hot encoded vectors of the atoms, and a matrices of the bonds.
 
     :param molecule: The molecule to be converted to PyTorch Geometric graph.
     :param canonicalize: If True, the input molecule is canonicalized.
-
     :return: The list of PyGraph objects.
     """
 
-    if len(molecule) == 1: # TODO sometimes the Retron is single atom
+    if len(molecule) == 1:  # to avoid a Retron to be a single atom
         return None
 
     tmp_molecule = molecule.copy()
@@ -427,14 +458,56 @@ def mol_to_pyg(molecule: MoleculeContainer, canonicalize: bool = True) -> Option
     return mol_pyg_graph
 
 
-MENDEL_INFO = {"Ag": (5, 11, 1, 1), "Al": (3, 13, 2, 1), "Ar": (3, 18, 2, 6), "As": (4, 15, 2, 3), "B": (2, 13, 2, 1),
-    "Ba": (6, 2, 1, 2), "Bi": (6, 15, 2, 3), "Br": (4, 17, 2, 5), "C": (2, 14, 2, 2), "Ca": (4, 2, 1, 2),
-    "Ce": (6, None, 1, 2), "Cl": (3, 17, 2, 5), "Cr": (4, 6, 1, 1), "Cs": (6, 1, 1, 1), "Cu": (4, 11, 1, 1),
-    "Dy": (6, None, 1, 2), "Er": (6, None, 1, 2), "F": (2, 17, 2, 5), "Fe": (4, 8, 1, 2), "Ga": (4, 13, 2, 1),
-    "Gd": (6, None, 1, 2), "Ge": (4, 14, 2, 2), "Hg": (6, 12, 1, 2), "I": (5, 17, 2, 5), "In": (5, 13, 2, 1),
-    "K": (4, 1, 1, 1), "La": (6, 3, 1, 2), "Li": (2, 1, 1, 1), "Mg": (3, 2, 1, 2), "Mn": (4, 7, 1, 2),
-    "N": (2, 15, 2, 3), "Na": (3, 1, 1, 1), "Nd": (6, None, 1, 2), "O": (2, 16, 2, 4), "P": (3, 15, 2, 3),
-    "Pb": (6, 14, 2, 2), "Pd": (5, 10, 3, 10), "Pr": (6, None, 1, 2), "Rb": (5, 1, 1, 1), "S": (3, 16, 2, 4),
-    "Sb": (5, 15, 2, 3), "Se": (4, 16, 2, 4), "Si": (3, 14, 2, 2), "Sm": (6, None, 1, 2), "Sn": (5, 14, 2, 2),
-    "Sr": (5, 2, 1, 2), "Te": (5, 16, 2, 4), "Ti": (4, 4, 1, 2), "Tl": (6, 13, 2, 1), "Yb": (6, None, 1, 2),
-    "Zn": (4, 12, 1, 2)}
+MENDEL_INFO = {
+    "Ag": (5, 11, 1, 1),
+    "Al": (3, 13, 2, 1),
+    "Ar": (3, 18, 2, 6),
+    "As": (4, 15, 2, 3),
+    "B": (2, 13, 2, 1),
+    "Ba": (6, 2, 1, 2),
+    "Bi": (6, 15, 2, 3),
+    "Br": (4, 17, 2, 5),
+    "C": (2, 14, 2, 2),
+    "Ca": (4, 2, 1, 2),
+    "Ce": (6, None, 1, 2),
+    "Cl": (3, 17, 2, 5),
+    "Cr": (4, 6, 1, 1),
+    "Cs": (6, 1, 1, 1),
+    "Cu": (4, 11, 1, 1),
+    "Dy": (6, None, 1, 2),
+    "Er": (6, None, 1, 2),
+    "F": (2, 17, 2, 5),
+    "Fe": (4, 8, 1, 2),
+    "Ga": (4, 13, 2, 1),
+    "Gd": (6, None, 1, 2),
+    "Ge": (4, 14, 2, 2),
+    "Hg": (6, 12, 1, 2),
+    "I": (5, 17, 2, 5),
+    "In": (5, 13, 2, 1),
+    "K": (4, 1, 1, 1),
+    "La": (6, 3, 1, 2),
+    "Li": (2, 1, 1, 1),
+    "Mg": (3, 2, 1, 2),
+    "Mn": (4, 7, 1, 2),
+    "N": (2, 15, 2, 3),
+    "Na": (3, 1, 1, 1),
+    "Nd": (6, None, 1, 2),
+    "O": (2, 16, 2, 4),
+    "P": (3, 15, 2, 3),
+    "Pb": (6, 14, 2, 2),
+    "Pd": (5, 10, 3, 10),
+    "Pr": (6, None, 1, 2),
+    "Rb": (5, 1, 1, 1),
+    "S": (3, 16, 2, 4),
+    "Sb": (5, 15, 2, 3),
+    "Se": (4, 16, 2, 4),
+    "Si": (3, 14, 2, 2),
+    "Sm": (6, None, 1, 2),
+    "Sn": (5, 14, 2, 2),
+    "Sr": (5, 2, 1, 2),
+    "Te": (5, 16, 2, 4),
+    "Ti": (4, 4, 1, 2),
+    "Tl": (6, 13, 2, 1),
+    "Yb": (6, None, 1, 2),
+    "Zn": (4, 12, 1, 2),
+}

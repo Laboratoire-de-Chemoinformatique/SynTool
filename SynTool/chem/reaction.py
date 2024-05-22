@@ -1,30 +1,29 @@
-"""
-Module containing classes and functions for manipulating reactions and reaction rules.
-"""
+"""Module containing classes and functions for manipulating reactions and reaction
+rules."""
 
-from CGRtools.reactor import Reactor
+from typing import Any, Iterator, List, Optional
+
 from CGRtools.containers import MoleculeContainer, ReactionContainer
 from CGRtools.exceptions import InvalidAromaticRing
-from typing import Any, List, Optional, Iterator
+from CGRtools.reactor import Reactor
 
 
 class Reaction(ReactionContainer):
-    """
-    Reaction class used for a general representation of reaction.
-    """
+    """Reaction class used for a general representation of reaction."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-# TODO what it is for
-def add_small_mols(big_mol: MoleculeContainer, small_molecules: Optional[Any] = None) -> List[MoleculeContainer]:
-    """
-    Takes a molecule and returns a list of modified molecules where each small molecule has been added to
-    the big molecule.
+
+def add_small_mols(
+    big_mol: MoleculeContainer, small_molecules: Optional[Any] = None
+) -> List[MoleculeContainer]:
+    """Takes a molecule and returns a list of modified molecules where each small
+    molecule has been added to the big molecule.
 
     :param big_mol: A molecule.
-    :param small_molecules: A list of small molecules that need to be added to the molecule.
-
+    :param small_molecules: A list of small molecules that need to be added to the
+        molecule.
     :return: Returns a list of molecules.
     """
     if small_molecules:
@@ -37,31 +36,33 @@ def add_small_mols(big_mol: MoleculeContainer, small_molecules: Optional[Any] = 
                 transition_mapping[n] = new_number
 
             for atom, neighbor, bond in small_mol.bonds():
-                tmp_mol.add_bond(transition_mapping[atom], transition_mapping[neighbor], bond)
+                tmp_mol.add_bond(
+                    transition_mapping[atom], transition_mapping[neighbor], bond
+                )
 
             transition_mapping = {}
         return tmp_mol.split()
-    else:
-        return [big_mol]
+
+    return [big_mol]
 
 
-def apply_reaction_rule(molecule: MoleculeContainer,
-                        reaction_rule: Reactor,
-                        sort_reactions: bool = False,
-                        top_reactions_num: int = 3,
-                        validate_products: bool = True, # TODO needed for what ?
-                        rebuild_with_cgr: bool = False # TODO needed for what ?
-                        ) -> Iterator[List[MoleculeContainer, ]]:
-    """
-    Applies a reaction rule to a given molecule.
+def apply_reaction_rule(
+    molecule: MoleculeContainer,
+    reaction_rule: Reactor,
+    sort_reactions: bool = False,
+    top_reactions_num: int = 3,
+    validate_products: bool = True,
+    rebuild_with_cgr: bool = False,
+) -> Iterator[List[MoleculeContainer,]]:
+    """Applies a reaction rule to a given molecule.
 
     :param molecule: A molecule to which reaction rule will be applied.
     :param reaction_rule: A reaction rule to be applied.
     :param sort_reactions:
-    :param top_reactions_num: The maximum amount of reactions after the application of reaction rule.
+    :param top_reactions_num: The maximum amount of reactions after the application of
+        reaction rule.
     :param validate_products: If True, validates the final products.
     :param rebuild_with_cgr: If True, the products are extracted from CGR decomposition.
-
     :return: An iterator yielding the products of reaction rule application.
     """
 
@@ -72,10 +73,15 @@ def apply_reaction_rule(molecule: MoleculeContainer,
             unsorted_reactions = list(reaction_rule(reactants))
             sorted_reactions = sorted(
                 unsorted_reactions,
-                key=lambda react: len(list(filter(lambda mol: len(mol) > 6, react.products))),
-                reverse=True)
+                key=lambda react: len(
+                    list(filter(lambda mol: len(mol) > 6, react.products))
+                ),
+                reverse=True,
+            )
 
-            reactions = sorted_reactions[:top_reactions_num]  # Take top-N reactions from reactor
+            reactions = sorted_reactions[
+                :top_reactions_num
+            ]  # Take top-N reactions from reactor
         else:
             reactions = []
             for reaction in reaction_rule(reactants):
@@ -88,17 +94,17 @@ def apply_reaction_rule(molecule: MoleculeContainer,
     for reaction in reactions:
         if rebuild_with_cgr:
             cgr = reaction.compose()
-            products = cgr.decompose()[1].split()
+            reactants = cgr.decompose()[1].split()
         else:
-            products = reaction.products
-        products = [mol for mol in products if len(mol) > 0]
+            reactants = reaction.products  # reactants are products in retro reaction
+        reactants = [mol for mol in reactants if len(mol) > 0]
         if validate_products:
-            for molecule in products:
+            for mol in reactants:
                 try:
-                    molecule.kekule()
-                    if molecule.check_valence():
+                    mol.kekule()
+                    if mol.check_valence():
                         yield None
-                    molecule.thiele()
+                    mol.thiele()
                 except InvalidAromaticRing:
                     yield None
-        yield products # TODO may bw more correctly - reactants/precursors
+        yield reactants

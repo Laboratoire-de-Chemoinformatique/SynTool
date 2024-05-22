@@ -1,55 +1,61 @@
-"""
-Module containing additional functions needed in different reaction data processing protocols.
-"""
+"""Module containing additional functions needed in different reaction data processing
+protocols."""
 
-from tqdm import tqdm
-from CGRtools import smiles
-from CGRtools.containers import MoleculeContainer, ReactionContainer, CGRContainer, QueryContainer
+from typing import Iterable, List, Tuple, Union
+
+from CGRtools.containers import (CGRContainer, MoleculeContainer,
+                                 QueryContainer, ReactionContainer)
 from CGRtools.exceptions import InvalidAromaticRing
-from typing import List, Iterable, Tuple, Union
+from tqdm import tqdm
+
+from SynTool.utils.files import MoleculeReader, MoleculeWriter
+from SynTool.utils.logging import GeneralException
 
 
 def query_to_mol(query: QueryContainer) -> MoleculeContainer:
-    """
-    Converts a QueryContainer object into a MoleculeContainer object.
+    """Converts a QueryContainer object into a MoleculeContainer object.
 
     :param query: A QueryContainer object representing the query structure.
-
     :return: A MoleculeContainer object that replicates the structure of the query.
     """
     new_mol = MoleculeContainer()
     for n, atom in query.atoms():
-        new_mol.add_atom(atom.atomic_symbol, n, charge=atom.charge, is_radical=atom.is_radical)
+        new_mol.add_atom(
+            atom.atomic_symbol, n, charge=atom.charge, is_radical=atom.is_radical
+        )
     for i, j, bond in query.bonds():
         new_mol.add_bond(i, j, int(bond))
     return new_mol
 
 
 def reaction_query_to_reaction(reaction_rule: ReactionContainer) -> ReactionContainer:
-    """
-    Converts a ReactionContainer object with query structures into a ReactionContainer with molecular structures.
+    """Converts a ReactionContainer object with query structures into a
+    ReactionContainer with molecular structures.
 
-    :param reaction_rule: A ReactionContainer object where reactants and products are QueryContainer objects.
-
-    :return: A new ReactionContainer object where reactants and products are MoleculeContainer objects.
+    :param reaction_rule: A ReactionContainer object where reactants and products are
+        QueryContainer objects.
+    :return: A new ReactionContainer object where reactants and products are
+        MoleculeContainer objects.
     """
     reactants = [query_to_mol(q) for q in reaction_rule.reactants]
     products = [query_to_mol(q) for q in reaction_rule.products]
-    reagents = [query_to_mol(q) for q in reaction_rule.reagents]  # Assuming reagents are also part of the rule
+    reagents = [
+        query_to_mol(q) for q in reaction_rule.reagents
+    ]  # Assuming reagents are also part of the rule
     reaction = ReactionContainer(reactants, products, reagents, reaction_rule.meta)
     reaction.name = reaction_rule.name
     return reaction
 
 
 def unite_molecules(molecules: Iterable[MoleculeContainer]) -> MoleculeContainer:
-    """
-    Unites a list of MoleculeContainer objects into a single MoleculeContainer.
-    This function takes multiple molecules and combines them into one larger molecule.
-    The first molecule in the list is taken as the base, and subsequent molecules are united with it sequentially.
+    """Unites a list of MoleculeContainer objects into a single MoleculeContainer. This
+    function takes multiple molecules and combines them into one larger molecule. The
+    first molecule in the list is taken as the base, and subsequent molecules are united
+    with it sequentially.
 
     :param molecules: A list of MoleculeContainer objects to be united.
-
-    :return: A single MoleculeContainer object representing the union of all input molecules.
+    :return: A single MoleculeContainer object representing the union of all input
+        molecules.
     """
     new_mol = MoleculeContainer()
     for mol in molecules:
@@ -58,12 +64,11 @@ def unite_molecules(molecules: Iterable[MoleculeContainer]) -> MoleculeContainer
 
 
 def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
-    """
-    Attempts to canonicalize a molecule, handling any exceptions. If the canonicalization process fails due to an
-    InvalidAromaticRing exception, it safely returns the original molecule.
+    """Attempts to canonicalize a molecule, handling any exceptions. If the
+    canonicalization process fails due to an InvalidAromaticRing exception, it safely
+    returns the original molecule.
 
     :param molecule: The given molecule to be canonicalized.
-
     :return: The canonicalized molecule if successful, otherwise the original molecule.
     """
     molecule._atoms = dict(sorted(molecule._atoms.items()))
@@ -76,13 +81,13 @@ def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
         return molecule
 
 
-def split_molecules(molecules: Iterable, number_of_atoms: int) -> Tuple[List[MoleculeContainer], List[MoleculeContainer]]:
-    """
-    Splits molecules according to the number of heavy atoms.
+def split_molecules(
+    molecules: Iterable, number_of_atoms: int
+) -> Tuple[List[MoleculeContainer], List[MoleculeContainer]]:
+    """Splits molecules according to the number of heavy atoms.
 
     :param molecules: Iterable of molecules.
     :param number_of_atoms: Threshold for splitting molecules.
-
     :return: Tuple of lists containing "big" molecules and "small" molecules.
     """
     big_molecules, small_molecules = [], []
@@ -95,25 +100,33 @@ def split_molecules(molecules: Iterable, number_of_atoms: int) -> Tuple[List[Mol
     return big_molecules, small_molecules
 
 
-def remove_small_molecules(reaction: ReactionContainer,
-                           number_of_atoms: int = 6,
-                           small_molecules_to_meta: bool = True) -> Union[ReactionContainer, None]:
-    """
-    Processes a reaction by removing small molecules.
+def remove_small_molecules(
+    reaction: ReactionContainer,
+    number_of_atoms: int = 6,
+    small_molecules_to_meta: bool = True,
+) -> Union[ReactionContainer, None]:
+    """Processes a reaction by removing small molecules.
 
     :param reaction: ReactionContainer object.
-    :param number_of_atoms: Molecules with the number of atoms equal to or below this will be removed.
+    :param number_of_atoms: Molecules with the number of atoms equal to or below this
+        will be removed.
     :param small_molecules_to_meta: If True, deleted molecules are saved to meta.
-
     :return: Processed ReactionContainer without small molecules.
     """
-    new_reactants, small_reactants = split_molecules(reaction.reactants, number_of_atoms)
+    new_reactants, small_reactants = split_molecules(
+        reaction.reactants, number_of_atoms
+    )
     new_products, small_products = split_molecules(reaction.products, number_of_atoms)
 
-    if sum(len(mol) for mol in new_reactants) == 0 or sum(len(mol) for mol in new_reactants) == 0:
+    if (
+        sum(len(mol) for mol in new_reactants) == 0
+        or sum(len(mol) for mol in new_reactants) == 0
+    ):
         return None
 
-    new_reaction = ReactionContainer(new_reactants, new_products, reaction.reagents, reaction.meta)
+    new_reaction = ReactionContainer(
+        new_reactants, new_products, reaction.reagents, reaction.meta
+    )
     new_reaction.name = reaction.name
 
     if small_molecules_to_meta:
@@ -127,47 +140,47 @@ def remove_small_molecules(reaction: ReactionContainer,
 
 
 def rebalance_reaction(reaction: ReactionContainer) -> ReactionContainer:
-    """
-    Rebalances the reaction by assembling CGR and then decomposing it. Works for all reactions for which the correct
-    CGR can be assembled.
+    """Rebalances the reaction by assembling CGR and then decomposing it. Works for all
+    reactions for which the correct CGR can be assembled.
 
     :param reaction: The reaction to be rebalanced.
-
     :return: The rebalanced reaction.
     """
     tmp_reaction = ReactionContainer(reaction.reactants, reaction.products)
     cgr = ~tmp_reaction
     reactants, products = ~cgr
-    rebalanced_reaction = ReactionContainer(reactants.split(), products.split(), reaction.reagents, reaction.meta)
+    rebalanced_reaction = ReactionContainer(
+        reactants.split(), products.split(), reaction.reagents, reaction.meta
+    )
     rebalanced_reaction.name = reaction.name
 
     return rebalanced_reaction
 
 
 def reverse_reaction(reaction: ReactionContainer) -> ReactionContainer:
-    """
-    Reverses the given reaction.
+    """Reverses the given reaction.
 
     :param reaction: The reaction to be reversed.
-
     :return: The reversed reaction.
     """
-    reversed_reaction = ReactionContainer(reaction.products, reaction.reactants, reaction.reagents, reaction.meta)
+    reversed_reaction = ReactionContainer(
+        reaction.products, reaction.reactants, reaction.reagents, reaction.meta
+    )
     reversed_reaction.name = reaction.name
 
     return reversed_reaction
 
 
-def remove_reagents(reaction: ReactionContainer,
-                    keep_reagents: bool = True,
-                    reagents_max_size: int = 7) -> Union[ReactionContainer, None]:
-    """
-    Removes reagents (not changed molecules or molecules not involved in the reaction) from reactants and products.
+def remove_reagents(
+    reaction: ReactionContainer, keep_reagents: bool = True, reagents_max_size: int = 7
+) -> Union[ReactionContainer, None]:
+    """Removes reagents (not changed molecules or molecules not involved in the
+    reaction) from reactants and products.
 
     :param reaction: Input reaction
     :param keep_reagents: Ff True, the reagents are written to ReactionContainer.
-    :param reagents_max_size: Max size of molecules that are considered as reagents, bigger are removed.
-
+    :param reagents_max_size: Max size of molecules that are considered as reagents,
+        bigger are removed.
     :return: The cleaned reaction.
     """
     not_changed_molecules = set(reaction.reactants).intersection(reaction.products)
@@ -191,26 +204,31 @@ def remove_reagents(reaction: ReactionContainer,
         else:
             new_products.append(molecule)
 
-    if sum(len(mol) for mol in new_reactants) == 0 or sum(len(mol) for mol in new_reactants) == 0:
+    if (
+        sum(len(mol) for mol in new_reactants) == 0
+        or sum(len(mol) for mol in new_reactants) == 0
+    ):
         return None
 
     if keep_reagents:
-        new_reagents = {molecule for molecule in new_reagents if len(molecule) <= reagents_max_size}
+        new_reagents = {
+            molecule for molecule in new_reagents if len(molecule) <= reagents_max_size
+        }
     else:
         new_reagents = []
 
-    new_reaction = ReactionContainer(new_reactants, new_products, new_reagents, reaction.meta)
+    new_reaction = ReactionContainer(
+        new_reactants, new_products, new_reagents, reaction.meta
+    )
     new_reaction.name = reaction.name
 
     return new_reaction
 
 
 def cgr_from_reaction_rule(reaction_rule: ReactionContainer) -> CGRContainer:
-    """
-    Creates a CGR from the given reaction rule.
+    """Creates a CGR from the given reaction rule.
 
     :param reaction_rule: The reaction rule to be converted.
-
     :return: The resulting CGR.
     """
 
@@ -221,11 +239,9 @@ def cgr_from_reaction_rule(reaction_rule: ReactionContainer) -> CGRContainer:
 
 
 def hash_from_reaction_rule(reaction_rule: ReactionContainer) -> hash:
-    """
-    Generates hash for the given reaction rule.
+    """Generates hash for the given reaction rule.
 
     :param reaction_rule: The reaction rule to be converted.
-
     :return: The resulting hash.
     """
 
@@ -236,24 +252,29 @@ def hash_from_reaction_rule(reaction_rule: ReactionContainer) -> hash:
     return hash((reactants_hash, reagents_hash, products_hash))
 
 
-def canonicalize_building_blocks(input_file: str, output_file: str) -> str:  # TODO reimplement with reader/writer
-    """
-    Canonicalizes custom building blocks.
+def canonicalize_building_blocks(input_file: str, output_file: str) -> str:
+    """Canonicalizes custom building blocks.
 
     :param input_file: The path to the file that stores the original building blocks.
-    :param output_file: The path to the file that will store the canonicalized building blocks.
-
+    :param output_file: The path to the file that will store the canonicalized building
+        blocks.
     :return: The path to the file with canonicalized building blocks.
     """
     if input_file == output_file:
-        raise 'input_file name and output_file name cannot be the same.'
-    with open(input_file, "r") as inp_file, open(output_file, "w") as out_file:
-        for smi in tqdm(inp_file, desc="Number of building blocks processed: ", bar_format='{desc}{n} [{elapsed}]'):
-            mol = smiles(smi)
+        raise ValueError("input_file name and output_file name cannot be the same.")
+
+    with MoleculeReader(input_file) as inp_file, MoleculeWriter(
+        output_file
+    ) as out_file:
+        for mol in tqdm(
+            inp_file,
+            desc="Number of building blocks processed: ",
+            bar_format="{desc}{n} [{elapsed}]",
+        ):
             try:
                 mol = safe_canonicalization(mol)
-            except:
+            except GeneralException:
                 continue
-            out_file.write(f'{str(mol)}\n')
+            out_file.write(mol)
 
     return output_file
