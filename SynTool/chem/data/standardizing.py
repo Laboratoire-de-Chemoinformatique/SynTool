@@ -10,12 +10,66 @@ from typing import Dict, List, Tuple
 
 import ray
 from CGRtools.containers import MoleculeContainer, ReactionContainer
+from CGRtools.containers import ReactionContainer as ReactionContainerCGRTools
 from tqdm import tqdm
 
 from SynTool.chem.utils import (rebalance_reaction, remove_reagents,
                                 remove_small_molecules)
 from SynTool.utils.files import ReactionReader, ReactionWriter
 from SynTool.utils.logging import GeneralException, HiddenPrints
+
+from CGRtools import smiles as smiles_cgrtools
+from chython import ReactionContainer as ReactionContainerChython
+from chython import smiles as smiles_chython
+from tqdm import tqdm
+
+from SynTool.utils.files import ReactionReader, ReactionWriter
+from SynTool.utils.logging import GeneralException
+
+
+class ReactionMappingStandardizer:
+    """Maps atoms of the reaction using chython (chytorch)."""
+
+    def _map_and_remove_reagents(self, reaction: ReactionContainerChython) -> ReactionContainerChython | None:
+        try:
+            reaction.reset_mapping()
+            reaction.remove_reagents()
+        except GeneralException:
+            return None
+
+        return reaction
+
+    def _map_reaction(self, reaction: ReactionContainerCGRTools) -> ReactionContainerCGRTools | None:
+        """Reads a file of reactions and maps atoms of the reactions using chytorch. This
+        function does not use the ReactionReader/ReactionWriter classes, because they are
+        not compatible with chython.
+
+        :param reaction: Input reaction.
+        :return: None.
+        """
+
+        chython_reaction = smiles_chython(str(reaction))
+        reaction_mapped = self._map_and_remove_reagents(chython_reaction)
+        if reaction_mapped:
+            reaction_mapped_cgrtools = smiles_cgrtools(
+                format(chython_reaction, "m")
+            )
+            return reaction_mapped_cgrtools
+
+        return None
+
+    def __call__(self, reaction: ReactionContainerCGRTools) -> ReactionContainerCGRTools | None:
+        """Maps atoms of the reactions using chytorch.
+
+        :param reaction: Input reaction.
+        :return: Returns standardized reaction if the reaction has standardized
+            successfully, else None.
+        """
+        try:
+            reaction.standardize()
+            return reaction
+        except GeneralException:
+            return None
 
 
 class FunctionalGroupsStandardizer:

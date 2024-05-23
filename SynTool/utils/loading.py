@@ -29,6 +29,8 @@ def load_reaction_rules(file: str) -> List[Reactor]:
     if not isinstance(reaction_rules[0][0], Reactor):
         reaction_rules = [Reactor(x) for x, _ in reaction_rules]
 
+    print(f"Number of loaded reaction rules: {len(reaction_rules)}")
+
     return reaction_rules
 
 
@@ -42,10 +44,10 @@ def load_building_blocks(building_blocks_path: str) -> Set[str]:
     """
 
     with MoleculeReader(building_blocks_path) as molecules:
-        bbs = set(str(mol) for mol in molecules)
-    print(f"Number of loaded building blocks: {len(bbs)}")
+        building_blocks = set(str(mol) for mol in molecules)
+    print(f"Number of loaded building blocks: {len(building_blocks)}")
 
-    return bbs
+    return building_blocks
 
 
 def load_value_net(model_class: ABCMeta, value_network_path: str) -> ValueNetwork:

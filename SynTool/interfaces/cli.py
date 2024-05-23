@@ -74,26 +74,6 @@ def building_blocks_cli(input_file: str, output_file: str) -> None:
     canonicalize_building_blocks(input_file=input_file, output_file=output_file)
 
 
-@syntool.command(name="reaction_mapping")
-@click.option(
-    "--input",
-    "input_file",
-    required=True,
-    type=click.Path(exists=True),
-    help="Path to the file with reactions to be mapped.",
-)
-@click.option(
-    "--output",
-    "output_file",
-    default=Path("reaction_data_standardized.smi"),
-    type=click.Path(),
-    help="Path to the file where mapped reactions will be stored.",
-)
-def reaction_mapping_cli(input_file: str, output_file: str) -> None:
-    """Reaction data mapping."""
-    map_and_remove_reagents_from_file(input_file=input_file, output_file=output_file)
-
-
 @syntool.command(name="reaction_standardizing")
 @click.option(
     "--input",
