@@ -18,7 +18,6 @@ from SynTool.chem.data.standardizing import (AromaticFormStandardizer,
                                              RemoveReagentsStandardizer)
 from SynTool.utils.config import ConfigABC, convert_config_to_dict
 from SynTool.utils.files import ReactionReader, ReactionWriter
-from SynTool.utils.logging import GeneralException
 
 
 @dataclass
@@ -296,7 +295,7 @@ class RingsChangeFilter:
 
 @dataclass
 class StrangeCarbonsConfig:
-    # Currently empty, but can be extended in the future if needed
+    # currently empty, but can be extended in the future if needed
     pass
 
 
@@ -564,13 +563,6 @@ class ReactionFilterConfig(ConfigABC):
     cc_sp3_breaking_config: Optional[CCsp3BreakingConfig] = None
     cc_ring_breaking_config: Optional[CCRingBreakingConfig] = None
 
-    # other configuration parameters
-    rebalance_reaction: bool = False
-    remove_reagents: bool = True
-    reagents_max_size: int = 7
-    remove_small_molecules: bool = False
-    small_molecules_max_size: int = 6
-
     def to_dict(self):
         """Converts the configuration into a dictionary."""
         config_dict = {
@@ -601,11 +593,6 @@ class ReactionFilterConfig(ConfigABC):
             "cc_ring_breaking_config": (
                 {} if self.cc_ring_breaking_config is not None else None
             ),
-            "rebalance_reaction": self.rebalance_reaction,
-            "remove_reagents": self.remove_reagents,
-            "reagents_max_size": self.reagents_max_size,
-            "remove_small_molecules": self.remove_small_molecules,
-            "small_molecules_max_size": self.small_molecules_max_size,
         }
 
         filtered_config_dict = {k: v for k, v in config_dict.items() if v is not None}
@@ -670,13 +657,6 @@ class ReactionFilterConfig(ConfigABC):
             CCRingBreakingConfig() if "cc_ring_breaking_config" in config_dict else None
         )
 
-        # extract other simple configuration parameters
-        rebalance_reaction = config_dict.get("rebalance_reaction", False)
-        remove_reagents = config_dict.get("remove_reagents", True)
-        reagents_max_size = config_dict.get("reagents_max_size", 7)
-        remove_small_molecules = config_dict.get("remove_small_molecules", False)
-        small_molecules_max_size = config_dict.get("small_molecules_max_size", 6)
-
         return ReactionFilterConfig(
             dynamic_bonds_config=dynamic_bonds_config,
             small_molecules_config=small_molecules_config,
@@ -689,11 +669,6 @@ class ReactionFilterConfig(ConfigABC):
             wrong_ch_breaking_config=wrong_ch_breaking_config,
             cc_sp3_breaking_config=cc_sp3_breaking_config,
             cc_ring_breaking_config=cc_ring_breaking_config,
-            rebalance_reaction=rebalance_reaction,
-            remove_reagents=remove_reagents,
-            reagents_max_size=reagents_max_size,
-            remove_small_molecules=remove_small_molecules,
-            small_molecules_max_size=small_molecules_max_size,
         )
 
     @staticmethod
@@ -704,20 +679,7 @@ class ReactionFilterConfig(ConfigABC):
         return ReactionFilterConfig.from_dict(config_dict)
 
     def _validate_params(self, params: Dict[str, Any]):
-        if not isinstance(params["rebalance_reaction"], bool):
-            raise ValueError("rebalance_reaction must be a boolean.")
-
-        if not isinstance(params["remove_reagents"], bool):
-            raise ValueError("remove_reagents must be a boolean.")
-
-        if not isinstance(params["reagents_max_size"], int):
-            raise ValueError("reagents_max_size must be an int.")
-
-        if not isinstance(params["remove_small_molecules"], bool):
-            raise ValueError("remove_small_molecules must be a boolean.")
-
-        if not isinstance(params["small_molecules_max_size"], int):
-            raise ValueError("small_molecules_max_size must be an int.")
+        pass
 
     def create_filters(self):
         filter_instances = []
@@ -836,7 +798,8 @@ def filter_reaction(
                     # if filter returns True it means the reaction doesn't pass the filter
                     reaction.meta["filtration_log"] = reaction_filter.__class__.__name__
                     is_filtered = True
-            except GeneralException:
+            except Exception as e:
+                logging.debug(e)
                 is_filtered = True
 
     return is_filtered, reaction
@@ -866,7 +829,8 @@ def process_batch(
         try:  # CGRtools.exceptions.MappingError: atoms with number {52} not equal
             is_filtered, processed_reaction = filter_reaction(reaction, config, filters)
             processed_reaction_list.append((is_filtered, processed_reaction))
-        except GeneralException:
+        except Exception as e:
+            logging.debug(e)
             processed_reaction_list.append((True, reaction))
     return processed_reaction_list
 
@@ -938,8 +902,8 @@ def filter_reactions_from_file(
         ):
             batch.append(reaction)
             if len(batch) == batch_size:
-                completed_batch = process_batch.remote(batch, config, filters)
-                batches_to_process[completed_batch] = None
+                batch_results = process_batch.remote(batch, config, filters)
+                batches_to_process[batch_results] = None
                 batch = []
 
                 # check and process completed tasks if we've reached the concurrency limit
@@ -952,8 +916,8 @@ def filter_reactions_from_file(
 
         # process the last batch if it's not empty
         if batch:
-            completed_batch = process_batch.remote(batch, config, filters)
-            batches_to_process[completed_batch] = None
+            batch_results = process_batch.remote(batch, config, filters)
+            batches_to_process[batch_results] = None
 
         # process remaining batches
         while batches_to_process:

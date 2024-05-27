@@ -40,4 +40,5 @@ After installation, one can add the syntool environment in their Jupyter platfor
 
 .. code-block:: bash
 
+    conda install ipykernel
     python -m ipykernel install --user --name syntool --display-name "syntool"

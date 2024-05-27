@@ -11,11 +11,11 @@ import yaml
 
 from SynTool.chem.data.filtering import (ReactionFilterConfig,
                                          filter_reactions_from_file)
-from SynTool.chem.data.mapping import map_and_remove_reagents_from_file
-from SynTool.chem.data.standardizing import standardize_reactions_from_file
+from SynTool.chem.data.standardizing import (ReactionStandardizationConfig,
+                                             standardize_reactions_from_file)
 from SynTool.chem.reaction_rules.extraction import extract_rules_from_reactions
 from SynTool.chem.utils import canonicalize_building_blocks
-from SynTool.mcts.search import tree_search
+from SynTool.mcts.search import run_search
 from SynTool.ml.training.reinforcement import run_reinforcement_tuning
 from SynTool.ml.training.supervised import (create_policy_dataset,
                                             run_policy_training)
@@ -35,7 +35,7 @@ def syntool():
 def download_planning_data_cli() -> None:
     """Downloads data for retrosythesis planning (reaction/molecule data and trained
     neural networks)."""
-    remote_id = "1HFL8yT5i2wE82lNqB88wZ5OM2D9AsvXH"
+    remote_id = "1nz8S66putDFQrFyTBkAbNKHjY0LZxqVU"
     data_archive = os.path.join("syntool_planning_data.zip")
     #
     gdown.download(output=data_archive, id=remote_id, quiet=False)
@@ -54,27 +54,34 @@ def download_training_data_cli() -> None:
     os.remove(data_archive)
 
 
-@syntool.command(name="building_blocks")
+@syntool.command(name="building_blocks_canonicalizing")
 @click.option(
     "--input",
     "input_file",
     required=True,
     type=click.Path(exists=True),
-    help="Path to the file with building blocks to be standardized.",
+    help="Path to the file with building blocks to be canonicalized.",
 )
 @click.option(
     "--output",
     "output_file",
     required=True,
     type=click.Path(),
-    help="Path to the file where standardized building blocks will be stored.",
+    help="Path to the file where canonicalized building blocks will be stored.",
 )
-def building_blocks_cli(input_file: str, output_file: str) -> None:
-    """Standardizes building blocks."""
+def building_blocks_canonicalizing_cli(input_file: str, output_file: str) -> None:
+    """Canonicalizes building blocks."""
     canonicalize_building_blocks(input_file=input_file, output_file=output_file)
 
 
 @syntool.command(name="reaction_standardizing")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to the configuration file for reactions standardizing.",
+)
 @click.option(
     "--input",
     "input_file",
@@ -92,10 +99,12 @@ def building_blocks_cli(input_file: str, output_file: str) -> None:
     "--num_cpus", default=4, type=int, help="The number of CPUs to use for processing."
 )
 def reaction_standardizing_cli(
-    input_file: str, output_file: str, num_cpus: int
+    config_path: str, input_file: str, output_file: str, num_cpus: int
 ) -> None:
     """Standardizes reactions and remove duplicates."""
+    stand_config = ReactionStandardizationConfig.from_yaml(config_path)
     standardize_reactions_from_file(
+        config=stand_config,
         input_reaction_data_path=input_file,
         standardized_reaction_data_path=output_file,
         num_cpus=num_cpus,
@@ -439,7 +448,7 @@ def planning_cli(
         {**config["node_expansion"], **{"weights_path": policy_network}}
     )
 
-    tree_search(
+    run_search(
         targets_path=targets,
         search_config=search_config,
         policy_config=policy_config,

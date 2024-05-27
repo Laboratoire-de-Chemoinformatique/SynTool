@@ -29,8 +29,6 @@ def load_reaction_rules(file: str) -> List[Reactor]:
     if not isinstance(reaction_rules[0][0], Reactor):
         reaction_rules = [Reactor(x) for x, _ in reaction_rules]
 
-    print(f"Number of loaded reaction rules: {len(reaction_rules)}")
-
     return reaction_rules
 
 
@@ -45,7 +43,6 @@ def load_building_blocks(building_blocks_path: str) -> Set[str]:
 
     with MoleculeReader(building_blocks_path) as molecules:
         building_blocks = set(str(mol) for mol in molecules)
-    print(f"Number of loaded building blocks: {len(building_blocks)}")
 
     return building_blocks
 

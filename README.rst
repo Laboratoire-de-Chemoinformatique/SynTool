@@ -46,6 +46,7 @@ After installation, one can add the ``syntool`` environment in their Jupyter pla
 
 .. code-block:: bash
 
+    conda install ipykernel
     python -m ipykernel install --user --name syntool --display-name "syntool"
 
 Quick start
@@ -67,7 +68,7 @@ If you use your custom building blocks, be sure to canonicalize them before plan
     syntool download_planning_data
 
     # canonicalize building blocks
-    syntool building_blocks --input building_blocks_custom.smi --output planning_data/building_blocks.smi
+    syntool building_blocks_canonicalizing --input building_blocks_custom.smi --output planning_data/building_blocks.smi
 
     # planning with rollout evaluation
     syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --results_dir planning_results

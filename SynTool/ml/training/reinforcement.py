@@ -15,7 +15,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
 
-from SynTool.chem.retron import retrons_to_cgr
+from SynTool.chem.retron import compose_retrons
 from SynTool.mcts.evaluation import ValueNetworkFunction
 from SynTool.mcts.expansion import PolicyNetworkFunction
 from SynTool.mcts.tree import Tree
@@ -150,11 +150,11 @@ def extract_tree_retrons(tree_list: List[Tree]) -> Dict[str, float]:
             if node.is_solved():
                 parent = idx
                 while parent and parent != 1:
-                    composed_smi = str(retrons_to_cgr(tree.nodes[parent].new_retrons))
+                    composed_smi = str(compose_retrons(tree.nodes[parent].new_retrons))
                     extracted_retrons[composed_smi] = 1.0
                     parent = tree.parents[parent]
             else:
-                composed_smi = str(retrons_to_cgr(tree.nodes[idx].new_retrons))
+                composed_smi = str(compose_retrons(tree.nodes[idx].new_retrons))
                 extracted_retrons[composed_smi] = 0.0
 
     # shuffle extracted retrons

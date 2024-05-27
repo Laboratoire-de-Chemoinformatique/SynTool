@@ -9,13 +9,12 @@ from pathlib import Path
 from CGRtools import smiles
 from tqdm import tqdm
 
-from SynTool.interfaces.visualisation import (extract_routes,
-                                              generate_results_html)
 from SynTool.mcts.evaluation import ValueNetworkFunction
 from SynTool.mcts.expansion import PolicyNetworkFunction
 from SynTool.mcts.tree import Tree, TreeConfig
 from SynTool.utils.config import PolicyNetworkConfig
 from SynTool.utils.loading import load_building_blocks, load_reaction_rules
+from SynTool.utils.visualisation import extract_routes, generate_results_html
 
 
 def extract_tree_stats(tree, target):
@@ -53,7 +52,7 @@ def extract_tree_stats(tree, target):
     }
 
 
-def tree_search(
+def run_search(
     targets_path: str,
     search_config: dict,
     policy_config: PolicyNetworkConfig,

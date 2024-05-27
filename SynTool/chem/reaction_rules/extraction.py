@@ -16,10 +16,10 @@ from CGRtools.exceptions import InvalidAromaticRing
 from CGRtools.reactor import Reactor
 from tqdm import tqdm
 
-from SynTool.chem.utils import remove_reagents, reverse_reaction
+from SynTool.chem.data.standardizing import RemoveReagentsStandardizer
+from SynTool.chem.utils import reverse_reaction
 from SynTool.utils.config import RuleExtractionConfig
 from SynTool.utils.files import ReactionReader
-from SynTool.utils.logging import GeneralException
 
 
 def add_environment_atoms(
@@ -419,6 +419,8 @@ def create_rule(
         and others.
     """
 
+    # 0. remove reagent # TODO put it here ?
+
     # 1. create reaction CGR
     cgr = ~reaction
     center_atoms = set(cgr.center_atoms)
@@ -511,7 +513,8 @@ def extract_rules(
         are extracted, up to a maximum of 15 distinct centers.
     """
 
-    reaction = remove_reagents(reaction)
+    standardizer = RemoveReagentsStandardizer()
+    reaction = standardizer(reaction)
 
     if config.multicenter_rules:
         # extract a single rule encompassing all reaction centers
@@ -554,7 +557,8 @@ def process_reaction_batch(
         try:
             extracted_rules = extract_rules(config, reaction)
             extracted_rules_list.append((index, extracted_rules))
-        except GeneralException:
+        except Exception as e:
+            logging.debug(e)
             continue
     return extracted_rules_list
 

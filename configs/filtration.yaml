@@ -4,7 +4,7 @@ dynamic_bonds_config:
   min_bonds_number: 1
   max_bonds_number: 6
 small_molecules_config:
-  limit: 6
+  mol_max_size: 6
 cc_ring_breaking_config:
 wrong_ch_breaking_config:
 cc_sp3_breaking_config:

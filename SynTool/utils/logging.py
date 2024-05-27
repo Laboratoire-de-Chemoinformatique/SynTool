@@ -6,17 +6,6 @@ import os
 import sys
 
 
-class GeneralException(Exception):
-    """SynTool is multilayered software combining the code working with reaction data,
-    machine learning, search algorithms, and interface modules.
-
-    The complexity of SynTool code now doesn’t allow for the specification of all fail
-    scenarios. This general exception is a placeholder and is supposed to be extended to
-    properly cover all exceptions in SynTool.
-    """
-
-
-
 class DisableLogger:
     """This class mute redundant logging information.
 

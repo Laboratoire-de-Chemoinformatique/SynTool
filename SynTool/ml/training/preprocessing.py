@@ -1,6 +1,7 @@
 """Module containing functions for preparation of the training sets for policy and value
 network."""
 
+import logging
 import os
 import pickle
 from abc import ABC
@@ -23,7 +24,6 @@ from tqdm import tqdm
 from SynTool.chem.utils import unite_molecules
 from SynTool.utils.files import ReactionReader
 from SynTool.utils.loading import load_reaction_rules
-from SynTool.utils.logging import GeneralException
 
 
 class ValueNetworkDataset(InMemoryDataset, ABC):
@@ -138,9 +138,11 @@ class RankingPolicyDataset(InMemoryDataset):
                     try:  #  MENDEL_INFO does not contain cadmium (Cd) properties
                         molecule = unite_molecules(reaction.products)
                         pyg_graph = mol_to_pyg(molecule)
+
                     except (
-                        GeneralException
-                    ):  # TypeError: can't assign a NoneType to a torch.ByteTensor
+                        Exception
+                    ) as e:  # TypeError: can't assign a NoneType to a torch.ByteTensor
+                        logging.debug(e)
                         continue
 
                     if pyg_graph is not None:
@@ -288,7 +290,8 @@ def reaction_rules_appliance(
                 #
                 if rule_prioritized:
                     priority_rules.append(i)
-        except GeneralException:
+        except Exception as e:
+            logging.debug(e)
             continue
 
     return applied_rules, priority_rules

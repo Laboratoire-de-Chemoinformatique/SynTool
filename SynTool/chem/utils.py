@@ -1,7 +1,8 @@
 """Module containing additional functions needed in different reaction data processing
 protocols."""
 
-from typing import Iterable, List, Tuple, Union
+import logging
+from typing import Iterable
 
 from CGRtools.containers import (CGRContainer, MoleculeContainer,
                                  QueryContainer, ReactionContainer)
@@ -9,7 +10,6 @@ from CGRtools.exceptions import InvalidAromaticRing
 from tqdm import tqdm
 
 from SynTool.utils.files import MoleculeReader, MoleculeWriter
-from SynTool.utils.logging import GeneralException
 
 
 def query_to_mol(query: QueryContainer) -> MoleculeContainer:
@@ -81,148 +81,33 @@ def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
         return molecule
 
 
-def split_molecules(
-    molecules: Iterable, number_of_atoms: int
-) -> Tuple[List[MoleculeContainer], List[MoleculeContainer]]:
-    """Splits molecules according to the number of heavy atoms.
+def canonicalize_building_blocks(input_file: str, output_file: str) -> str:
+    """Canonicalizes custom building blocks.
 
-    :param molecules: Iterable of molecules.
-    :param number_of_atoms: Threshold for splitting molecules.
-    :return: Tuple of lists containing "big" molecules and "small" molecules.
+    :param input_file: The path to the file that stores the original building blocks.
+    :param output_file: The path to the file that will store the canonicalized building
+        blocks.
+    :return: The path to the file with canonicalized building blocks.
     """
-    big_molecules, small_molecules = [], []
-    for molecule in molecules:
-        if len(molecule) > number_of_atoms:
-            big_molecules.append(molecule)
-        else:
-            small_molecules.append(molecule)
+    if input_file == output_file:
+        raise ValueError("input_file name and output_file name cannot be the same.")
 
-    return big_molecules, small_molecules
+    with MoleculeReader(input_file) as inp_file, MoleculeWriter(
+        output_file
+    ) as out_file:
+        for mol in tqdm(
+            inp_file,
+            desc="Number of building blocks processed: ",
+            bar_format="{desc}{n} [{elapsed}]",
+        ):
+            try:
+                mol = safe_canonicalization(mol)
+            except Exception as e:
+                logging.debug(e)
+                continue
+            out_file.write(mol)
 
-
-def remove_small_molecules(
-    reaction: ReactionContainer,
-    number_of_atoms: int = 6,
-    small_molecules_to_meta: bool = True,
-) -> Union[ReactionContainer, None]:
-    """Processes a reaction by removing small molecules.
-
-    :param reaction: ReactionContainer object.
-    :param number_of_atoms: Molecules with the number of atoms equal to or below this
-        will be removed.
-    :param small_molecules_to_meta: If True, deleted molecules are saved to meta.
-    :return: Processed ReactionContainer without small molecules.
-    """
-    new_reactants, small_reactants = split_molecules(
-        reaction.reactants, number_of_atoms
-    )
-    new_products, small_products = split_molecules(reaction.products, number_of_atoms)
-
-    if (
-        sum(len(mol) for mol in new_reactants) == 0
-        or sum(len(mol) for mol in new_reactants) == 0
-    ):
-        return None
-
-    new_reaction = ReactionContainer(
-        new_reactants, new_products, reaction.reagents, reaction.meta
-    )
-    new_reaction.name = reaction.name
-
-    if small_molecules_to_meta:
-        united_small_reactants = unite_molecules(small_reactants)
-        new_reaction.meta["small_reactants"] = str(united_small_reactants)
-
-        united_small_products = unite_molecules(small_products)
-        new_reaction.meta["small_products"] = str(united_small_products)
-
-    return new_reaction
-
-
-def rebalance_reaction(reaction: ReactionContainer) -> ReactionContainer:
-    """Rebalances the reaction by assembling CGR and then decomposing it. Works for all
-    reactions for which the correct CGR can be assembled.
-
-    :param reaction: The reaction to be rebalanced.
-    :return: The rebalanced reaction.
-    """
-    tmp_reaction = ReactionContainer(reaction.reactants, reaction.products)
-    cgr = ~tmp_reaction
-    reactants, products = ~cgr
-    rebalanced_reaction = ReactionContainer(
-        reactants.split(), products.split(), reaction.reagents, reaction.meta
-    )
-    rebalanced_reaction.name = reaction.name
-
-    return rebalanced_reaction
-
-
-def reverse_reaction(reaction: ReactionContainer) -> ReactionContainer:
-    """Reverses the given reaction.
-
-    :param reaction: The reaction to be reversed.
-    :return: The reversed reaction.
-    """
-    reversed_reaction = ReactionContainer(
-        reaction.products, reaction.reactants, reaction.reagents, reaction.meta
-    )
-    reversed_reaction.name = reaction.name
-
-    return reversed_reaction
-
-
-def remove_reagents(
-    reaction: ReactionContainer, keep_reagents: bool = True, reagents_max_size: int = 7
-) -> Union[ReactionContainer, None]:
-    """Removes reagents (not changed molecules or molecules not involved in the
-    reaction) from reactants and products.
-
-    :param reaction: Input reaction
-    :param keep_reagents: Ff True, the reagents are written to ReactionContainer.
-    :param reagents_max_size: Max size of molecules that are considered as reagents,
-        bigger are removed.
-    :return: The cleaned reaction.
-    """
-    not_changed_molecules = set(reaction.reactants).intersection(reaction.products)
-
-    cgr = ~reaction
-    center_atoms = set(cgr.center_atoms)
-
-    new_reactants = []
-    new_products = []
-    new_reagents = []
-
-    for molecule in reaction.reactants:
-        if center_atoms.isdisjoint(molecule) or molecule in not_changed_molecules:
-            new_reagents.append(molecule)
-        else:
-            new_reactants.append(molecule)
-
-    for molecule in reaction.products:
-        if center_atoms.isdisjoint(molecule) or molecule in not_changed_molecules:
-            new_reagents.append(molecule)
-        else:
-            new_products.append(molecule)
-
-    if (
-        sum(len(mol) for mol in new_reactants) == 0
-        or sum(len(mol) for mol in new_reactants) == 0
-    ):
-        return None
-
-    if keep_reagents:
-        new_reagents = {
-            molecule for molecule in new_reagents if len(molecule) <= reagents_max_size
-        }
-    else:
-        new_reagents = []
-
-    new_reaction = ReactionContainer(
-        new_reactants, new_products, new_reagents, reaction.meta
-    )
-    new_reaction.name = reaction.name
-
-    return new_reaction
+    return output_file
 
 
 def cgr_from_reaction_rule(reaction_rule: ReactionContainer) -> CGRContainer:
@@ -252,29 +137,17 @@ def hash_from_reaction_rule(reaction_rule: ReactionContainer) -> hash:
     return hash((reactants_hash, reagents_hash, products_hash))
 
 
-def canonicalize_building_blocks(input_file: str, output_file: str) -> str:
-    """Canonicalizes custom building blocks.
+def reverse_reaction(
+    reaction: ReactionContainer,
+) -> ReactionContainer:  # TODO move it to standardization ?
+    """Reverses the given reaction. # TODO used only in extraction. Move to extraction ?
 
-    :param input_file: The path to the file that stores the original building blocks.
-    :param output_file: The path to the file that will store the canonicalized building
-        blocks.
-    :return: The path to the file with canonicalized building blocks.
+    :param reaction: The reaction to be reversed.
+    :return: The reversed reaction.
     """
-    if input_file == output_file:
-        raise ValueError("input_file name and output_file name cannot be the same.")
+    reversed_reaction = ReactionContainer(
+        reaction.products, reaction.reactants, reaction.reagents, reaction.meta
+    )
+    reversed_reaction.name = reaction.name
 
-    with MoleculeReader(input_file) as inp_file, MoleculeWriter(
-        output_file
-    ) as out_file:
-        for mol in tqdm(
-            inp_file,
-            desc="Number of building blocks processed: ",
-            bar_format="{desc}{n} [{elapsed}]",
-        ):
-            try:
-                mol = safe_canonicalization(mol)
-            except GeneralException:
-                continue
-            out_file.write(mol)
-
-    return output_file
+    return reversed_reaction

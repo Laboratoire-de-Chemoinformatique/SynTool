@@ -12,12 +12,12 @@ class Retron:
     """Retron class is used to extend the molecule behavior needed for interaction with
     a tree in MCTS."""
 
-    def __init__(self, molecule: MoleculeContainer):
+    def __init__(self, molecule: MoleculeContainer, canonicalize: bool = True):
         """It initializes a Retron object with a molecule container as a parameter.
 
         :param molecule: A molecule.
         """
-        self.molecule = safe_canonicalization(molecule)
+        self.molecule = safe_canonicalization(molecule) if canonicalize else molecule
         self.prev_retrons = []
 
     def __len__(self) -> int:
@@ -55,7 +55,7 @@ class Retron:
         return str(self.molecule) in bb_stock
 
 
-def retrons_to_cgr(
+def compose_retrons(
     retrons: list = None, exclude_small: bool = True, min_mol_size: int = 6
 ) -> MoleculeContainer:
     """Takes a list of retrons, excludes small retrons if specified, and composes them

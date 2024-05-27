@@ -164,40 +164,43 @@ class MCTSNetwork(LightningModule, ABC):
         """
 
     def training_step(self, batch: Batch, batch_idx: int) -> Tensor:
-        """
-        Calculates the loss for a given training batch and logs the loss value.
+        """Calculates the loss for a given training batch and logs the loss value.
 
         :param batch: The batch of data that is used for training.
         :param batch_idx: The index of the batch.
-
         :return: The value of the training loss.
         """
         metrics = self._get_loss(batch)
         for name, value in metrics.items():
-            self.log('train_' + name, value, prog_bar=True, on_step=True, on_epoch=True, batch_size=self.batch_size)
-        return metrics['loss']
+            self.log(
+                "train_" + name,
+                value,
+                prog_bar=True,
+                on_step=True,
+                on_epoch=True,
+                batch_size=self.batch_size,
+            )
+        return metrics["loss"]
 
     def validation_step(self, batch: Batch, batch_idx: int) -> None:
-        """
-        Calculates the loss for a given validation batch and logs the loss value.
+        """Calculates the loss for a given validation batch and logs the loss value.
 
         :param batch: The batch of data that is used for validation.
         :param batch_idx: The index of the batch.
         """
         metrics = self._get_loss(batch)
         for name, value in metrics.items():
-            self.log('val_' + name, value, on_epoch=True, batch_size=self.batch_size)
+            self.log("val_" + name, value, on_epoch=True, batch_size=self.batch_size)
 
     def test_step(self, batch: Batch, batch_idx: int) -> None:
-        """
-        Calculates the loss for a given test batch and logs the loss value.
+        """Calculates the loss for a given test batch and logs the loss value.
 
         :param batch: The batch of data that is used for testing.
         :param batch_idx: The index of the batch.
         """
         metrics = self._get_loss(batch)
         for name, value in metrics.items():
-            self.log('test_' + name, value, on_epoch=True, batch_size=self.batch_size)
+            self.log("test_" + name, value, on_epoch=True, batch_size=self.batch_size)
 
     def configure_optimizers(
         self,

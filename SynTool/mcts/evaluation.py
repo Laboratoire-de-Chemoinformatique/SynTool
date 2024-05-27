@@ -5,7 +5,7 @@ from typing import List
 
 import torch
 
-from SynTool.chem.retron import Retron, retrons_to_cgr
+from SynTool.chem.retron import Retron, compose_retrons
 from SynTool.ml.networks.value import ValueNetwork
 from SynTool.ml.training import mol_to_pyg
 
@@ -34,7 +34,7 @@ class ValueNetworkFunction:
         :return: The predicted float value ("synthesisability") of the node.
         """
 
-        molecule = retrons_to_cgr(retrons=retrons, exclude_small=True)
+        molecule = compose_retrons(retrons=retrons, exclude_small=True)
         pyg_graph = mol_to_pyg(molecule)
         if pyg_graph:
             with torch.no_grad():
