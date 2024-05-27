@@ -73,25 +73,22 @@ source of reaction data. Below, the main steps of this pipeline are listed.</p>
 <p>Reaction data (USPTO dataset) and other supplementary data for retrosynthetic models training and retrosynthesis planning
 can be easily downloaded.
 See the details in <a class="reference internal" href="data_download.html#data-download"><span class="std std-ref">Data download</span></a>.</p>
-<p><strong>2. Reaction data mapping</strong></p>
-<p>Reaction mapping is a necessary step in reaction data curation.
-See the details in <a class="reference internal" href="reaction_mapping.html#reaction-mapping"><span class="std std-ref">Reaction mapping</span></a>.</p>
-<p><strong>3. Reaction data standardization</strong></p>
-<p>Reaction standardization is a necessary step in reaction data curation. It requires already mapped reactions.
+<p><strong>2. Reaction data standardization</strong></p>
+<p>Reaction standardization is a necessary step in reaction data curation. It also includes reaction atom mapping.
 See the details in <a class="reference internal" href="reaction_standardization.html#reaction-standardization"><span class="std std-ref">Reaction standardization</span></a>.</p>
-<p><strong>4. Reaction data filtration</strong></p>
+<p><strong>3. Reaction data filtration</strong></p>
 <p>Reaction data filtration ensures the validity of reaction rules extracted from the reactions.
 See the details in <a class="reference internal" href="reaction_filtration.html#reaction-filtration"><span class="std std-ref">Reaction filtration</span></a>.</p>
-<p><strong>5. Reaction rules extraction</strong></p>
+<p><strong>4. Reaction rules extraction</strong></p>
 <p>Reaction rules should be extracted from the high-quality reaction data prepared by the data curation steps listed above.
 See the details in <a class="reference internal" href="reaction_rules_extraction.html#reaction-rules-extraction"><span class="std std-ref">Reaction rules extraction</span></a>.</p>
-<p><strong>6. Policy network training</strong></p>
+<p><strong>5. Policy network training</strong></p>
 <p>Policy network training is needed for the node expansion in the tree search algorithm.
 See the details in <a class="reference internal" href="policy_network.html#policy-network"><span class="std std-ref">Policy network</span></a>.</p>
-<p><strong>7. Value network training</strong></p>
+<p><strong>6. Value network training</strong></p>
 <p>Value network training is needed for the node evaluation in the tree search algorithm.
 See the details in <a class="reference internal" href="value_network.html#value-network"><span class="std std-ref">Value network</span></a>.</p>
-<p><strong>8. Retrosynthesis planning</strong></p>
+<p><strong>7. Retrosynthesis planning</strong></p>
 <p>After the preparation of the reaction rules and trained retrosynthetic model,
 the retrosynthesis planning of target molecules can be performed.
 See the details in <a class="reference internal" href="retrosynthesis_planning.html#retrosynthesis-planning"><span class="std std-ref">Retrosynthesis planning</span></a>.</p>
@@ -121,7 +118,6 @@ See the details in <a class="reference internal" href="retrosynthesis_planning.h
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>

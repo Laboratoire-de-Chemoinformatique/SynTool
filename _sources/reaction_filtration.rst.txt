@@ -63,8 +63,9 @@ Standard and special filters (4 + 3 filters):
     wrong_ch_breaking_config:
     cc_sp3_breaking_config:
 
-**Important**: if the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated.
-Also, some filters requires additional parameters (e.g. ``small_molecules_config``).
+**Important-1:** if the reaction filter name is listed in the configuration file (see above), it means that this filter will be activated. Also, some filters requires additional parameters (e.g. ``small_molecules_config``).
+
+**Important-2:** the order of filters listed in the configuration file defines the order of their application to the input reactions.
 
 CLI
 ---------------------------

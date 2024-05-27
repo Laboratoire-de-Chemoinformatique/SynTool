@@ -64,7 +64,8 @@ conda<span class="w"> </span>activate<span class="w"> </span>syntool
 <section id="optional">
 <h2>Optional<a class="headerlink" href="#optional" title="Link to this heading">¶</a></h2>
 <p>After installation, one can add the syntool environment in their Jupyter platform:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>ipykernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="w"> </span>syntool<span class="w"> </span>--display-name<span class="w"> </span><span class="s2">&quot;syntool&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>ipykernel
+python<span class="w"> </span>-m<span class="w"> </span>ipykernel<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--name<span class="w"> </span>syntool<span class="w"> </span>--display-name<span class="w"> </span><span class="s2">&quot;syntool&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -95,7 +96,6 @@ conda<span class="w"> </span>activate<span class="w"> </span>syntool
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>

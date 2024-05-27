@@ -41,37 +41,32 @@ Reaction data (USPTO dataset) and other supplementary data for retrosynthetic mo
 can be easily downloaded.
 See the details in :ref:`data_download`.
 
-**2. Reaction data mapping**
+**2. Reaction data standardization**
 
-Reaction mapping is a necessary step in reaction data curation.
-See the details in :ref:`reaction_mapping`.
-
-**3. Reaction data standardization**
-
-Reaction standardization is a necessary step in reaction data curation. It requires already mapped reactions.
+Reaction standardization is a necessary step in reaction data curation. It also includes reaction atom mapping.
 See the details in :ref:`reaction_standardization`.
 
-**4. Reaction data filtration**
+**3. Reaction data filtration**
 
 Reaction data filtration ensures the validity of reaction rules extracted from the reactions.
 See the details in :ref:`reaction_filtration`.
 
-**5. Reaction rules extraction**
+**4. Reaction rules extraction**
 
 Reaction rules should be extracted from the high-quality reaction data prepared by the data curation steps listed above.
 See the details in :ref:`reaction_rules_extraction`.
 
-**6. Policy network training**
+**5. Policy network training**
 
 Policy network training is needed for the node expansion in the tree search algorithm.
 See the details in :ref:`policy_network`.
 
-**7. Value network training**
+**6. Value network training**
 
 Value network training is needed for the node evaluation in the tree search algorithm.
 See the details in :ref:`value_network`.
 
-**8. Retrosynthesis planning**
+**7. Retrosynthesis planning**
 
 After the preparation of the reaction rules and trained retrosynthetic model,
 the retrosynthesis planning of target molecules can be performed.
@@ -84,7 +79,6 @@ See the details in :ref:`retrosynthesis_planning`.
     user_guide
     installation
     data_download
-    reaction_mapping
     reaction_standardization
     reaction_filtration
     reaction_rules_extraction

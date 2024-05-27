@@ -39,6 +39,44 @@ predicts the reaction rules for obtained precursors. This dissection proceeds un
     - If the reaction is successful, but the generated precursors are not the building_blocks and cannot be generated without exceeding the maximum tree depth, return -0.5.
     - If the reaction is successful, but the precursors are not the building_blocks and cannot be generated, return -1.0.
 
+Planning algorithm
+------------------------
+
+Currently, in SynTool there are different configurations of planning algorithms are available. The two reasonable and
+recommended configurations are  - default and advanced configuration.
+
+**Default planning**. This planning configuration includes the ranking policy network for node expansion,
+rollout simulations for node evaluation, and expansion-first search strategy. This default configuration
+requires only reaction data for training the policy network and is independent of the building block set
+(they can be changed) because the rollout simulations can be considered as an online evaluation function
+interacting with the given set of building blocks.
+
+.. code-block:: yaml
+
+    tree:
+      search_strategy: expansion_first
+    node_evaluation:
+      evaluation_type: rollout
+
+**Advanced planning**. This planning configuration includes the ranking policy network for node expansion,
+value neural network for instant node evaluation, and evaluation-first strategy. This configuration requires reaction data
+for training the policy network and molecule data for planning simulations in value network tuning.
+Because the building block set is used in planning simulations, the value network should be returned
+if the building block set is changed. The evaluation-first strategy supposes more computations,
+but the total time of search is partially reduced by instant predictions of node values by value neural network
+instead of expansive rollout simulations.
+
+.. code-block:: yaml
+
+    tree:
+      search_strategy: evaluation_first
+    node_evaluation:
+      evaluation_type: gcn
+
+**Conclusion**. In general, the advanced planning algorithm is slower than the default (around 2x slow down),
+but can be considered more powerful (because of more exhaustive search tree exploration) and may help
+if the default planning algorithm fails to find a solution for the given molecule.
+
 Configuration
 ---------------------------
 The retrosynthesis planning algorithm can be adjusted by the configuration yaml file:
@@ -101,7 +139,7 @@ If you use your custom building blocks, be sure to canonicalize them before plan
 
 .. code-block:: bash
 
-    syntool building_blocks --input building_blocks_init.smi --output building_blocks.smi
+    syntool building_blocks_canonicalizing --input building_blocks_init.smi --output building_blocks.smi
     syntool planning --config planning.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks_stand.smi --policy_network policy_network.ckpt --results_dir planning
 
 **Parameters**:

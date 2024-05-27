@@ -14,7 +14,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Reaction filtration" href="reaction_filtration.html" />
-    <link rel="prev" title="Reaction mapping" href="reaction_mapping.html" />
+    <link rel="prev" title="Data download" href="data_download.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,41 +36,106 @@
 <p>This page explains how to do a reaction standardization in SynTool.</p>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
-<p>The reaction data are standardized using an original protocol for reaction data curation
+<p><strong>Reaction atom mapping</strong>. Reaction atom-to-atom (AAM) mapping in SynTool is performed with GraphormerMapper,
+a new algorithm for AAM based on a transformerneural network adopted for the direct processing of molecular graphs
+as sets of atoms and bonds, as opposed to SMILES/SELFIES sequence-based approaches, in combination with the
+Bidirectional Encoder Representations from Transformers (BERT) network. The graph transformer serves to extract molecular
+features that are tied to atoms and bonds. The BERT network is used for chemical transformation learning.
+In a benchmarking study, it was demonstrated [<a class="reference external" href="https://doi.org/10.1021/acs.jcim.2c00344">https://doi.org/10.1021/acs.jcim.2c00344</a>] that GraphormerMapper
+is superior to the state-of-the-art IBM RxnMapper algorithm in the “Golden” benchmarking data set
+(total correctly mapped reactions 89.5% vs. 84.5%).</p>
+<p><strong>Reaction standardization</strong>. The reaction data are standardized using an original protocol for reaction data curation
 published earlier [<a class="reference external" href="https://doi.org/10.1002/minf.202100119">https://doi.org/10.1002/minf.202100119</a>]. This protocol includes two layers:
 standardization of individual molecules (reactants, reagents, products) and reaction standardization.
 Steps for standardization of individual molecules include functional group standardization, aromatization/kekulization,
 valence checking, hydrogens manipulation, cleaning isotopes, and radicals, etc.
 The reaction standardization layer includes reaction role assignment, reaction equation balancing,
 and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions are removed.</p>
-<p>This current default protocol includes several steps such as:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>Standardization of functional groups</p></li>
-<li><p>Transform molecules to Kekule form when possible</p></li>
-<li><p>Check atom valences</p></li>
-<li><p>Remove hydrogen atoms</p></li>
-<li><p>Check and clean isotope atoms when possible</p></li>
-<li><p>Split ions in reaction when possible</p></li>
-<li><p>Transform molecules to aromatic form when possible</p></li>
-<li><p>Fix atom-to-atom mapping in reaction when needed and possible</p></li>
-<li><p>Remove unchanged parts in reaction</p></li>
-<li><p>Remove duplicate reactions</p></li>
-</ol>
-</div></blockquote>
+<p>The current available reaction standardizers in SynTool:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37.5%" />
+<col style="width: 62.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Reaction standardizer</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>reaction_mapping_config</p></td>
+<td><p>Maps atoms of the reaction using chython (chytorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p>functional_groups_config</p></td>
+<td><p>Standardization of functional groups</p></td>
+</tr>
+<tr class="row-even"><td><p>kekule_form_config</p></td>
+<td><p>Transform molecules to Kekule form when possible</p></td>
+</tr>
+<tr class="row-odd"><td><p>check_valence_config</p></td>
+<td><p>Check atom valences</p></td>
+</tr>
+<tr class="row-even"><td><p>implicify_hydrogens_config</p></td>
+<td><p>Remove hydrogen atoms</p></td>
+</tr>
+<tr class="row-odd"><td><p>check_isotopes_config</p></td>
+<td><p>Check and clean isotope atoms when possible</p></td>
+</tr>
+<tr class="row-even"><td><p>split_ions_config</p></td>
+<td><p>Split ions in reaction when possible</p></td>
+</tr>
+<tr class="row-odd"><td><p>aromatic_form_config</p></td>
+<td><p>Transform molecules to aromatic form when possible</p></td>
+</tr>
+<tr class="row-even"><td><p>mapping_fix_config</p></td>
+<td><p>Fix atom-to-atom mapping in reaction when needed and possible</p></td>
+</tr>
+<tr class="row-odd"><td><p>unchanged_parts_config</p></td>
+<td><p>Remove unchanged parts in reaction</p></td>
+</tr>
+<tr class="row-even"><td><p>small_molecules_config</p></td>
+<td><p>Remove small molecule from reaction</p></td>
+</tr>
+<tr class="row-odd"><td><p>remove_reagents_config</p></td>
+<td><p>Remove reagents from reaction</p></td>
+</tr>
+<tr class="row-even"><td><p>rebalance_reaction_config</p></td>
+<td><p>Rebalance reaction</p></td>
+</tr>
+<tr class="row-odd"><td><p>duplicate_reaction_config</p></td>
+<td><p>Remove duplicate reactions</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>Reaction standardization does not require any special configuration in the current version of SynTool.</p>
+<p>Reaction standardization protocol can be adjusted configuration yaml file (these default parameters bellow are recommended).</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">reaction_mapping_config</span><span class="p">:</span>
+<span class="nt">functional_groups_config</span><span class="p">:</span>
+<span class="nt">kekule_form_config</span><span class="p">:</span>
+<span class="nt">check_valence_config</span><span class="p">:</span>
+<span class="nt">implicify_hydrogens_config</span><span class="p">:</span>
+<span class="nt">check_isotopes_config</span><span class="p">:</span>
+<span class="nt">split_ions_config</span><span class="p">:</span>
+<span class="nt">aromatic_form_config</span><span class="p">:</span>
+<span class="nt">mapping_fix_config</span><span class="p">:</span>
+<span class="nt">unchanged_parts_config</span><span class="p">:</span>
+<span class="nt">duplicate_reaction_config</span><span class="p">:</span>
+</pre></div>
+</div>
+<p><strong>Important-1:</strong> if the reaction standardizer name is listed in the configuration file (see above), it means that this filter will be activated.</p>
+<p><strong>Important-2:</strong> the order of standardizers listed in the configuration file defines the order of their application to the input reactions.</p>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading">¶</a></h2>
 <p>Reaction standardization can be performed with the below command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>reaction_standardizing<span class="w"> </span>--input<span class="w"> </span>reaction_data_mapped.smi<span class="w"> </span>--output<span class="w"> </span>reaction_data_standardized.smi
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>reaction_standardizing<span class="w"> </span>--config<span class="w"> </span>standardization.yaml<span class="w"> </span>--input<span class="w"> </span>reaction_data_mapped.smi<span class="w"> </span>--output<span class="w"> </span>reaction_data_standardized.smi
 </pre></div>
 </div>
 <dl class="simple">
 <dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> - the path to the configuration file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - the path to the file (.smi or .rdf) with reactions to be standardized.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - the path to the file (.smi or .rdf) where standardized reactions will be stored.</p></li>
 </ul>
@@ -101,7 +166,6 @@ and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reaction_mapping.html">Reaction mapping</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reaction standardization</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
@@ -119,7 +183,7 @@ and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="reaction_mapping.html" title="previous chapter">Reaction mapping</a></li>
+      <li>Previous: <a href="data_download.html" title="previous chapter">Data download</a></li>
       <li>Next: <a href="reaction_filtration.html" title="next chapter">Reaction filtration</a></li>
   </ul></li>
 </ul>
