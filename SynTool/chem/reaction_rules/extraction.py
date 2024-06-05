@@ -25,19 +25,21 @@ from SynTool.utils.files import ReactionReader
 def add_environment_atoms(
     cgr: CGRContainer, center_atoms: Set[int], environment_atom_count: int
 ) -> Set[int]:
-    """Adds environment atoms to the set of center atoms based on the specified depth.
+    """Adds environment atoms to the set of center atoms based on the specified
+    depth.
 
-    :param cgr: A complete graph representation of a reaction (ReactionContainer
-        object).
-    :param center_atoms: A set of atom id corresponding to the center atoms of the
-        reaction.
-    :param environment_atom_count: An integer specifying the depth of the environment
-        around the reaction center to be included. If it's 0, only the reaction center
-        is included. If it's 1, the first layer of surrounding atoms is included, and so
-        on.
-    :return: A set of atom id including the center atoms and their environment atoms up
-        to the specified depth. If environment_atom_count is 0, the original set of
-        center atoms is returned unchanged.
+    :param cgr: A complete graph representation of a reaction
+        (ReactionContainer object).
+    :param center_atoms: A set of atom id corresponding to the center
+        atoms of the reaction.
+    :param environment_atom_count: An integer specifying the depth of
+        the environment around the reaction center to be included. If
+        it's 0, only the reaction center is included. If it's 1, the
+        first layer of surrounding atoms is included, and so on.
+    :return: A set of atom id including the center atoms and their
+        environment atoms up to the specified depth. If
+        environment_atom_count is 0, the original set of center atoms is
+        returned unchanged.
     """
 
     if environment_atom_count:
@@ -54,18 +56,21 @@ def add_functional_groups(
     center_atoms: Set[int],
     func_groups_list: List[MoleculeContainer],
 ) -> Set[int]:
-    """Augments the set of reaction rule atoms with functional groups if specified.
+    """Augments the set of reaction rule atoms with functional groups if
+    specified.
 
-    :param reaction: The reaction object (ReactionContainer) from which molecules are
-        extracted.
-    :param center_atoms: A set of atom id corresponding to the center atoms of the
-        reaction.
-    :param func_groups_list: A list of functional group objects (MoleculeContainer or
-        QueryContainer) to be considered when including functional groups. These objects
-        define the structure of the functional groups to be included.
-    :return: A set of atom id corresponding to the rule atoms, including atoms from the
-        specified functional groups if include_func_groups is True. If
-        include_func_groups is False, the original set of center atoms is returned.
+    :param reaction: The reaction object (ReactionContainer) from which
+        molecules are extracted.
+    :param center_atoms: A set of atom id corresponding to the center
+        atoms of the reaction.
+    :param func_groups_list: A list of functional group objects
+        (MoleculeContainer or QueryContainer) to be considered when
+        including functional groups. These objects define the structure
+        of the functional groups to be included.
+    :return: A set of atom id corresponding to the rule atoms, including
+        atoms from the specified functional groups if
+        include_func_groups is True. If include_func_groups is False,
+        the original set of center atoms is returned.
     """
 
     rule_atoms = center_atoms.copy()
@@ -86,14 +91,15 @@ def add_functional_groups(
 
 
 def add_ring_structures(cgr: CGRContainer, rule_atoms: Set[int]) -> Set[int]:
-    """Adds ring structures to the set of rule atoms if they intersect with the reaction
-    center atoms.
+    """Adds ring structures to the set of rule atoms if they intersect with the
+    reaction center atoms.
 
-    :param cgr: A condensed graph representation of a reaction (CGRContainer object).
-    :param rule_atoms: A set of atom id corresponding to the center atoms of the
-        reaction.
-    :return: A set of atom id corresponding to the original rule atoms and the included
-        ring structures.
+    :param cgr: A condensed graph representation of a reaction
+        (CGRContainer object).
+    :param rule_atoms: A set of atom id corresponding to the center
+        atoms of the reaction.
+    :return: A set of atom id corresponding to the original rule atoms
+        and the included ring structures.
     """
     for ring in cgr.sssr:
         # check if the current ring intersects with the set of rule atoms
@@ -109,19 +115,19 @@ def add_leaving_incoming_groups(
     keep_leaving_groups: bool,
     keep_incoming_groups: bool,
 ) -> Tuple[Set[int], Dict[str, Set]]:
-    """Identifies and includes leaving and incoming groups to the rule atoms based on
-    specified flags.
+    """Identifies and includes leaving and incoming groups to the rule atoms
+    based on specified flags.
 
-    :param reaction: The reaction object (ReactionContainer) from which leaving and
-        incoming groups are extracted.
-    :param rule_atoms: A set of atom id corresponding to the center atoms of the
-        reaction.
-    :param keep_leaving_groups: A boolean flag indicating whether to include leaving
-        groups in the rule.
-    :param keep_incoming_groups: A boolean flag indicating whether to include incoming
-        groups in the rule.
-    :return: Updated set of rule atoms including leaving and incoming groups if
-        specified, and metadata about added groups.
+    :param reaction: The reaction object (ReactionContainer) from which
+        leaving and incoming groups are extracted.
+    :param rule_atoms: A set of atom id corresponding to the center
+        atoms of the reaction.
+    :param keep_leaving_groups: A boolean flag indicating whether to
+        include leaving groups in the rule.
+    :param keep_incoming_groups: A boolean flag indicating whether to
+        include incoming groups in the rule.
+    :return: Updated set of rule atoms including leaving and incoming
+        groups if specified, and metadata about added groups.
     """
 
     meta_debug = {"leaving": set(), "incoming": set()}
@@ -157,8 +163,8 @@ def clean_molecules(
     reaction_center_atoms: Set[int],
     atom_retention_details: Dict[str, Dict[str, bool]],
 ) -> List[QueryContainer]:
-    """Cleans rule molecules by removing specified information about atoms based on
-    retention details provided.
+    """Cleans rule molecules by removing specified information about atoms
+    based on retention details provided.
 
     :param rule_molecules: A list of query container objects representing the rule molecules.
     :param reaction_molecules: A list of molecule container objects involved in the reaction.
@@ -259,11 +265,12 @@ def create_substructures_and_reagents(
     as_query_container: bool,
     keep_reagents: bool,
 ) -> Tuple[List[MoleculeContainer], List[MoleculeContainer], List]:
-    """Creates substructures for reactants and products, and optionally includes
-    reagents, based on specified parameters. The function processes the reaction to
-    create substructures for reactants and products based on the rule atoms. It also
-    handles the inclusion of reagents based on the keep_reagents flag and converts these
-    structures to query containers if required.
+    """Creates substructures for reactants and products, and optionally
+    includes reagents, based on specified parameters. The function processes
+    the reaction to create substructures for reactants and products based on
+    the rule atoms. It also handles the inclusion of reagents based on the
+    keep_reagents flag and converts these structures to query containers if
+    required.
 
     :param reaction: The reaction object (ReactionContainer) from which to extract substructures.
     This object  represents a chemical reaction with specified reactants, products, and possibly reagents.
@@ -312,29 +319,31 @@ def assemble_final_rule(
     keep_metadata: bool,
     reaction: ReactionContainer,
 ) -> ReactionContainer:
-    """Assembles the final reaction rule from the provided substructures and metadata.
-    This function brings together the various components of a reaction rule, including
-    reactant and product substructures, reagents, and metadata. It creates a
-    comprehensive representation of the reaction rule, which can be used for further
-    processing or analysis.
+    """Assembles the final reaction rule from the provided substructures and
+    metadata. This function brings together the various components of a
+    reaction rule, including reactant and product substructures, reagents, and
+    metadata. It creates a comprehensive representation of the reaction rule,
+    which can be used for further processing or analysis.
 
-    :param reactant_substructures: A list of substructures derived from the reactants of
-        the reaction. These substructures represent parts of reactants that are relevant
-        to the rule.
-    :param product_substructures: A list of substructures derived from the products of
-        the reaction. These substructures represent parts of products that are relevant
-        to the rule.
-    :param reagents: A list of reagents involved in the reaction. These may be included
-        as-is or as substructures, depending on earlier processing steps.
-    :param meta_debug: A dictionary containing additional metadata about the reaction,
-        such as leaving and incoming groups.
-    :param keep_metadata: A boolean flag indicating whether to retain the metadata
-        associated with the reaction in the rule.
-    :param reaction: The original reaction object (ReactionContainer) from which the
-        rule is being created.
-    :return: A ReactionContainer object representing the assembled reaction rule. This
-        container includes the reactant and product substructures, reagents, and any
-        additional metadata if keep_metadata is True.
+    :param reactant_substructures: A list of substructures derived from
+        the reactants of the reaction. These substructures represent
+        parts of reactants that are relevant to the rule.
+    :param product_substructures: A list of substructures derived from
+        the products of the reaction. These substructures represent
+        parts of products that are relevant to the rule.
+    :param reagents: A list of reagents involved in the reaction. These
+        may be included as-is or as substructures, depending on earlier
+        processing steps.
+    :param meta_debug: A dictionary containing additional metadata about
+        the reaction, such as leaving and incoming groups.
+    :param keep_metadata: A boolean flag indicating whether to retain
+        the metadata associated with the reaction in the rule.
+    :param reaction: The original reaction object (ReactionContainer)
+        from which the rule is being created.
+    :return: A ReactionContainer object representing the assembled
+        reaction rule. This container includes the reactant and product
+        substructures, reagents, and any additional metadata if
+        keep_metadata is True.
     """
 
     rule_metadata = meta_debug if keep_metadata else {}
@@ -352,22 +361,24 @@ def assemble_final_rule(
 
 
 def validate_rule(rule: ReactionContainer, reaction: ReactionContainer) -> bool:
-    """Validates a reaction rule by ensuring it can correctly generate the products from
-    the reactants. The function uses a chemical reactor to simulate the reaction based
-    on the provided rule. It then compares the products generated by the simulation with
-    the actual products of the reaction. If they match, the rule is considered valid. If
-    not, a ValueError is raised, indicating an issue with the rule.
+    """Validates a reaction rule by ensuring it can correctly generate the
+    products from the reactants. The function uses a chemical reactor to
+    simulate the reaction based on the provided rule. It then compares the
+    products generated by the simulation with the actual products of the
+    reaction. If they match, the rule is considered valid. If not, a ValueError
+    is raised, indicating an issue with the rule.
 
-    :param rule: The reaction rule to be validated. This is a ReactionContainer object
-        representing a chemical reaction rule, which includes the necessary information
-        to perform a reaction.
-    :param reaction: The original reaction object (ReactionContainer) against which the
-        rule is to be validated. This object contains the actual reactants and products
-        of the reaction.
-    :return: The validated rule if the rule correctly generates the products from the
-        reactants.
-    :raises ValueError: If the rule does not correctly generate the products from the
-        reactants, indicating an incorrect or incomplete rule.
+    :param rule: The reaction rule to be validated. This is a
+        ReactionContainer object representing a chemical reaction rule,
+        which includes the necessary information to perform a reaction.
+    :param reaction: The original reaction object (ReactionContainer)
+        against which the rule is to be validated. This object contains
+        the actual reactants and products of the reaction.
+    :return: The validated rule if the rule correctly generates the
+        products from the reactants.
+    :raises ValueError: If the rule does not correctly generate the
+        products from the reactants, indicating an incorrect or
+        incomplete rule.
     """
 
     # create a reactor with the given rule
@@ -401,22 +412,24 @@ def create_rule(
     config: RuleExtractionConfig, reaction: ReactionContainer
 ) -> ReactionContainer:
     """Creates a reaction rule from a given reaction based on the specified
-    configuration. The function processes the reaction to create a rule that matches the
-    configuration settings. It handles the inclusion of environmental atoms, functional
-    groups, ring structures, and leaving and incoming groups. It also constructs
-    substructures for reactants, products, and reagents, and cleans molecule
-    representations if required. Optionally, it validates the rule using a reactor.
+    configuration. The function processes the reaction to create a rule that
+    matches the configuration settings. It handles the inclusion of
+    environmental atoms, functional groups, ring structures, and leaving and
+    incoming groups. It also constructs substructures for reactants, products,
+    and reagents, and cleans molecule representations if required. Optionally,
+    it validates the rule using a reactor.
 
-    :param config: An instance of ExtractRuleConfig, containing various settings that
-        determine how the rule is created, such as environmental atom count, inclusion
-        of functional groups, rings, leaving and incoming groups, and other parameters.
-    :param reaction: The reaction object (ReactionContainer) from which to create the
-        rule. This object represents a chemical reaction with specified reactants,
-        products, and possibly reagents.
-    :return: A ReactionContainer object representing the extracted reaction rule. This
-        rule includes various elements of the reaction as specified by the
-        configuration, such as reaction centers, environmental atoms, functional groups,
-        and others.
+    :param config: An instance of ExtractRuleConfig, containing various
+        settings that determine how the rule is created, such as
+        environmental atom count, inclusion of functional groups, rings,
+        leaving and incoming groups, and other parameters.
+    :param reaction: The reaction object (ReactionContainer) from which
+        to create the rule. This object represents a chemical reaction
+        with specified reactants, products, and possibly reagents.
+    :return: A ReactionContainer object representing the extracted
+        reaction rule. This rule includes various elements of the
+        reaction as specified by the configuration, such as reaction
+        centers, environmental atoms, functional groups, and others.
     """
 
     # 0. remove reagent # TODO put it here ?
@@ -500,17 +513,19 @@ def extract_rules(
     """Extracts reaction rules from a given reaction based on the specified
     configuration.
 
-    :param config: An instance of ExtractRuleConfig, which contains various
-        configuration settings for rule extraction, such as whether to include
-        multicenter rules, functional groups, ring structures, leaving and incoming
-        groups, etc.
-    :param reaction: The reaction object (ReactionContainer) from which to extract
-        rules. The reaction object represents a chemical reaction with specified
-        reactants, products, and possibly reagents.
-    :return: A list of ReactionContainer objects, each representing a distinct reaction
-        rule. If config.multicenter_rules is True, a single rule encompassing all
-        reaction centers is returned. Otherwise, separate rules for each reaction center
-        are extracted, up to a maximum of 15 distinct centers.
+    :param config: An instance of ExtractRuleConfig, which contains
+        various configuration settings for rule extraction, such as
+        whether to include multicenter rules, functional groups, ring
+        structures, leaving and incoming groups, etc.
+    :param reaction: The reaction object (ReactionContainer) from which
+        to extract rules. The reaction object represents a chemical
+        reaction with specified reactants, products, and possibly
+        reagents.
+    :return: A list of ReactionContainer objects, each representing a
+        distinct reaction rule. If config.multicenter_rules is True, a
+        single rule encompassing all reaction centers is returned.
+        Otherwise, separate rules for each reaction center are
+        extracted, up to a maximum of 15 distinct centers.
     """
 
     standardizer = RemoveReagentsStandardizer()
@@ -533,23 +548,26 @@ def extract_rules(
 def process_reaction_batch(
     batch: List[Tuple[int, ReactionContainer]], config: RuleExtractionConfig
 ) -> List[Tuple[int, List[ReactionContainer]]]:
-    """Processes a batch of reactions to extract reaction rules based on the given
-    configuration. This function operates as a remote task in a distributed system using
-    Ray. It takes a batch of reactions, where each reaction is paired with an index. For
-    each reaction in the batch, it extracts reaction rules as specified by the
-    configuration object. The extracted rules for each reaction are then returned along
-    with the corresponding index. This function is intended to be used in a distributed
+    """Processes a batch of reactions to extract reaction rules based on the
+    given configuration. This function operates as a remote task in a
+    distributed system using Ray. It takes a batch of reactions, where each
+    reaction is paired with an index. For each reaction in the batch, it
+    extracts reaction rules as specified by the configuration object. The
+    extracted rules for each reaction are then returned along with the
+    corresponding index. This function is intended to be used in a distributed
     manner with Ray to parallelize the rule extraction process across multiple
     reactions.
 
-    :param batch: A list where each element is a tuple containing an index (int) and a
-        ReactionContainer object. The index is typically used to keep track of the
-        reaction's position in a larger dataset.
-    :param config: An instance of ExtractRuleConfig that provides settings and
-        parameters for the rule extraction process.
-    :return: A list where each element is a tuple. The first element of the tuple is an
-        index (int), and the second is a list of ReactionContainer objects representing
-        the extracted rules for the corresponding reaction.
+    :param batch: A list where each element is a tuple containing an
+        index (int) and a ReactionContainer object. The index is
+        typically used to keep track of the reaction's position in a
+        larger dataset.
+    :param config: An instance of ExtractRuleConfig that provides
+        settings and parameters for the rule extraction process.
+    :return: A list where each element is a tuple. The first element of
+        the tuple is an index (int), and the second is a list of
+        ReactionContainer objects representing the extracted rules for
+        the corresponding reaction.
     """
 
     extracted_rules_list = []
@@ -567,14 +585,17 @@ def process_completed_batch(
     futures: Dict,
     rules_statistics: Dict,
 ) -> None:
-    """Processes completed batches of reactions, updating the rules statistics and
-    writing rules to a file. This function waits for the completion of a batch of
-    reactions processed in parallel (using Ray), updates the statistics for each
-    extracted rule, and writes the rules to a result file if they are new. It also
-    updates the progress bar with the size of the processed batch.
+    """Processes completed batches of reactions, updating the rules statistics
+    and writing rules to a file. This function waits for the completion of a
+    batch of reactions processed in parallel (using Ray), updates the
+    statistics for each extracted rule, and writes the rules to a result file
+    if they are new. It also updates the progress bar with the size of the
+    processed batch.
 
-    :param futures: A dictionary of futures representing ongoing batch processing tasks.
-    :param rules_statistics: A dictionary to keep track of statistics for each rule.
+    :param futures: A dictionary of futures representing ongoing batch
+        processing tasks.
+    :param rules_statistics: A dictionary to keep track of statistics
+        for each rule.
     :return: None
     """
 
@@ -593,23 +614,26 @@ def process_completed_batch(
 def sort_rules(
     rules_stats: Dict, min_popularity: int, single_reactant_only: bool
 ) -> List[Tuple[ReactionContainer, List[int]]]:
-    """Sorts reaction rules based on their popularity and validation status. This
-    function sorts the given rules according to their popularity (i.e., the number of
-    times they have been applied) and filters out rules that haven't passed reactor
-    validation or are less popular than the specified minimum popularity threshold.
+    """Sorts reaction rules based on their popularity and validation status.
+    This function sorts the given rules according to their popularity (i.e.,
+    the number of times they have been applied) and filters out rules that
+    haven't passed reactor validation or are less popular than the specified
+    minimum popularity threshold.
 
-    :param rules_stats: A dictionary where each key is a reaction rule and the value is
-        a list of integers. Each integer represents an index where the rule was applied.
+    :param rules_stats: A dictionary where each key is a reaction rule
+        and the value is a list of integers. Each integer represents an
+        index where the rule was applied.
     :type rules_stats: The number of occurrence of the reaction rules.
-    :param min_popularity: The minimum number of times a rule must be applied to be
-        considered. Default is 3.
-    :type min_popularity: The minimum number of occurrence of the reaction rule to be
-        selected.
-    :param single_reactant_only: Whether to keep only reaction rules with a single
-        molecule on the right side of reaction arrow. Default is True.
-    :return: A list of tuples, where each tuple contains a reaction rule and a list of
-        indices representing the rule's applications. The list is sorted in descending
-        order of the rule's popularity.
+    :param min_popularity: The minimum number of times a rule must be
+        applied to be considered. Default is 3.
+    :type min_popularity: The minimum number of occurrence of the
+        reaction rule to be selected.
+    :param single_reactant_only: Whether to keep only reaction rules
+        with a single molecule on the right side of reaction arrow.
+        Default is True.
+    :return: A list of tuples, where each tuple contains a reaction rule
+        and a list of indices representing the rule's applications. The
+        list is sorted in descending order of the rule's popularity.
     """
 
     return sorted(
@@ -631,19 +655,24 @@ def extract_rules_from_reactions(
     num_cpus: int,
     batch_size: int,
 ) -> None:
-    """Extracts reaction rules from a set of reactions based on the given configuration.
-    This function initializes a Ray environment for distributed computing and processes
-    each reaction in the provided reaction database to extract reaction rules. It
-    handles the reactions in batches, parallelize the rule extraction process. Extracted
-    rules are written to RDF files and their statistics are recorded. The function also
-    sorts the rules based on their popularity and saves the sorted rules.
+    """Extracts reaction rules from a set of reactions based on the given
+    configuration. This function initializes a Ray environment for distributed
+    computing and processes each reaction in the provided reaction database to
+    extract reaction rules. It handles the reactions in batches, parallelize
+    the rule extraction process. Extracted rules are written to RDF files and
+    their statistics are recorded. The function also sorts the rules based on
+    their popularity and saves the sorted rules.
 
-    :param config: Configuration settings for rule extraction, including file paths,
-        batch size, and other parameters.
-    :param reaction_data_path: Path to the file containing reaction database.
-    :param reaction_rules_path: Name of the file to store the extracted rules.
-    :param num_cpus: Number of CPU cores to use for processing. Defaults to 1.
-    :param batch_size: Number of reactions to process in each batch. Defaults to 10.
+    :param config: Configuration settings for rule extraction, including
+        file paths, batch size, and other parameters.
+    :param reaction_data_path: Path to the file containing reaction
+        database.
+    :param reaction_rules_path: Name of the file to store the extracted
+        rules.
+    :param num_cpus: Number of CPU cores to use for processing. Defaults
+        to 1.
+    :param batch_size: Number of reactions to process in each batch.
+        Defaults to 10.
     :return: None
     """
 

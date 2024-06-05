@@ -67,7 +67,8 @@ class CompeteProductsFilter:
 
     @staticmethod
     def from_config(config: CompeteProductsConfig) -> "CompeteProductsFilter":
-        """Creates an instance of CompeteProductsFilter from a configuration object."""
+        """Creates an instance of CompeteProductsFilter from a configuration
+        object."""
         return CompeteProductsFilter(
             config.fingerprint_tanimoto_threshold, config.mcs_tanimoto_threshold
         )
@@ -76,7 +77,8 @@ class CompeteProductsFilter:
         """Checks if the reaction has competing products, else False.
 
         :param reaction: Input reaction.
-        :return: Returns True if the reaction has competing products, else False.
+        :return: Returns True if the reaction has competing products,
+            else False.
         """
         mf = MorganFingerprint()
         is_compete = False
@@ -163,7 +165,8 @@ class DynamicBondsFilter:
 
     @staticmethod
     def from_config(config: DynamicBondsConfig):
-        """Creates an instance of DynamicBondsChecker from a configuration object."""
+        """Creates an instance of DynamicBondsChecker from a configuration
+        object."""
         return DynamicBondsFilter(config.min_bonds_number, config.max_bonds_number)
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -196,15 +199,16 @@ class SmallMoleculesConfig(ConfigABC):
 
 
 class SmallMoleculesFilter:
-    """Checks if there are only small molecules in the reaction or if there is only one
-    small reactant or product."""
+    """Checks if there are only small molecules in the reaction or if there is
+    only one small reactant or product."""
 
     def __init__(self, limit: int = 6):
         self.limit = limit
 
     @staticmethod
     def from_config(config: SmallMoleculesConfig) -> "SmallMoleculesFilter":
-        """Creates an instance of SmallMoleculesChecker from a configuration object."""
+        """Creates an instance of SmallMoleculesChecker from a configuration
+        object."""
         return SmallMoleculesFilter(config.limit)
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -226,7 +230,8 @@ class SmallMoleculesFilter:
         return False
 
     def are_only_small_molecules(self, molecules: Iterable[MoleculeContainer]) -> bool:
-        """Checks if all molecules in the given iterable are small molecules."""
+        """Checks if all molecules in the given iterable are small
+        molecules."""
         return all(len(molecule) <= self.limit for molecule in molecules)
 
 
@@ -242,8 +247,8 @@ class CGRConnectedComponentsFilter:
     def from_config(
         config: CGRConnectedComponentsConfig,
     ) -> "CGRConnectedComponentsFilter":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return CGRConnectedComponentsFilter()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -266,12 +271,13 @@ class RingsChangeFilter:
         return RingsChangeFilter()
 
     def __call__(self, reaction: ReactionContainer):
-        """Returns True if there are valence mistakes in the reaction or there is a
-        reaction with mismatch numbers of all rings or aromatic rings in reactants and
-        products (reaction in rings)
+        """Returns True if there are valence mistakes in the reaction or there
+        is a reaction with mismatch numbers of all rings or aromatic rings in
+        reactants and products (reaction in rings)
 
         :param reaction: Input reaction.
-        :return: Returns True if there are valence mistakes in the reaction.
+        :return: Returns True if there are valence mistakes in the
+            reaction.
         """
 
         r_rings, r_arom_rings = self._calc_rings(reaction.reactants)
@@ -281,10 +287,12 @@ class RingsChangeFilter:
 
     @staticmethod
     def _calc_rings(molecules: Iterable) -> Tuple[int, int]:
-        """Calculates number of all rings and number of aromatic rings in molecules.
+        """Calculates number of all rings and number of aromatic rings in
+        molecules.
 
         :param molecules: Set of molecules.
-        :return: Number of all rings and number of aromatic rings in molecules
+        :return: Number of all rings and number of aromatic rings in
+            molecules
         """
         rings, arom_rings = 0, 0
         for mol in molecules:
@@ -304,7 +312,8 @@ class StrangeCarbonsFilter:
 
     @staticmethod
     def from_config(config: StrangeCarbonsConfig) -> "StrangeCarbonsFilter":
-        """Creates an instance of StrangeCarbonsChecker from a configuration object."""
+        """Creates an instance of StrangeCarbonsChecker from a configuration
+        object."""
         return StrangeCarbonsFilter()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -332,7 +341,8 @@ class NoReactionFilter:
 
     @staticmethod
     def from_config(config: NoReactionConfig) -> "NoReactionFilter":
-        """Creates an instance of NoReactionChecker from a configuration object."""
+        """Creates an instance of NoReactionChecker from a configuration
+        object."""
         return NoReactionFilter()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
@@ -370,11 +380,12 @@ class WrongCHBreakingFilter:
         return WrongCHBreakingFilter()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
-        """Determines if a reaction involves incorrect C-C bond formation from breaking
-        a C-H bond.
+        """Determines if a reaction involves incorrect C-C bond formation from
+        breaking a C-H bond.
 
         :param reaction: The reaction to be filtered.
-        :return: True if incorrect C-C bond formation is found, False otherwise.
+        :return: True if incorrect C-C bond formation is found, False
+            otherwise.
         """
 
         if reaction.check_valence():
@@ -389,10 +400,12 @@ class WrongCHBreakingFilter:
 
     @staticmethod
     def is_wrong_c_h_breaking(cgr: CGRContainer) -> bool:
-        """Checks for incorrect C-C bond formation from breaking a C-H bond in a CGR.
+        """Checks for incorrect C-C bond formation from breaking a C-H bond in
+        a CGR.
 
         :param cgr: The CGR with explicified hydrogens.
-        :return: True if incorrect C-C bond formation is found, False otherwise.
+        :return: True if incorrect C-C bond formation is found, False
+            otherwise.
         """
         for atom_id in cgr.center_atoms:
             if cgr.atom(atom_id).atomic_symbol == "C":
@@ -449,7 +462,8 @@ class CCsp3BreakingFilter:
         """Returns True if there is C(sp3)-C bonds breaking, else False.
 
         :param reaction: Input reaction
-        :return: Returns True if there is C(sp3)-C bonds breaking, else False.
+        :return: Returns True if there is C(sp3)-C bonds breaking, else
+            False.
         """
         cgr = ~reaction
         reaction_center = cgr.augmented_substructure(cgr.center_atoms, deep=1)
@@ -481,11 +495,12 @@ class CCRingBreakingFilter:
         return CCRingBreakingFilter()
 
     def __call__(self, reaction: ReactionContainer) -> bool:
-        """Returns True if the reaction involves ring C-C bond breaking, else False.
+        """Returns True if the reaction involves ring C-C bond breaking, else
+        False.
 
         :param reaction: Input reaction
-        :return: Returns True if the reaction involves ring C-C bond breaking, else
-            False.
+        :return: Returns True if the reaction involves ring C-C bond
+            breaking, else False.
         """
         cgr = ~reaction
 
@@ -533,9 +548,9 @@ class CCRingBreakingFilter:
 
 @dataclass
 class ReactionFilterConfig(ConfigABC):
-    """Configuration class for reaction filtering. This class manages configuration
-    settings for various reaction filters, including paths, file formats, and filter-
-    specific parameters.
+    """Configuration class for reaction filtering. This class manages
+    configuration settings for various reaction filters, including paths, file
+    formats, and filter- specific parameters.
 
     :attribute dynamic_bonds_config: Configuration for dynamic bonds checking.
     :attribute small_molecules_config: Configuration for small molecules checking.
@@ -745,7 +760,8 @@ class ReactionFilterConfig(ConfigABC):
 
 
 def tanimoto_kernel(x: MorganFingerprint, y: MorganFingerprint) -> float:
-    """Calculate the Tanimoto coefficient between each element of arrays x and y."""
+    """Calculate the Tanimoto coefficient between each element of arrays x and
+    y."""
     x = x.astype(np.float64)
     y = y.astype(np.float64)
     x_dot = np.dot(x, y.T)
@@ -763,15 +779,15 @@ def tanimoto_kernel(x: MorganFingerprint, y: MorganFingerprint) -> float:
 def filter_reaction(
     reaction: ReactionContainer, config: ReactionFilterConfig, filters: list
 ) -> Tuple[bool, ReactionContainer]:
-    """Checks the input reaction. Returns True if reaction is detected as erroneous and
-    returns reaction itself, which sometimes is modified and does not necessarily
-    correspond to the initial reaction.
+    """Checks the input reaction. Returns True if reaction is detected as
+    erroneous and returns reaction itself, which sometimes is modified and does
+    not necessarily correspond to the initial reaction.
 
     :param reaction: Reaction to be filtered.
     :param config: Reaction filtration configuration.
     :param filters: The list of reaction filters.
-    :return: False and reaction if reaction is correct and True and reaction if reaction
-        is filtered (erroneous).
+    :return: False and reaction if reaction is correct and True and
+        reaction if reaction is filtered (erroneous).
     """
 
     is_filtered = False
@@ -811,17 +827,18 @@ def process_batch(
     config: ReactionFilterConfig,
     filters: list,
 ) -> List[Tuple[bool, ReactionContainer]]:
-    """Processes a batch of reactions to extract reaction rules based on the given
-    configuration. This function operates as a remote task in a distributed system using
-    Ray.
+    """Processes a batch of reactions to extract reaction rules based on the
+    given configuration. This function operates as a remote task in a
+    distributed system using Ray.
 
-    :param batch: A list where each element is a tuple containing an index (int) and a
-        ReactionContainer object. The index is typically used to keep track of the
-        reaction's position in a larger dataset.
+    :param batch: A list where each element is a tuple containing an
+        index (int) and a ReactionContainer object. The index is
+        typically used to keep track of the reaction's position in a
+        larger dataset.
     :param config: Reaction filtration configuration.
     :param filters: The list of reaction filters.
-    :return: The list of tuples where each tuple include the reaction index, is ir
-        filtered or not (True/False) and reaction itself.
+    :return: The list of tuples where each tuple include the reaction
+        index, is ir filtered or not (True/False) and reaction itself.
     """
 
     processed_reaction_list = []
@@ -842,8 +859,10 @@ def process_completed_batch(
 ) -> int:
     """Processes completed batches of reactions.
 
-    :param futures: A dictionary of futures representing ongoing batch processing tasks.
-    :param result_file: The path to the file where filtered reactions will be stored.
+    :param futures: A dictionary of futures representing ongoing batch
+        processing tasks.
+    :param result_file: The path to the file where filtered reactions
+        will be stored.
     :param n_filtered: The number of processed reactions.
     :return: The numbers of filtered and correct reactions.
     """
@@ -873,15 +892,15 @@ def filter_reactions_from_file(
     """Processes reaction data, applying reaction filters based on the provided
     configuration, and writes the results to specified files.
 
-    :param config: ReactionCheckConfig object containing all filtration configuration
-        settings.
+    :param config: ReactionCheckConfig object containing all filtration
+        configuration settings.
     :param input_reaction_data_path: Path to the reaction data file.
-    :param filtered_reaction_data_path: Name for the file that will contain filtered
-        reactions.
+    :param filtered_reaction_data_path: Name for the file that will
+        contain filtered reactions.
     :param num_cpus: Number of CPUs to use for processing.
     :param batch_size: Size of the batch for processing reactions.
-    :return: None. The function writes the processed reactions to specified RDF/smi
-        files.
+    :return: None. The function writes the processed reactions to
+        specified RDF/smi files.
     """
 
     filters = config.create_filters()

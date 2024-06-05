@@ -1,5 +1,5 @@
-"""Module containing additional functions needed in different reaction data processing
-protocols."""
+"""Module containing additional functions needed in different reaction data
+processing protocols."""
 
 import logging
 from typing import Iterable
@@ -15,8 +15,10 @@ from SynTool.utils.files import MoleculeReader, MoleculeWriter
 def query_to_mol(query: QueryContainer) -> MoleculeContainer:
     """Converts a QueryContainer object into a MoleculeContainer object.
 
-    :param query: A QueryContainer object representing the query structure.
-    :return: A MoleculeContainer object that replicates the structure of the query.
+    :param query: A QueryContainer object representing the query
+        structure.
+    :return: A MoleculeContainer object that replicates the structure of
+        the query.
     """
     new_mol = MoleculeContainer()
     for n, atom in query.atoms():
@@ -32,10 +34,10 @@ def reaction_query_to_reaction(reaction_rule: ReactionContainer) -> ReactionCont
     """Converts a ReactionContainer object with query structures into a
     ReactionContainer with molecular structures.
 
-    :param reaction_rule: A ReactionContainer object where reactants and products are
-        QueryContainer objects.
-    :return: A new ReactionContainer object where reactants and products are
-        MoleculeContainer objects.
+    :param reaction_rule: A ReactionContainer object where reactants and
+        products are QueryContainer objects.
+    :return: A new ReactionContainer object where reactants and products
+        are MoleculeContainer objects.
     """
     reactants = [query_to_mol(q) for q in reaction_rule.reactants]
     products = [query_to_mol(q) for q in reaction_rule.products]
@@ -48,14 +50,14 @@ def reaction_query_to_reaction(reaction_rule: ReactionContainer) -> ReactionCont
 
 
 def unite_molecules(molecules: Iterable[MoleculeContainer]) -> MoleculeContainer:
-    """Unites a list of MoleculeContainer objects into a single MoleculeContainer. This
-    function takes multiple molecules and combines them into one larger molecule. The
-    first molecule in the list is taken as the base, and subsequent molecules are united
-    with it sequentially.
+    """Unites a list of MoleculeContainer objects into a single
+    MoleculeContainer. This function takes multiple molecules and combines them
+    into one larger molecule. The first molecule in the list is taken as the
+    base, and subsequent molecules are united with it sequentially.
 
     :param molecules: A list of MoleculeContainer objects to be united.
-    :return: A single MoleculeContainer object representing the union of all input
-        molecules.
+    :return: A single MoleculeContainer object representing the union of
+        all input molecules.
     """
     new_mol = MoleculeContainer()
     for mol in molecules:
@@ -65,11 +67,12 @@ def unite_molecules(molecules: Iterable[MoleculeContainer]) -> MoleculeContainer
 
 def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
     """Attempts to canonicalize a molecule, handling any exceptions. If the
-    canonicalization process fails due to an InvalidAromaticRing exception, it safely
-    returns the original molecule.
+    canonicalization process fails due to an InvalidAromaticRing exception, it
+    safely returns the original molecule.
 
     :param molecule: The given molecule to be canonicalized.
-    :return: The canonicalized molecule if successful, otherwise the original molecule.
+    :return: The canonicalized molecule if successful, otherwise the
+        original molecule.
     """
     molecule._atoms = dict(sorted(molecule._atoms.items()))
 
@@ -84,9 +87,10 @@ def safe_canonicalization(molecule: MoleculeContainer) -> MoleculeContainer:
 def canonicalize_building_blocks(input_file: str, output_file: str) -> str:
     """Canonicalizes custom building blocks.
 
-    :param input_file: The path to the file that stores the original building blocks.
-    :param output_file: The path to the file that will store the canonicalized building
-        blocks.
+    :param input_file: The path to the file that stores the original
+        building blocks.
+    :param output_file: The path to the file that will store the
+        canonicalized building blocks.
     :return: The path to the file with canonicalized building blocks.
     """
     if input_file == output_file:
@@ -140,7 +144,8 @@ def hash_from_reaction_rule(reaction_rule: ReactionContainer) -> hash:
 def reverse_reaction(
     reaction: ReactionContainer,
 ) -> ReactionContainer:  # TODO move it to standardization ?
-    """Reverses the given reaction. # TODO used only in extraction. Move to extraction ?
+    """Reverses the given reaction. # TODO used only in extraction. Move to
+    extraction ?
 
     :param reaction: The reaction to be reversed.
     :return: The reversed reaction.

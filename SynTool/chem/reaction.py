@@ -1,5 +1,5 @@
-"""Module containing classes and functions for manipulating reactions and reaction
-rules."""
+"""Module containing classes and functions for manipulating reactions and
+reaction rules."""
 
 from typing import Any, Iterator, List, Optional
 
@@ -18,12 +18,12 @@ class Reaction(ReactionContainer):
 def add_small_mols(
     big_mol: MoleculeContainer, small_molecules: Optional[Any] = None
 ) -> List[MoleculeContainer]:
-    """Takes a molecule and returns a list of modified molecules where each small
-    molecule has been added to the big molecule.
+    """Takes a molecule and returns a list of modified molecules where each
+    small molecule has been added to the big molecule.
 
     :param big_mol: A molecule.
-    :param small_molecules: A list of small molecules that need to be added to the
-        molecule.
+    :param small_molecules: A list of small molecules that need to be
+        added to the molecule.
     :return: Returns a list of molecules.
     """
     if small_molecules:
@@ -59,11 +59,13 @@ def apply_reaction_rule(
     :param molecule: A molecule to which reaction rule will be applied.
     :param reaction_rule: A reaction rule to be applied.
     :param sort_reactions:
-    :param top_reactions_num: The maximum amount of reactions after the application of
-        reaction rule.
+    :param top_reactions_num: The maximum amount of reactions after the
+        application of reaction rule.
     :param validate_products: If True, validates the final products.
-    :param rebuild_with_cgr: If True, the products are extracted from CGR decomposition.
-    :return: An iterator yielding the products of reaction rule application.
+    :param rebuild_with_cgr: If True, the products are extracted from
+        CGR decomposition.
+    :return: An iterator yielding the products of reaction rule
+        application.
     """
 
     reactants = add_small_mols(molecule, small_molecules=False)

@@ -1,8 +1,8 @@
-"""Module for the preparation and training of a policy network used in the expansion of
-nodes in tree search.
+"""Module for the preparation and training of a policy network used in the
+expansion of nodes in tree search.
 
-This module includes functions for creating training datasets and running the training
-process for the policy network.
+This module includes functions for creating training datasets and
+running the training process for the policy network.
 """
 
 import warnings
@@ -17,7 +17,7 @@ from SynTool.ml.networks.policy import PolicyNetwork
 from SynTool.ml.training.preprocessing import (FilteringPolicyDataset,
                                                RankingPolicyDataset)
 from SynTool.utils.config import PolicyNetworkConfig
-from SynTool.utils.logging import DisableLogger
+from SynTool.utils.logging import DisableLogger, HiddenPrints
 
 warnings.filterwarnings("ignore")
 
@@ -43,7 +43,7 @@ def create_policy_dataset(
 
     :return: A `LightningDataset` object containing training and validation datasets.
     """
-    with DisableLogger():
+    with DisableLogger(), HiddenPrints():
         if dataset_type == "filtering":
             full_dataset = FilteringPolicyDataset(
                 reaction_rules_path=reaction_rules_path,
@@ -86,7 +86,8 @@ def run_policy_training(
     results_path: str,
     accelerator: str = "gpu",
 ) -> None:
-    """Trains a policy network using a given datamodule and training configuration.
+    """Trains a policy network using a given datamodule and training
+    configuration.
 
     :param datamodule: A PyTorch Lightning `DataModule` class instance. It is responsible for
      loading, processing, and preparing the training data for the model.
@@ -120,7 +121,7 @@ def run_policy_training(
             enable_checkpointing=False,
             logger=False,
             gradient_clip_val=1.0,
-            enable_progress_bar=True,
+            enable_progress_bar=False,
         )
 
         trainer.fit(network, datamodule)

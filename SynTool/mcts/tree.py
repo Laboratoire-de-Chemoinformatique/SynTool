@@ -1,4 +1,5 @@
-"""Module containing a class Tree that used for tree search of retrosynthetic paths."""
+"""Module containing a class Tree that used for tree search of retrosynthetic
+paths."""
 
 from collections import defaultdict, deque
 from math import sqrt
@@ -30,16 +31,17 @@ class Tree:
         expansion_function: PolicyNetworkFunction,
         evaluation_function: ValueNetworkFunction = None,
     ):
-        """Initializes a tree object with optional parameters for tree search for target
-        molecule.
+        """Initializes a tree object with optional parameters for tree search
+        for target molecule.
 
-        :param target: A target molecule for retrosynthesis routes search.
+        :param target: A target molecule for retrosynthesis routes
+            search.
         :param config: A tree configuration.
         :param reaction_rules: A loaded reaction rules.
         :param building_blocks: A loaded building blocks.
         :param expansion_function: A loaded policy function.
-        :param evaluation_function: A loaded value function. If None, the rollout is
-            used as a default for node evaluation.
+        :param evaluation_function: A loaded value function. If None,
+            the rollout is used as a default for node evaluation.
         """
 
         # config parameters
@@ -115,15 +117,17 @@ class Tree:
         return self
 
     def __repr__(self) -> str:
-        """Returns a string representation of the tree (target SMILES, tree size, and
-        the number of found paths)."""
+        """Returns a string representation of the tree (target SMILES, tree
+        size, and the number of found paths)."""
         return self.report()
 
     def __next__(self) -> [bool, List[int]]:
-        """The __next__ method is used to do one iteration of the tree building.
+        """The __next__ method is used to do one iteration of the tree
+        building.
 
-        :return: Returns True if the route was found and the node id of the last node in
-            the route. Otherwise, returns False and the id of the last visited node.
+        :return: Returns True if the route was found and the node id of
+            the last node in the route. Otherwise, returns False and the
+            id of the last visited node.
         """
 
         if self.nodes[1].curr_retron.is_building_block(
@@ -217,7 +221,8 @@ class Tree:
         return False, [node_id]
 
     def _ucb(self, node_id: int) -> float:
-        """Calculates the Upper Confidence Bound (UCB) statistics for a given node.
+        """Calculates the Upper Confidence Bound (UCB) statistics for a given
+        node.
 
         :param node_id: The id of the node.
         :return: The calculated UCB.
@@ -246,8 +251,8 @@ class Tree:
         return ucb_value
 
     def _select_node(self, node_id: int) -> int:
-        """Selects a node based on its UCB value and returns the id of the node with the
-        highest UCB.
+        """Selects a node based on its UCB value and returns the id of the node
+        with the highest UCB.
 
         :param node_id: The id of the node.
         :return: The id of the node with the highest UCB.
@@ -270,7 +275,8 @@ class Tree:
         return best_children[0]
 
     def _expand_node(self, node_id: int) -> None:
-        """Expands the node by generating new retrons with policy (expansion) function.
+        """Expands the node by generating new retrons with policy (expansion)
+        function.
 
         :param node_id: The id the node to be expanded.
         :return: None.
@@ -324,13 +330,14 @@ class Tree:
         policy_prob: float = None,
         rule_id: int = None,
     ) -> None:
-        """Adds a new node to the tree with probability of reaction rules predicted by
-        policy function and applied to the parent node of the new node.
+        """Adds a new node to the tree with probability of reaction rules
+        predicted by policy function and applied to the parent node of the new
+        node.
 
         :param node_id: The id of the parent node.
         :param new_node: The new node to be added.
-        :param policy_prob: The probability of reaction rules predicted by policy
-            function for thr parent node.
+        :param policy_prob: The probability of reaction rules predicted
+            by policy function for thr parent node.
         :return: None.
         """
 
@@ -355,8 +362,8 @@ class Tree:
         self.nodes_total_value[new_node_id] = node_value
 
     def _get_node_value(self, node_id: int) -> float:
-        """Calculates the value for the given node (for example with rollout or value
-        network).
+        """Calculates the value for the given node (for example with rollout or
+        value network).
 
         :param node_id: The id of the node to be evaluated.
         :return: The estimated value of the node.
@@ -365,7 +372,7 @@ class Tree:
         node = self.nodes[node_id]
 
         if self.config.evaluation_type == "random":
-            node_value = uniform()
+            node_value = uniform(0, 1)
 
         elif self.config.evaluation_type == "rollout":
             node_value = min(
@@ -395,7 +402,8 @@ class Tree:
     def _backpropagate(self, node_id: int, value: float) -> None:
         """Backpropagates the value through the tree from the current.
 
-        :param node_id: The id of the node from which to backpropagate the value.
+        :param node_id: The id of the node from which to backpropagate
+            the value.
         :param value: The value to backpropagate.
         :return: None.
         """
@@ -409,20 +417,22 @@ class Tree:
             node_id = self.parents[node_id]
 
     def _rollout_node(self, retron: Retron, current_depth: int = None) -> float:
-        """Performs a rollout simulation from a given node in the tree. Given the
-        current retron, find the first successful reaction and return the new retrons.
+        """Performs a rollout simulation from a given node in the tree. Given
+        the current retron, find the first successful reaction and return the
+        new retrons.
 
-        If the retron is a building_block, return 1.0, else check the first successful
-        reaction.
+        If the retron is a building_block, return 1.0, else check the
+        first successful reaction.
 
         If the reaction is not successful, return -1.0.
 
-        If the reaction is successful, but the generated retrons are not the
-        building_blocks and the retrons cannot be generated without exceeding
-        current_depth threshold, return -0.5.
+        If the reaction is successful, but the generated retrons are not
+        the building_blocks and the retrons cannot be generated without
+        exceeding current_depth threshold, return -0.5.
 
-        If the reaction is successful, but the retrons are not the building_blocks and
-        the retrons cannot be generated, return -1.0.
+        If the reaction is successful, but the retrons are not the
+        building_blocks and the retrons cannot be generated, return
+        -1.0.
 
         :param retron: The retron to be evaluated.
         :param current_depth: The current depth of the tree.
@@ -504,16 +514,17 @@ class Tree:
 
         return (
             f"Tree for: {str(self.nodes[1].retrons_to_expand[0])}\n"
+            f"Time: {round(self.curr_time, 1)} seconds\n"
             f"Number of nodes: {len(self)}\n"
-            f"Number of visited nodes: {len(self.visited_nodes)}\n"
-            f"Number of found routes: {len(self.winning_nodes)}\n"
             f"Number of iterations: {self.curr_iteration}\n"
-            f"Time: {round(self.curr_time, 1)} seconds"
+            f"Number of visited nodes: {len(self.visited_nodes)}\n"
+            f"Number of found routes: {len(self.winning_nodes)}"
         )
 
     def route_score(self, node_id: int) -> float:
-        """Calculates the score of a given route from the current node to the root node.
-        The score depends on cumulated node values nad the route length.
+        """Calculates the score of a given route from the current node to the
+        root node. The score depends on cumulated node values nad the route
+        length.
 
         :param node_id: The id of the current given node.
         :return: The route score.
@@ -529,8 +540,8 @@ class Tree:
         return cumulated_nodes_value / (route_length**2)
 
     def route_to_node(self, node_id: int) -> List[Node,]:
-        """Returns the route (list of id of nodes) to from the node current node to the
-        root node.
+        """Returns the route (list of id of nodes) to from the node current
+        node to the root node.
 
         :param node_id: The id of the current node.
         :return: The list of nodes.
@@ -547,7 +558,8 @@ class Tree:
         retrosynthesis route from the current node.
 
         :param node_id: The id of the current node.
-        :return: The tuple of extracted reactions representing the synthesis route.
+        :return: The tuple of extracted reactions representing the
+            synthesis route.
         """
 
         nodes = self.route_to_node(node_id)
@@ -575,10 +587,12 @@ class Tree:
         visited_nodes = set()
 
         def newick_render_node(current_node_id: int) -> str:
-            """Recursively generates a Newick string representation of the tree.
+            """Recursively generates a Newick string representation of the
+            tree.
 
             :param current_node_id: The id of the current node.
-            :return: A string representation of a node in a Newick format.
+            :return: A string representation of a node in a Newick
+                  format.
             """
             assert (
                 current_node_id not in visited_nodes

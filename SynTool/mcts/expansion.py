@@ -1,5 +1,5 @@
-"""Module containing a class that represents a policy function for node expansion in the
-tree search."""
+"""Module containing a class that represents a policy function for node
+expansion in the tree search."""
 
 from typing import Iterator, List, Tuple, Union
 
@@ -14,16 +14,18 @@ from SynTool.utils.config import PolicyNetworkConfig
 
 
 class PolicyNetworkFunction:
-    """Policy function implemented as a policy neural network for node expansion in tree
-    search."""
+    """Policy function implemented as a policy neural network for node
+    expansion in tree search."""
 
     def __init__(
         self, policy_config: PolicyNetworkConfig, compile: bool = False
     ) -> None:
-        """Initializes the expansion function (ranking or filter policy network).
+        """Initializes the expansion function (ranking or filter policy
+        network).
 
         :param policy_config: An expansion policy configuration.
-        :param compile: Is supposed to speed up the training with model compilation.
+        :param compile: Is supposed to speed up the training with model
+            compilation.
         """
 
         self.config = policy_config
@@ -44,13 +46,15 @@ class PolicyNetworkFunction:
     def predict_reaction_rules(
         self, retron: Retron, reaction_rules: List[Reactor]
     ) -> Iterator[Union[Iterator, Iterator[Tuple[float, Reactor, int]]]]:
-        """The policy function predicts the list of reaction rules for a given retron.
+        """The policy function predicts the list of reaction rules for a given
+        retron.
 
-        :param retron: The current retron for which the reaction rules are predicted.
-        :param reaction_rules: The list of reaction rules from which applicable reaction
-            rules are predicted and selected.
-        :return: Yielding the predicted probability for the reaction rule, reaction rule
-            and reaction rule id.
+        :param retron: The current retron for which the reaction rules
+            are predicted.
+        :param reaction_rules: The list of reaction rules from which
+            applicable reaction rules are predicted and selected.
+        :return: Yielding the predicted probability for the reaction
+            rule, reaction rule and reaction rule id.
         """
 
         pyg_graph = mol_to_pyg(retron.molecule, canonicalize=False)

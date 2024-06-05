@@ -7,8 +7,8 @@ rules = []
 
 
 def prepare():
-    """Creates and returns three query containers and appends a reaction container to
-    the "rules" list."""
+    """Creates and returns three query containers and appends a reaction
+    container to the "rules" list."""
     q_ = QueryContainer()
     p1_ = QueryContainer()
     p2_ = QueryContainer()

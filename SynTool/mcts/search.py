@@ -18,7 +18,8 @@ from SynTool.utils.visualisation import extract_routes, generate_results_html
 
 
 def extract_tree_stats(tree, target):
-    """Collects various statistics from a tree and returns them in a dictionary format.
+    """Collects various statistics from a tree and returns them in a dictionary
+    format.
 
     :param tree: The built search tree.
     :param target: The target molecule associated with the tree.
@@ -61,19 +62,23 @@ def run_search(
     value_network_path: str = None,
     results_root: str = "search_results",
 ) -> None:
-    """Performs a tree search on a set of target molecules using specified configuration
-    and reaction rules, logging the results and statistics.
+    """Performs a tree search on a set of target molecules using specified
+    configuration and reaction rules, logging the results and statistics.
 
-    :param targets_path: The path to the file containing the target molecules (in SDF or
-        SMILES format).
-    :param search_config: The config object containing the configuration for the tree
-        search.
-    :param policy_config: The config object containing the configuration for the policy.
-    :param reaction_rules_path: The path to the file containing reaction rules.
-    :param building_blocks_path: The path to the file containing building blocks.
-    :param value_network_path: The path to the file containing value weights (optional).
-    :param results_root: The name of the folder where the results of the tree search
-        will be saved.
+    :param targets_path: The path to the file containing the target
+        molecules (in SDF or SMILES format).
+    :param search_config: The config object containing the configuration
+        for the tree search.
+    :param policy_config: The config object containing the configuration
+        for the policy.
+    :param reaction_rules_path: The path to the file containing reaction
+        rules.
+    :param building_blocks_path: The path to the file containing
+        building blocks.
+    :param value_network_path: The path to the file containing value
+        weights (optional).
+    :param results_root: The name of the folder where the results of the
+        tree search will be saved.
     :return: None.
     """
 

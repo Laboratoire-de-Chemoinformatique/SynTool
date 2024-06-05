@@ -1,3 +1,5 @@
+.. _index:
+
 SynTool
 ========
 SynTool is a tool for reaction data curation, reaction rules extraction, retrosynthetic models training,
@@ -85,3 +87,5 @@ See the details in :ref:`retrosynthesis_planning`.
     policy_network
     value_network
     retrosynthesis_planning
+    applications
+    contribution

@@ -33,8 +33,8 @@ def syntool():
 
 @syntool.command(name="download_planning_data")
 def download_planning_data_cli() -> None:
-    """Downloads data for retrosythesis planning (reaction/molecule data and trained
-    neural networks)."""
+    """Downloads data for retrosythesis planning (reaction/molecule data and
+    trained neural networks)."""
     remote_id = "1nz8S66putDFQrFyTBkAbNKHjY0LZxqVU"
     data_archive = os.path.join("syntool_planning_data.zip")
     #

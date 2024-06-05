@@ -15,8 +15,8 @@ class ValueNetworkFunction:
     (synthesisability prediction) in tree search."""
 
     def __init__(self, weights_path: str) -> None:
-        """The value function predicts the probability to synthesize the target molecule
-        with available building blocks starting from a given retron.
+        """The value function predicts the probability to synthesize the target
+        molecule with available building blocks starting from a given retron.
 
         :param weights_path: The value network weights file path.
         """
@@ -27,11 +27,12 @@ class ValueNetworkFunction:
         self.value_network = value_net.eval()
 
     def predict_value(self, retrons: List[Retron,]) -> float:
-        """Predicts a value based on the given retrons from the node. For prediction,
-        retrons must be composed into a single molecule (product).
+        """Predicts a value based on the given retrons from the node. For
+        prediction, retrons must be composed into a single molecule (product).
 
         :param retrons: The list of retrons.
-        :return: The predicted float value ("synthesisability") of the node.
+        :return: The predicted float value ("synthesisability") of the
+            node.
         """
 
         molecule = compose_retrons(retrons=retrons, exclude_small=True)

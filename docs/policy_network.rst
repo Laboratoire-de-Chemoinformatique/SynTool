@@ -25,7 +25,8 @@ to the successfully applied reaction rules. The prediction part of the filtering
 with a sigmoid function that assigns the probabilities for the “regular”, as well as “priority” reac-tion rules
 (cyclization reaction rules). These two vectors are then combined with a coefficient α ranging from 0 to 1.
 This approach ensures that the priority reaction rules receive the highest score, followed by other regular reaction rules.
-The filtering policy network requires much more computational resources for the generating of the training dataset than
+
+**Conclusion**. The filtering policy network requires much more computational resources for the generating of the training dataset than
 the ranking policy but can be used with any set of reaction rules because the original reaction dataset is not needed.
 This allows for the portability of reaction rules extracted with another software from any source of reaction data.
 

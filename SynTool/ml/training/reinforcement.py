@@ -1,9 +1,9 @@
-"""Module containing functions for running value network tuning with self-tuning
-approach."""
+"""Module containing functions for running value network tuning with self-
+tuning approach."""
 
 import os
+import random
 from collections import defaultdict
-from multiprocessing import Pool
 from pathlib import Path
 from random import shuffle
 from typing import Dict, List
@@ -11,7 +11,6 @@ from typing import Dict, List
 import torch
 from CGRtools.containers import MoleculeContainer
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor
 from torch.utils.data import random_split
 from torch_geometric.data.lightning import LightningDataset
 
@@ -56,7 +55,8 @@ def create_value_network(value_config: ValueNetworkConfig) -> ValueNetwork:
 def create_targets_batch(
     targets: List[MoleculeContainer], batch_size: int
 ) -> List[List[MoleculeContainer]]:
-    """Creates the targets batches for planning simulations and value network tuning.
+    """Creates the targets batches for planning simulations and value network
+    tuning.
 
     :param targets: The list of target molecules.
     :param batch_size: The size of each target batch.
@@ -101,8 +101,10 @@ def run_tree_search(
     :param tree_config: The planning configuration of tree search.
     :param policy_config: The policy network configuration.
     :param value_config: The value network configuration.
-    :param reaction_rules_path: The path to the file with reaction rules.
-    :param building_blocks_path: The path to the file with building blocks.
+    :param reaction_rules_path: The path to the file with reaction
+        rules.
+    :param building_blocks_path: The path to the file with building
+        blocks.
     :return: The built search tree for the given molecule.
     """
 
@@ -135,9 +137,9 @@ def run_tree_search(
 
 
 def extract_tree_retrons(tree_list: List[Tree]) -> Dict[str, float]:
-    """Takes the built tree and extracts the retrons for value network tuning. The
-    retrons from found retrosynthetic routes are labeled as a positive class and retrons
-    from not solved routes are labeled as a negative class.
+    """Takes the built tree and extracts the retrons for value network tuning.
+    The retrons from found retrosynthetic routes are labeled as a positive
+    class and retrons from not solved routes are labeled as a negative class.
 
     :param tree_list: The list of built search trees.
 
@@ -165,18 +167,31 @@ def extract_tree_retrons(tree_list: List[Tree]) -> Dict[str, float]:
     return extracted_retrons
 
 
+def balance_extracted_retrons(extracted_retrons):
+    extracted_retrons_balanced = {}
+    neg_list = [i for i, j in extracted_retrons.items() if j == 0]
+    for k, v in extracted_retrons.items():
+        if v == 1:
+            extracted_retrons_balanced[k] = v
+        if len(extracted_retrons_balanced) < len(neg_list):
+            neg_list.pop(random.choice(range(len(neg_list))))
+    return extracted_retrons_balanced
+
+
 def create_tuning_set(
     extracted_retrons: Dict[str, float], batch_size: int = 1
 ) -> LightningDataset:
-    """Creates the value network tuning dataset from retrons extracted from the planning
-    simulation.
+    """Creates the value network tuning dataset from retrons extracted from the
+    planning simulation.
 
-    :param extracted_retrons: The dictionary with the extracted retrons and their
-        labels.
+    :param extracted_retrons: The dictionary with the extracted retrons
+        and their labels.
     :param batch_size: The size of the batch in value network tuning.
-    :return: A LightningDataset object, which contains the tuning set for value network
-        tuning.
+    :return: A LightningDataset object, which contains the tuning set
+        for value network tuning.
     """
+
+    extracted_retrons = balance_extracted_retrons(extracted_retrons)
 
     full_dataset = ValueNetworkDataset(extracted_retrons)
     train_size = int(0.6 * len(full_dataset))
@@ -197,8 +212,8 @@ def create_tuning_set(
 def tune_value_network(
     datamodule: LightningDataset, value_config: ValueNetworkConfig
 ) -> None:
-    """Trains the value network using a given tuning data and saves the trained neural
-    network.
+    """Trains the value network using a given tuning data and saves the trained
+    neural network.
 
     :param datamodule: The tuning dataset (LightningDataset).
     :param value_config: The value network configuration.
@@ -206,34 +221,36 @@ def tune_value_network(
     """
 
     current_weights = value_config.weights_path
-    value_network = load_value_net(ValueNetworkFunction, current_weights)
+    value_network = load_value_net(ValueNetwork, current_weights)
 
-    lr_monitor = LearningRateMonitor(logging_interval="epoch")
+    with DisableLogger(), HiddenPrints():
+        trainer = Trainer(
+            accelerator="gpu",
+            devices=[0],
+            max_epochs=value_config.num_epoch,
+            enable_checkpointing=False,
+            logger=False,
+            gradient_clip_val=1.0,
+            enable_progress_bar=False,
+        )
 
-    # with DisableLogger() as DL, HiddenPrints() as HP:
-    #     trainer = Trainer(accelerator="gpu",
-    #                       devices=[0],
-    #                       max_epochs=value_config.num_epoch,
-    #                       callbacks=[lr_monitor],
-    #                       gradient_clip_val=1.0,
-    #                       enable_progress_bar=False)
+        trainer.fit(value_network, datamodule)
+        val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
+        trainer.save_checkpoint(current_weights)
+
+    # trainer = Trainer(
+    #     accelerator="gpu",
+    #     devices=[0],
+    #     max_epochs=value_config.num_epoch,
+    #     enable_checkpointing=False,
+    #     logger=False,
+    #     gradient_clip_val=1.0,
+    #     enable_progress_bar=True,
+    # )
     #
-    #     trainer.fit(value_network, datamodule)
-    #     val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
-    #     trainer.save_checkpoint(current_weights)
-
-    trainer = Trainer(
-        accelerator="gpu",
-        devices=[0],
-        max_epochs=value_config.num_epoch,
-        callbacks=[lr_monitor],
-        gradient_clip_val=1.0,
-        enable_progress_bar=True,
-    )
-
-    trainer.fit(value_network, datamodule)
-    val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
-    trainer.save_checkpoint(current_weights)
+    # trainer.fit(value_network, datamodule)
+    # val_score = trainer.validate(value_network, datamodule.val_dataloader())[0]
+    # trainer.save_checkpoint(current_weights)
 
     #
     print(f"Value network balanced accuracy: {val_score['val_balanced_accuracy']}")
@@ -244,7 +261,8 @@ def run_training(
 ) -> None:
     """Runs the training stage in reinforcement value network tuning.
 
-    :param extracted_retrons: The retrons extracted from the planing simulations.
+    :param extracted_retrons: The retrons extracted from the planing
+        simulations.
     :param value_config: The value network configuration.
     :return: None.
     """
@@ -258,44 +276,94 @@ def run_training(
     tune_value_network(datamodule=training_set, value_config=value_config)
 
 
+#
+# def run_planning(
+#     targets_batch: List[MoleculeContainer],
+#     tree_config: TreeConfig,
+#     policy_config: PolicyNetworkConfig,
+#     value_config: ValueNetworkConfig,
+#     reaction_rules_path: str,
+#     building_blocks_path: str,
+#     targets_batch_id: int,
+# ) -> List[Tree]:
+#     """Performs the planning stage for the batch of target molecules.
+#
+#     :param targets_batch: The batch of target molecules for planning simulation.
+#     :param tree_config: The search tree configuration.
+#     :param policy_config: The policy network configuration.
+#     :param value_config: The value network configuration.
+#     :param reaction_rules_path: The path to the file with reaction rules.
+#     :param building_blocks_path: The path to the file with building blocks.
+#     :param targets_batch_id: The id of the batch of target molecules.
+#     :return: The list of built trees for the given batch of target molecules.
+#     """
+#
+#     search_batch = [
+#         (
+#             target,
+#             tree_config,
+#             policy_config,
+#             value_config,
+#             reaction_rules_path,
+#             building_blocks_path,
+#         )
+#         for target in targets_batch
+#     ]
+#
+#     print(f"\nProcess batch number {targets_batch_id}")
+#     with Pool(2) as pool:
+#         tree_list = pool.starmap(run_tree_search, search_batch)
+#
+#     num_solved = sum(len(i.winning_nodes) > 0 for i in tree_list)
+#     print(f"Planning is finished with {num_solved} solved targets")
+#
+#     return tree_list
+
+
 def run_planning(
-    targets_batch: list[MoleculeContainer],
+    targets_batch: List[MoleculeContainer],
     tree_config: TreeConfig,
     policy_config: PolicyNetworkConfig,
     value_config: ValueNetworkConfig,
     reaction_rules_path: str,
     building_blocks_path: str,
     targets_batch_id: int,
-) -> List[Tree]:
-    """Performs the planning stage for the batch of target molecules.
+):
+    """Performs planning stage (tree search) for target molecules and save
+    extracted from built trees retrons for further tuning the value network in
+    the training stage.
 
-    :param targets_batch: The batch of target molecules for planning simulation.
-    :param tree_config: The search tree configuration.
-    :param policy_config: The policy network configuration.
-    :param value_config: The value network configuration.
-    :param reaction_rules_path: The path to the file with reaction rules.
-    :param building_blocks_path: The path to the file with building blocks.
-    :param targets_batch_id: The id of the batch of target molecules.
-    :return: The list of built trees for the given batch of target molecules.
+    :param targets_batch:
+    :param tree_config:
+    :param policy_config:
+    :param value_config:
+    :param reaction_rules_path:
+    :param building_blocks_path:
+    :param targets_batch_id:
     """
-
-    search_batch = [
-        (
-            target,
-            tree_config,
-            policy_config,
-            value_config,
-            reaction_rules_path,
-            building_blocks_path,
-        )
-        for target in targets_batch
-    ]
+    from tqdm import tqdm
 
     print(f"\nProcess batch number {targets_batch_id}")
-    with Pool(2) as pool:
-        tree_list = pool.starmap(run_tree_search, search_batch)
+    tree_list = []
+    tree_config.silent = False
+    for target in tqdm(targets_batch):
 
-    num_solved = sum(len(i.winning_nodes) > 0 for i in tree_list)
+        try:
+            tree = run_tree_search(
+                target=target,
+                tree_config=tree_config,
+                policy_config=policy_config,
+                value_config=value_config,
+                reaction_rules_path=reaction_rules_path,
+                building_blocks_path=building_blocks_path,
+            )
+            tree_list.append(tree)
+
+        except Exception as e:
+            print(e)
+            continue
+
+    num_solved = sum([len(i.winning_nodes) > 0 for i in tree_list])
     print(f"Planning is finished with {num_solved} solved targets")
 
     return tree_list
@@ -318,10 +386,12 @@ def run_reinforcement_tuning(
     :param policy_config: The policy network configuration.
     :param value_config: The value network configuration.
     :param reinforce_config: The reinforcement tuning configuration.
-    :param reaction_rules_path: The path to the file with reaction rules.
-    :param building_blocks_path: The path to the file with building blocks.
-    :param results_root: The path to the directory where trained value network will be
-        saved.
+    :param reaction_rules_path: The path to the file with reaction
+        rules.
+    :param building_blocks_path: The path to the file with building
+        blocks.
+    :param results_root: The path to the directory where trained value
+        network will be saved.
     :return: None.
     """
 

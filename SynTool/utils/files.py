@@ -60,8 +60,8 @@ class Reader(FileHandler):
 
 class SMILESRead:
     def __init__(self, filename: str, **kwargs):
-        """Simplified class to read files containing a SMILES (Molecules or Reaction)
-        string per line.
+        """Simplified class to read files containing a SMILES (Molecules or
+        Reaction) string per line.
 
         :param filename: The path and name of the SMILES file to parse.
         :return: None.
@@ -209,7 +209,8 @@ class MoleculeWriter(Writer):
 
 
 def to_reaction_smiles_record(reaction: ReactionContainer) -> str:
-    """Converts the reaction to the SMILES record. Needed for reaction/molecule writers.
+    """Converts the reaction to the SMILES record. Needed for reaction/molecule
+    writers.
 
     :param reaction: The reaction to be written.
     :return: The SMILES record to be written.

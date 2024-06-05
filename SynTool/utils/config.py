@@ -52,30 +52,41 @@ class ConfigABC(ABC):
 class RuleExtractionConfig(ConfigABC):
     """Configuration class for extracting reaction rules.
 
-    :ivar multicenter_rules: If True, extracts a single rule encompassing all centers.
-    If False, extracts separate reaction rules for each reaction center in a multicenter
-    reaction. :ivar as_query_container: If True, the extracted rules are generated as
-    QueryContainer objects,                           analogous to SMARTS objects for
-    pattern matching in chemical structures. :ivar reverse_rule: If True, reverses the
-    direction of the reaction for rule extraction. :ivar reactor_validation: If True,
-    validates each generated rule in a chemical reactor to ensure correct
-    generation of products from reactants. :ivar include_func_groups: If True, includes
-    specific functional groups in the reaction rule in addition
-    to the reaction center and its environment. :ivar func_groups_list: A list of
-    functional groups to be considered when include_func_groups is True. :ivar
-    include_rings: If True, includes ring structures in the reaction rules. :ivar
-    keep_leaving_groups: If True, retains leaving groups in the extracted reaction rule.
-    :ivar keep_incoming_groups: If True, retains incoming groups in the extracted
-    reaction rule. :ivar keep_reagents: If True, includes reagents in the extracted
-    reaction rule. :ivar environment_atom_count: Defines the size of the environment
-    around the reaction center to be included                               in the rule
-    (0 for only the reaction center, 1 for the first environment, etc.). :ivar
-    min_popularity: Minimum number of times a rule must be applied to be considered for
-    further analysis. :ivar keep_metadata: If True, retains metadata associated with the
-    reaction in the extracted rule. :ivar single_reactant_only: If True, includes only
-    reaction rules with a single reactant molecule. :ivar atom_info_retention: Controls
-    the amount of information about each atom to retain ('none', 'reaction_center', or
-    'all').
+    :param multicenter_rules: If True, extracts a single rule
+        encompassing all centers. If False, extracts separate reaction
+        rules for each reaction center in a multicenter reaction.
+    :param as_query_container: If True, the extracted rules are
+        generated as QueryContainer objects, analogous to SMARTS objects
+        for pattern matching in chemical structures.
+    :param reverse_rule: If True, reverses the direction of the reaction
+        for rule extraction.
+    :param reactor_validation: If True, validates each generated rule in
+        a chemical reactor to ensure correct generation of products from
+        reactants.
+    :param include_func_groups: If True, includes specific functional
+        groups in the reaction rule in addition to the reaction center
+        and its environment.
+    :param func_groups_list: A list of functional groups to be
+        considered when include_func_groups is True.
+    :param include_rings: If True, includes ring structures in the
+        reaction rules.
+    :param keep_leaving_groups: If True, retains leaving groups in the
+        extracted reaction rule.
+    :param keep_incoming_groups: If True, retains incoming groups in the
+        extracted reaction rule.
+    :param keep_reagents: If True, includes reagents in the extracted
+        reaction rule.
+    :param environment_atom_count: Defines the size of the environment
+        around the reaction center to be included in the rule (0 for
+        only the reaction center, 1 for the first environment, etc.).
+    :param min_popularity: Minimum number of times a rule must be
+        applied to be considered for further analysis.
+    :param keep_metadata: If True, retains metadata associated with the
+        reaction in the extracted rule.
+    :param single_reactant_only: If True, includes only reaction rules
+        with a single reactant molecule.
+    :param atom_info_retention: Controls the amount of information about
+        each atom to retain ('none', 'reaction_center', or 'all').
     """
 
     multicenter_rules: bool = True
@@ -223,11 +234,15 @@ class RuleExtractionConfig(ConfigABC):
 class PolicyNetworkConfig(ConfigABC):
     """Configuration class for the policy network.
 
-    :ivar vector_dim: Dimension of the input vectors. :ivar batch_size: Number of
-    samples per batch. :ivar dropout: Dropout rate for regularization. :ivar
-    learning_rate: Learning rate for the optimizer. :ivar num_conv_layers: Number of
-    convolutional layers in the network. :ivar num_epoch: Number of training epochs.
-    :ivar policy_type: Mode of operation, either 'filtering' or 'ranking'.
+    :param vector_dim: Dimension of the input vectors.
+    :param batch_size: Number of samples per batch.
+    :param dropout: Dropout rate for regularization.
+    :param learning_rate: Learning rate for the optimizer.
+    :param num_conv_layers: Number of convolutional layers in the
+        network.
+    :param num_epoch: Number of training epochs.
+    :param policy_type: Mode of operation, either 'filtering' or
+        'ranking'.
     """
 
     policy_type: str = "ranking"
@@ -307,34 +322,42 @@ class PolicyNetworkConfig(ConfigABC):
 class TreeConfig(ConfigABC):
     """Configuration class for the tree search algorithm.
 
-    :ivar max_iterations: The number of iterations to run the algorithm for, defaults to
-    100. :ivar max_tree_size: The maximum number of nodes in the tree, defaults to
-    10000. :ivar max_time: The time limit (in seconds) for the algorithm to run,
-    defaults to 600. :ivar max_depth: The maximum depth of the tree, defaults to 6.
-    :ivar ucb_type: Type of UCB used in the search algorithm. Options are "puct", "uct",
-    "value", defaults to "uct". :ivar c_ucb: The exploration-exploitation balance
-    coefficient used in Upper Confidence Bound (UCB), defaults to 0.1. :ivar
-    backprop_type: Type of backpropagation algorithm. Options are "muzero",
-    "cumulative", defaults to "muzero". :ivar search_strategy: The strategy used for
-    tree search. Options are "expansion_first", "evaluation_first", defaults to
-    "expansion_first". :ivar exclude_small: Whether to exclude small molecules during
-    the search, defaults to True. :ivar evaluation_agg: Method for aggregating
-    evaluation scores. Options are "max", "average", defaults to "max". :ivar
-    evaluation_type: The method used for evaluating nodes. Options are "random",
-    "rollout", "gcn", defaults to "gcn". :ivar init_node_value: Initial value for a new
-    node, defaults to 0.0. :ivar epsilon: A parameter in the epsilon-greedy search
-    strategy representing the chance of random selection of reaction rules during the
-    selection stage in Monte Carlo Tree Search, specifically during Upper Confidence
-    Bound estimation. It balances between exploration and exploitation, defaults to 0.0.
-    :ivar min_mol_size: Defines the minimum size of a molecule that is have to be
-    synthesized. Molecules with 6 or fewer heavy atoms are assumed to be building blocks
-    by definition, thus setting the threshold for considering larger molecules in the
-    search, defaults to 6. :ivar silent: Whether to suppress progress output, defaults
-    to False.
+    :param max_iterations: The number of iterations to run the algorithm
+        for.
+    :param max_tree_size: The maximum number of nodes in the tree.
+    :param max_time: The time limit (in seconds) for the algorithm to
+        run.
+    :param max_depth: The maximum depth of the tree.
+    :param ucb_type: Type of UCB used in the search algorithm. Options
+        are "puct", "uct", "value", defaults to "uct".
+    :param c_ucb: The exploration-exploitation balance coefficient used
+        in Upper Confidence Bound (UCB).
+    :param backprop_type: Type of backpropagation algorithm. Options are
+        "muzero", "cumulative", defaults to "muzero".
+    :param search_strategy: The strategy used for tree search. Options
+        are "expansion_first", "evaluation_first".
+    :param exclude_small: Whether to exclude small molecules during the
+        search.
+    :param evaluation_agg: Method for aggregating evaluation scores.
+        Options are "max", "average", defaults to "max".
+    :param evaluation_type: The method used for evaluating nodes.
+        Options are "random", "rollout", "gcn".
+    :param init_node_value: Initial value for a new node.
+    :param epsilon: A parameter in the epsilon-greedy search strategy
+        representing the chance of random selection of reaction rules
+        during the selection stage in Monte Carlo Tree Search,
+        specifically during Upper Confidence Bound estimation. It
+        balances between exploration and exploitation.
+    :param min_mol_size: Defines the minimum size of a molecule that is
+        have to be synthesized. Molecules with 6 or fewer heavy atoms
+        are assumed to be building blocks by definition, thus setting
+        the threshold for considering larger molecules in the search,
+        defaults to 6.
+    :param silent: Whether to suppress progress output.
     """
 
     max_iterations: int = 100
-    max_tree_size: int = 10000
+    max_tree_size: int = 1000000
     max_time: float = 600
     max_depth: int = 6
     ucb_type: str = "uct"
@@ -404,10 +427,13 @@ class TreeConfig(ConfigABC):
 class ValueNetworkConfig(ConfigABC):
     """Configuration class for the value network.
 
-    :ivar vector_dim: Dimension of the input vectors. :ivar batch_size: Number of
-    samples per batch. :ivar dropout: Dropout rate for regularization. :ivar
-    learning_rate: Learning rate for the optimizer. :ivar num_conv_layers: Number of
-    convolutional layers in the network. :ivar num_epoch: Number of training epochs.
+    :param vector_dim: Dimension of the input vectors.
+    :param batch_size: Number of samples per batch.
+    :param dropout: Dropout rate for regularization.
+    :param learning_rate: Learning rate for the optimizer.
+    :param num_conv_layers: Number of convolutional layers in the
+        network.
+    :param num_epoch: Number of training epochs.
     """
 
     weights_path: str = None
@@ -465,8 +491,9 @@ class ValueNetworkConfig(ConfigABC):
 class ReinforcementConfig(ConfigABC):
     """Configuration class for the reinforcement network training.
 
-    :ivar batch_size: The number of targets per batch in the planning simulation step.
-    :ivar num_simulations: The number of planning simulations.
+    :param batch_size: The number of targets per batch in the planning
+        simulation step.
+    :param num_simulations: The number of planning simulations.
     """
 
     batch_size: int = 100
@@ -489,13 +516,13 @@ class ReinforcementConfig(ConfigABC):
 
 
 def convert_config_to_dict(config_attr: ConfigABC, config_type) -> Dict | None:
-    """Converts a configuration attribute to a dictionary if it's either a dictionary or
-    an instance of a specified configuration type.
+    """Converts a configuration attribute to a dictionary if it's either a
+    dictionary or an instance of a specified configuration type.
 
     :param config_attr: The configuration attribute to be converted.
     :param config_type: The type to check against for conversion.
-    :return: The configuration attribute as a dictionary, or None if it's not an
-        instance of the given type or dict.
+    :return: The configuration attribute as a dictionary, or None if
+        it's not an instance of the given type or dict.
     """
     if isinstance(config_attr, dict):
         return config_attr

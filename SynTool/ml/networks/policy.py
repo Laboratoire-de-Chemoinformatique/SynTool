@@ -27,11 +27,12 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
         policy_type: str = "ranking",
         **kwargs
     ):
-        """Initializes a policy network with the given number of reaction rules (output
-        dimension) and vector graph embedding dimension, and creates linear layers for
-        predicting the regular and priority reaction rules.
+        """Initializes a policy network with the given number of reaction rules
+        (output dimension) and vector graph embedding dimension, and creates
+        linear layers for predicting the regular and priority reaction rules.
 
-        :param n_rules: The number of reaction rules in the policy network.
+        :param n_rules: The number of reaction rules in the policy
+            network.
         :param vector_dim: The dimensionality of the input vectors.
         """
         super().__init__(vector_dim, *args, **kwargs)
@@ -44,12 +45,13 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
             self.priority_predictor = Linear(vector_dim, n_rules)
 
     def forward(self, batch: Batch) -> Tensor:
-        """Takes a molecular graph, applies a graph convolution and sigmoid layers to
-        predict regular and priority reaction rules.
+        """Takes a molecular graph, applies a graph convolution and sigmoid
+        layers to predict regular and priority reaction rules.
 
         :param batch: The input batch of molecular graphs.
-        :return: Returns the vector of probabilities (given by sigmoid) of successful
-            application of regular and priority reaction rules.
+        :return: Returns the vector of probabilities (given by sigmoid)
+            of successful application of regular and priority reaction
+            rules.
         """
         x = self.embedder(batch, self.batch_size)
         y = self.y_predictor(x)
@@ -64,12 +66,12 @@ class PolicyNetwork(MCTSNetwork, LightningModule, ABC):
             return y, priority
 
     def _get_loss(self, batch: Batch) -> Dict[str, Tensor]:
-        """Calculates the loss and various classification metrics for a given batch for
-        reaction rules prediction.
+        """Calculates the loss and various classification metrics for a given
+        batch for reaction rules prediction.
 
         :param batch: The batch of molecular graphs.
-        :return: A dictionary with loss value and balanced accuracy of reaction rules
-            prediction.
+        :return: A dictionary with loss value and balanced accuracy of
+            reaction rules prediction.
         """
         true_y = batch.y_rules.long()
         x = self.embedder(batch, self.batch_size)

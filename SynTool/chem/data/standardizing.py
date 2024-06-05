@@ -36,8 +36,8 @@ class ReactionMappingStandardizer:
     def from_config(
         config: ReactionMappingConfig,
     ) -> "ReactionMappingStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return ReactionMappingStandardizer()
 
     def _map_and_remove_reagents(
@@ -54,9 +54,9 @@ class ReactionMappingStandardizer:
     def _map_reaction(
         self, reaction: ReactionContainerCGRTools
     ) -> ReactionContainerCGRTools | None:
-        """Reads a file of reactions and maps atoms of the reactions using chytorch.
-        This function does not use the ReactionReader/ReactionWriter classes, because
-        they are not compatible with chython.
+        """Reads a file of reactions and maps atoms of the reactions using
+        chytorch. This function does not use the ReactionReader/ReactionWriter
+        classes, because they are not compatible with chython.
 
         :param reaction: Input reaction.
         :return: None.
@@ -76,14 +76,15 @@ class ReactionMappingStandardizer:
         """Maps atoms of the reactions using chytorch.
 
         :param reaction: Input reaction.
-        :return: Returns standardized reaction if the reaction has standardized
-            successfully, else None.
+        :return: Returns standardized reaction if the reaction has
+            standardized successfully, else None.
         """
         try:
             reaction.standardize()
             return reaction
         except Exception as e:
             logging.debug(e)
+        return None
 
 
 class FunctionalGroupsConfig:
@@ -97,16 +98,16 @@ class FunctionalGroupsStandardizer:
     def from_config(
         config: FunctionalGroupsConfig,
     ) -> "FunctionalGroupsStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return FunctionalGroupsStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
         """Functional groups standardization.
 
         :param reaction: Input reaction.
-        :return: Returns standardized reaction if the reaction has standardized
-            successfully, else None.
+        :return: Returns standardized reaction if the reaction has
+            standardized successfully, else None.
         """
         try:
             reaction.standardize()
@@ -127,16 +128,16 @@ class KekuleFormStandardizer:
     def from_config(
         config: KekuleFormConfig,
     ) -> "KekuleFormStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return KekuleFormStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
         """Reactants/reagents/products kekulization.
 
         :param reaction: Input reaction.
-        :return: Returns standardized reaction if the reaction has standardized
-            successfully, else None.
+        :return: Returns standardized reaction if the reaction has
+            standardized successfully, else None.
         """
         try:
             reaction.kekule()
@@ -157,15 +158,16 @@ class CheckValenceStandardizer:
     def from_config(
         config: CheckValenceConfig,
     ) -> "CheckValenceStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return CheckValenceStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
         """Check valence.
 
         :param reaction: Input reaction.
-        :return: Returns reaction if the atom valences are correct, else None.
+        :return: Returns reaction if the atom valences are correct, else
+            None.
         """
         for molecule in reaction.reactants + reaction.products + reaction.reagents:
             valence_mistakes = molecule.check_valence()
@@ -185,8 +187,8 @@ class ImplicifyHydrogensStandardizer:
     def from_config(
         config: ImplicifyHydrogensConfig,
     ) -> "ImplicifyHydrogensStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return ImplicifyHydrogensStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
@@ -214,8 +216,8 @@ class CheckIsotopesStandardizer:
     def from_config(
         config: CheckIsotopesConfig,
     ) -> "CheckIsotopesStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return CheckIsotopesStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
@@ -247,8 +249,8 @@ class SplitIonsStandardizer:
     def from_config(
         config: SplitIonsConfig,
     ) -> "SplitIonsStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return SplitIonsStandardizer()
 
     def _calc_charge(self, molecule: MoleculeContainer) -> int:
@@ -325,16 +327,16 @@ class AromaticFormStandardizer:
     def from_config(
         config: AromaticFormConfig,
     ) -> "AromaticFormStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return AromaticFormStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
         """Aromatize molecules in reaction.
 
         :param reaction: Input reaction.
-        :return: Returns reaction with aromatized reactants/reagents/products, else
-            None.
+        :return: Returns reaction with aromatized
+            reactants/reagents/products, else None.
         """
         try:
             reaction.thiele()
@@ -355,15 +357,16 @@ class MappingFixStandardizer:
     def from_config(
         config: MappingFixConfig,
     ) -> "MappingFixStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return MappingFixStandardizer()
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
         """Fix atom-to-atom mapping in reaction.
 
         :param reaction: Input reaction.
-        :return: Returns reaction with fixed atom-to-atom mapping, else None.
+        :return: Returns reaction with fixed atom-to-atom mapping, else
+            None.
         """
         try:
             reaction.fix_mapping()
@@ -379,7 +382,8 @@ class UnchangedPartsConfig:
 
 
 class UnchangedPartsStandardizer:
-    """Ungroup molecules, remove unchanged parts from reactants and products."""
+    """Ungroup molecules, remove unchanged parts from reactants and
+    products."""
 
     def __init__(
         self,
@@ -391,14 +395,17 @@ class UnchangedPartsStandardizer:
 
     @staticmethod
     def from_config(config: UnchangedPartsConfig) -> "UnchangedPartsStandardizer":
-        """Creates an instance of CompeteProductsFilter from a configuration object."""
+        """Creates an instance of CompeteProductsFilter from a configuration
+        object."""
         return UnchangedPartsStandardizer()
 
     def _remove_unchanged_parts(self, reaction: ReactionContainer) -> ReactionContainer:
-        """Ungroup molecules, remove unchanged parts from reactants and products.
+        """Ungroup molecules, remove unchanged parts from reactants and
+        products.
 
         :param reaction: Input reaction.
-        :return: Returns reaction with removed unchanged parts, else None.
+        :return: Returns reaction with removed unchanged parts, else
+            None.
         """
         meta = reaction.meta
         new_reactants = list(reaction.reactants)
@@ -424,10 +431,12 @@ class UnchangedPartsStandardizer:
         )
 
     def __call__(self, reaction: ReactionContainer) -> ReactionContainer | None:
-        """Ungroup molecules, remove unchanged parts from reactants and products.
+        """Ungroup molecules, remove unchanged parts from reactants and
+        products.
 
         :param reaction: Input reaction.
-        :return: Returns reaction with removed unchanged parts, else None.
+        :return: Returns reaction with removed unchanged parts, else
+            None.
         """
         try:
             reaction = self._remove_unchanged_parts(reaction)
@@ -475,7 +484,8 @@ class SmallMoleculesStandardizer:
 
     @staticmethod
     def from_config(config: SmallMoleculesConfig) -> "SmallMoleculesStandardizer":
-        """Creates an instance of SmallMoleculesStandardizer from a configuration object."""
+        """Creates an instance of SmallMoleculesStandardizer from a
+        configuration object."""
         return SmallMoleculesStandardizer(config.mol_max_size)
 
     def _split_molecules(
@@ -485,7 +495,8 @@ class SmallMoleculesStandardizer:
 
         :param molecules: Iterable of molecules.
         :param number_of_atoms: Threshold for splitting molecules.
-        :return: Tuple of lists containing "big" molecules and "small" molecules.
+        :return: Tuple of lists containing "big" molecules and "small"
+            molecules.
         """
         big_molecules, small_molecules = [], []
         for molecule in molecules:
@@ -504,7 +515,8 @@ class SmallMoleculesStandardizer:
         """Processes a reaction by removing small molecules.
 
         :param reaction: ReactionContainer object.
-        :param small_molecules_to_meta: If True, deleted molecules are saved to meta.
+        :param small_molecules_to_meta: If True, deleted molecules are
+            saved to meta.
         :return: Processed ReactionContainer without small molecules.
         """
         new_reactants, small_reactants = self._split_molecules(
@@ -582,7 +594,8 @@ class RemoveReagentsStandardizer:
 
     @staticmethod
     def from_config(config: RemoveReagentsConfig) -> "RemoveReagentsStandardizer":
-        """Creates an instance of SmallMoleculesStandardizer from a configuration object."""
+        """Creates an instance of SmallMoleculesStandardizer from a
+        configuration object."""
         return RemoveReagentsStandardizer(config.reagent_max_size)
 
     def _remove_reagents(
@@ -590,11 +603,12 @@ class RemoveReagentsStandardizer:
         reaction: ReactionContainer,
         keep_reagents: bool = True,
     ) -> Union[ReactionContainer, None]:
-        """Removes reagents (not changed molecules or molecules not involved in the
-        reaction) from reactants and products.
+        """Removes reagents (not changed molecules or molecules not involved in
+        the reaction) from reactants and products.
 
         :param reaction: Input reaction
-        :param keep_reagents: If True, the reagents are written to ReactionContainer.
+        :param keep_reagents: If True, the reagents are written to
+            ReactionContainer.
         :return: The cleaned reaction.
         """
         not_changed_molecules = set(reaction.reactants).intersection(reaction.products)
@@ -668,13 +682,13 @@ class RebalanceReactionStandardizer:
     def from_config(
         config: RebalanceReactionConfig,
     ) -> "RebalanceReactionStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return RebalanceReactionStandardizer()
 
     def _rebalance_reaction(self, reaction: ReactionContainer) -> ReactionContainer:
-        """Rebalances the reaction by assembling CGR and then decomposing it. Works for all
-        reactions for which the correct CGR can be assembled.
+        """Rebalances the reaction by assembling CGR and then decomposing it.
+        Works for all reactions for which the correct CGR can be assembled.
 
         :param reaction: The reaction to be rebalanced.
         :return: The rebalanced reaction.
@@ -717,8 +731,8 @@ class DuplicateReactionStandardizer:
     def from_config(
         config: DuplicateReactionConfig,
     ) -> "DuplicateReactionStandardizer":
-        """Creates an instance of CGRConnectedComponentsChecker from a configuration
-        object."""
+        """Creates an instance of CGRConnectedComponentsChecker from a
+        configuration object."""
         return DuplicateReactionStandardizer()
 
     def safe_reaction_smiles(self, reaction: ReactionContainer):
@@ -731,7 +745,8 @@ class DuplicateReactionStandardizer:
         """Remove duplicate reactions.
 
         :param reaction: Input reaction.
-        :return: Returns reaction if it is unique (not duplicate), else None
+        :return: Returns reaction if it is unique (not duplicate), else
+            None
         """
 
         h = hash(self.safe_reaction_smiles(reaction))
@@ -744,23 +759,35 @@ class DuplicateReactionStandardizer:
 
 @dataclass
 class ReactionStandardizationConfig(ConfigABC):
-    """Configuration class for reaction filtering. This class manages configuration
-    settings for various reaction filters, including paths, file formats, and filter-
-    specific parameters.
+    """Configuration class for reaction filtering. This class manages
+    configuration settings for various reaction filters, including paths, file
+    formats, and filter- specific parameters.
 
     :param reaction_mapping_config: Configuration for reaction mapping.
-    :param functional_groups_config: Configuration for functional groups standardization.
-    :param kekule_form_config: Configuration for reactants/reagents/products kekulization.
-    :param check_valence_config: Configuration for atom valence checking.
-    :param implicify_hydrogens_config: Configuration for hydrogens removal.
-    :param check_isotopes_config: Configuration for isotopes checking and cleaning.
-    :param split_ions_config: Configuration for computing charge of molecule.
-    :param aromatic_form_config: Configuration for molecules aromatization.
-    :param unchanged_parts_config: Configuration for removal of unchanged parts in reaction.
-    :param small_molecules_config: Configuration for removal of small molecule from reaction.
-    :param remove_reagents_config: Configuration for removal of reagents from reaction.
-    :param rebalance_reaction_config: Configuration for reaction rebalancing.
-    :param duplicate_reaction_config: Configuration for removal of duplicate reactions.
+    :param functional_groups_config: Configuration for functional groups
+        standardization.
+    :param kekule_form_config: Configuration for
+        reactants/reagents/products kekulization.
+    :param check_valence_config: Configuration for atom valence
+        checking.
+    :param implicify_hydrogens_config: Configuration for hydrogens
+        removal.
+    :param check_isotopes_config: Configuration for isotopes checking
+        and cleaning.
+    :param split_ions_config: Configuration for computing charge of
+        molecule.
+    :param aromatic_form_config: Configuration for molecules
+        aromatization.
+    :param unchanged_parts_config: Configuration for removal of
+        unchanged parts in reaction.
+    :param small_molecules_config: Configuration for removal of small
+        molecule from reaction.
+    :param remove_reagents_config: Configuration for removal of reagents
+        from reaction.
+    :param rebalance_reaction_config: Configuration for reaction
+        rebalancing.
+    :param duplicate_reaction_config: Configuration for removal of
+        duplicate reactions.
     """
 
     # configuration for reaction standardizers
@@ -1014,8 +1041,8 @@ def process_batch(
     batch: List[ReactionContainer],
     standardizers: list,
 ) -> List[ReactionContainer]:
-    """Processes a batch of reactions to standardize reactions based on the given list
-    of standardizers.
+    """Processes a batch of reactions to standardize reactions based on the
+    given list of standardizers.
 
     :param batch: A list of reactions to be standardized.
     :param standardizers: The list of standardizers.
@@ -1039,12 +1066,13 @@ def process_completed_batch(
 ) -> int:
     """Processes completed batches of standardized reactions.
 
-    :param futures: A dictionary of futures with ongoing batch processing tasks.
-    :param result_file: The path to the file where standardized reactions will be
-        stored.
+    :param futures: A dictionary of futures with ongoing batch
+        processing tasks.
+    :param result_file: The path to the file where standardized
+        reactions will be stored.
     :param n_processed: The number of already standardized reactions.
-    :return: The number of standardized reactions after the processing of the current
-        batch.
+    :return: The number of standardized reactions after the processing
+        of the current batch.
     """
     ready_id, running_id = ray.wait(list(futures.keys()), num_returns=1)
     completed_batch = ray.get(ready_id[0])
@@ -1071,12 +1099,12 @@ def standardize_reactions_from_file(
 
     :param config: The reaction standardization configuration.
     :param input_reaction_data_path: Path to the reaction data file.
-    :param standardized_reaction_data_path: Name for the file where standardized
-        reactions will be stored.
+    :param standardized_reaction_data_path: Name for the file where
+        standardized reactions will be stored.
     :param num_cpus: Number of CPUs to use for processing.
     :param batch_size: Size of the batch for processing reactions.
-    :return: None. The function writes the processed reactions to specified smi/RDF
-        files.
+    :return: None. The function writes the processed reactions to
+        specified smi/RDF files.
     """
 
     standardizers = config.create_standardizers()

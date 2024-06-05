@@ -1,5 +1,5 @@
-"""Module containing a class Retron that represents a retron (extend molecule object) in
-the search tree."""
+"""Module containing a class Retron that represents a retron (extend molecule
+object) in the search tree."""
 
 from typing import Set
 
@@ -9,11 +9,12 @@ from SynTool.chem.utils import safe_canonicalization
 
 
 class Retron:
-    """Retron class is used to extend the molecule behavior needed for interaction with
-    a tree in MCTS."""
+    """Retron class is used to extend the molecule behavior needed for
+    interaction with a tree in MCTS."""
 
     def __init__(self, molecule: MoleculeContainer, canonicalize: bool = True):
-        """It initializes a Retron object with a molecule container as a parameter.
+        """It initializes a Retron object with a molecule container as a
+        parameter.
 
         :param molecule: A molecule.
         """
@@ -43,10 +44,11 @@ class Retron:
     def is_building_block(self, bb_stock: Set, min_mol_size: int = 6) -> bool:
         """Checks if a Retron is a building block.
 
-        :param bb_stock: The list of building blocks. Each building block is represented
-            by a canonical SMILES.
-        :param min_mol_size: If the size of the Retron is equal or smaller than
-            min_mol_size it is automatically classified as building block.
+        :param bb_stock: The list of building blocks. Each building
+            block is represented by a canonical SMILES.
+        :param min_mol_size: If the size of the Retron is equal or
+            smaller than min_mol_size it is automatically classified as
+            building block.
         :return: True is Retron is a building block.
         """
         if len(self.molecule) <= min_mol_size:
@@ -58,10 +60,10 @@ class Retron:
 def compose_retrons(
     retrons: list = None, exclude_small: bool = True, min_mol_size: int = 6
 ) -> MoleculeContainer:
-    """Takes a list of retrons, excludes small retrons if specified, and composes them
-    into a single molecule. The composed molecule then is used for the prediction of
-    synthesisability of the characterizing the possible success of the route including
-    the nodes with the given retrons.
+    """Takes a list of retrons, excludes small retrons if specified, and
+    composes them into a single molecule. The composed molecule then is used
+    for the prediction of synthesisability of the characterizing the possible
+    success of the route including the nodes with the given retrons.
 
     :param retrons: The list of retrons to be composed.
     :param exclude_small: The parameter that determines whether small retrons should be excluded from the composition

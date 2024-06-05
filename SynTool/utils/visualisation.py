@@ -1,4 +1,5 @@
-"""Module containing functions for analysis and visualization of the built tree."""
+"""Module containing functions for analysis and visualization of the built
+tree."""
 
 from itertools import count, islice
 from typing import Any, Dict, List
@@ -16,8 +17,10 @@ def get_child_nodes(
     """Extracts the child nodes of the given molecule.
 
     :param tree: The built tree.
-    :param molecule: The molecule in the tree from which to extract child nodes.
-    :param graph: The relationship between the given molecule and child nodes.
+    :param molecule: The molecule in the tree from which to extract
+        child nodes.
+    :param graph: The relationship between the given molecule and child
+        nodes.
     :return: The dict with extracted child nodes.
     """
 
@@ -40,13 +43,16 @@ def get_child_nodes(
 
 
 def extract_routes(tree: Tree, extended: bool = False) -> List[Dict[str, Any]]:
-    """Takes the target and the dictionary of successors and predecessors and returns a
-    list of dictionaries that contain the target and the list of successors.
+    """Takes the target and the dictionary of successors and predecessors and
+    returns a list of dictionaries that contain the target and the list of
+    successors.
 
     :param tree: The built tree.
-    :param extended: If True, generates the extended route representation.
-    :return: A list of dictionaries. Each dictionary contains a target, a list of
-        children, and a boolean indicating whether the target is in building_blocks.
+    :param extended: If True, generates the extended route
+        representation.
+    :return: A list of dictionaries. Each dictionary contains a target,
+        a list of children, and a boolean indicating whether the target
+        is in building_blocks.
     """
     target = tree.nodes[1].retrons_to_expand[0].molecule
     target_in_stock = tree.nodes[1].curr_retron.is_building_block(tree.building_blocks)
@@ -96,7 +102,8 @@ def get_route_svg(tree: Tree, node_id: int) -> str:
     """Visualizes the retrosynthesis route.
 
     :param tree: The built tree.
-    :param node_id: The id of the node from which to visualize the route.
+    :param node_id: The id of the node from which to visualize the
+        route.
     :return: The SVG string.
     """
     nodes = tree.route_to_node(node_id)
@@ -258,12 +265,14 @@ def get_route_svg(tree: Tree, node_id: int) -> str:
 def generate_results_html(
     tree: Tree, html_path: str, aam: bool = False, extended: bool = False
 ) -> None:
-    """Writes an HTML page with the synthesis routes in SVG format and corresponding
-    reactions in SMILES format.
+    """Writes an HTML page with the synthesis routes in SVG format and
+    corresponding reactions in SMILES format.
 
     :param tree: The built tree.
-    :param extended: If True, generates the extended route representation.
-    :param html_path: The path to the file where to store resulting HTML.
+    :param extended: If True, generates the extended route
+        representation.
+    :param html_path: The path to the file where to store resulting
+        HTML.
     :param aam: If True, depict atom-to-atom mapping.
     :return: None.
     """

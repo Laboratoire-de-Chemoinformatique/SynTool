@@ -1,5 +1,5 @@
-"""Module containing classes for muting the redundant logging from complementary
-packages and tools."""
+"""Module containing classes for muting the redundant logging from
+complementary packages and tools."""
 
 import logging
 import os
