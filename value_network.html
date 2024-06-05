@@ -207,7 +207,7 @@ planning session alternat-ed by the retraining of the value network until it rea
 <p>Value network training can be performed with the below command.</p>
 <p><strong>Important:</strong> If you use your custom building blocks, be sure to canonicalize them before planning simulations in value network tuning.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>syntool<span class="w"> </span>building_blocks_canonicalizing<span class="w"> </span>--input<span class="w"> </span>building_blocks_init.smi<span class="w"> </span>--output<span class="w"> </span>building_blocks.smi
-syntool<span class="w"> </span>reinforcement_value_network_training<span class="w"> </span>--config<span class="w"> </span>reinforcement.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks.smi<span class="w"> </span>--policy_network<span class="w"> </span>policy_network.ckpt<span class="w"> </span>--results_dir<span class="w"> </span>value_network
+syntool<span class="w"> </span>reinforcement_value_network_training<span class="w"> </span>--config<span class="w"> </span>reinforcement.yaml<span class="w"> </span>--targets<span class="w"> </span>targets.smi<span class="w"> </span>--reaction_rules<span class="w"> </span>reaction_rules.pickle<span class="w"> </span>--policy_network<span class="w"> </span>policy_network.ckpt<span class="w"> </span>--building_blocks<span class="w"> </span>building_blocks.smi<span class="w"> </span>--results_dir<span class="w"> </span>value_network
 </pre></div>
 </div>
 <dl class="simple">
@@ -256,6 +256,8 @@ syntool<span class="w"> </span>reinforcement_value_network_training<span class="
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">SynTool applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribution.html">SynTool contribution</a></li>
 </ul>
 
 <div class="relations">

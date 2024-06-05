@@ -104,7 +104,7 @@ Value network training can be performed with the below command.
 .. code-block:: bash
 
     syntool building_blocks_canonicalizing --input building_blocks_init.smi --output building_blocks.smi
-    syntool reinforcement_value_network_training --config reinforcement.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --building_blocks building_blocks.smi --policy_network policy_network.ckpt --results_dir value_network
+    syntool reinforcement_value_network_training --config reinforcement.yaml --targets targets.smi --reaction_rules reaction_rules.pickle --policy_network policy_network.ckpt --building_blocks building_blocks.smi --results_dir value_network
 
 **Parameters**:
     - ``config`` - the path to the configuration file.

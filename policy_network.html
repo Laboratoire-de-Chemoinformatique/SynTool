@@ -51,8 +51,8 @@ reaction rules to the training molecules. The labels vector is filled with posit
 to the successfully applied reaction rules. The prediction part of the filtering policy is formed from two linear layers
 with a sigmoid function that assigns the probabilities for the “regular”, as well as “priority” reac-tion rules
 (cyclization reaction rules). These two vectors are then combined with a coefficient α ranging from 0 to 1.
-This approach ensures that the priority reaction rules receive the highest score, followed by other regular reaction rules.
-The filtering policy network requires much more computational resources for the generating of the training dataset than
+This approach ensures that the priority reaction rules receive the highest score, followed by other regular reaction rules.</p>
+<p><strong>Conclusion</strong>. The filtering policy network requires much more computational resources for the generating of the training dataset than
 the ranking policy but can be used with any set of reaction rules because the original reaction dataset is not needed.
 This allows for the portability of reaction rules extracted with another software from any source of reaction data.</p>
 </section>
@@ -172,6 +172,8 @@ This allows for the portability of reaction rules extracted with another softwar
 </li>
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">SynTool applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribution.html">SynTool contribution</a></li>
 </ul>
 
 <div class="relations">

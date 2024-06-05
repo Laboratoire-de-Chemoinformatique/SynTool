@@ -3,15 +3,17 @@
 <html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; SynTool 1.0 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SynTool contribution &#8212; SynTool 1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
     <script src="_static/documentation_options.js?v=f2a433a1"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <link rel="index" title="Index" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="SynTool applications" href="applications.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -28,12 +30,25 @@
 
           <div class="body" role="main">
             
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
-</div>
+  <section id="syntool-contribution">
+<h1>SynTool contribution<a class="headerlink" href="#syntool-contribution" title="Link to this heading">¶</a></h1>
+<p>This page explains possible ways of contributing to SynTool, its improvement, and extension.</p>
+<section id="syntool-extension">
+<h2>SynTool extension<a class="headerlink" href="#syntool-extension" title="Link to this heading">¶</a></h2>
+<p><strong>1. Adding new reaction/molecule standardizers</strong></p>
+<p>The quality of reaction data is crucial in training retrosynthetic models and retrosynthesis planning.
+The current protocol of reaction data curation can be extended by the addition of new reaction standardizers
+and customized depending on the task.</p>
+<p><strong>2. Adding new reaction filters</strong></p>
+<p>The quality of reaction data is crucial in training retrosynthetic models and retrosynthesis planning.
+The current protocol of reaction data curation can be extended by the addition of new reaction filters and customized depending on the task.</p>
+<p><strong>3. Adding new expansion policies</strong></p>
+<p>Expansion policy in tree search can prioritize some reaction rules navigating the search and defining
+the final patterns in predicted retrosynthetic routes. Thus, expansion policy is an interface between algorithmic search
+and the chemical context of panning. The addition of specialized expansion policies can customize
+the general design of predicted retrosynthetic routes depending on the task.</p>
+</section>
+</section>
 
 
           </div>
@@ -52,7 +67,7 @@
 
 
 <h3>Navigation</h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
@@ -63,13 +78,17 @@
 <li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="applications.html">SynTool applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contribution.html">SynTool contribution</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SynTool contribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#syntool-extension">SynTool extension</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="applications.html" title="previous chapter">SynTool applications</a></li>
   </ul></li>
 </ul>
 </div>
@@ -102,6 +121,9 @@
       Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
+      |
+      <a href="_sources/contribution.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
 
     

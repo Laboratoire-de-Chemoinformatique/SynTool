@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SynTool applications &#8212; SynTool 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SynTool contribution" href="contribution.html" />
+    <link rel="prev" title="Retrosynthesis planning" href="retrosynthesis_planning.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="syntool-applications">
+<h1>SynTool applications<a class="headerlink" href="#syntool-applications" title="Link to this heading">¶</a></h1>
+<p>This page shows some usage cases of SynTool, potentially useful in reaction informatics and Computer-Aided Synthesis Planning (CASP).</p>
+<section id="usage-cases">
+<h2>Usage cases<a class="headerlink" href="#usage-cases" title="Link to this heading">¶</a></h2>
+<p><strong>1. Curating/cleaning reaction data</strong></p>
+<p>SynTool provides original reaction data curation protocols (atom mapping, standardization, and filtration),
+which can be used separately and independently. This curated data can be used in other applications or CASP tools.</p>
+<p>See the details in <a class="reference internal" href="reaction_standardization.html#reaction-standardization"><span class="std std-ref">Reaction standardization</span></a> and <a class="reference internal" href="reaction_filtration.html#reaction-filtration"><span class="std std-ref">Reaction filtration</span></a>.</p>
+<p><strong>2. Building custom retrosynthesis planners</strong></p>
+<p>SynTool incorporates the full pipeline of preparation of retrosynthetic models and building ready-to-use retrosynthesis planners.
+This allows for the usage of SynTool in retrosynthesis planning based on custom and private reaction data, specific reaction databases,
+or specific types of chemistry. With SynTool it is possible easily to build a private planner from any reaction data sources.</p>
+<p>See the details in <a class="reference internal" href="index.html#index"><span class="std std-ref">SynTool</span></a>.</p>
+<p><strong>3. Extracting reaction rules from the reaction database</strong></p>
+<p>SynTool incorporates the original module for reaction rule extraction from reaction data.
+The protocol of reaction rule extraction is flexible and allows balancing between the generality and specificity of reaction rules
+depending on the task. The extracted reaction rules can be stored as reaction SMARTS and currently are compatible with the AiZynthFinder tool.</p>
+<p>See the details in <a class="reference internal" href="reaction_rules_extraction.html#reaction-rules-extraction"><span class="std std-ref">Reaction rules extraction</span></a>.</p>
+<p><strong>4. Retrosynthesis planning with custom reaction rules</strong></p>
+<p>In SynTool it is possible to train a filtering policy network for the prediction of applicable reaction rules in tree search.
+The distinctive feature of the filtering policy network is that it can be trained with an external set of reaction rules,
+extracted by other software, and created manually. Then, these reaction rules and trained policy can be used in advanced planning algorithms in SynTool.</p>
+<p>See the details in <a class="reference internal" href="policy_network.html#policy-network"><span class="std std-ref">Policy network</span></a>.</p>
+<p><strong>5. Advanced planning algorithms</strong></p>
+<p>The flexibility of SynTool and a collection of complementary neural networks in SynTool allows for advanced retrosynthesis planning,
+which sometimes may find the solution for some target molecules unsolved by default planning in SynTool or other tools.
+Advanced planning is slower than other counterparts but is more powerful because of a more comprehensive exploration of the search tree.</p>
+<p>See the details in <a class="reference internal" href="retrosynthesis_planning.html#retrosynthesis-planning"><span class="std std-ref">Retrosynthesis planning</span></a>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SynTool</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_download.html">Data download</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_standardization.html">Reaction standardization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_filtration.html">Reaction filtration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reaction_rules_extraction.html">Reaction rules extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="policy_network.html">Policy network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="value_network.html">Value network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrosynthesis_planning.html">Retrosynthesis planning</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SynTool applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage-cases">Usage cases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contribution.html">SynTool contribution</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="retrosynthesis_planning.html" title="previous chapter">Retrosynthesis planning</a></li>
+      <li>Next: <a href="contribution.html" title="next chapter">SynTool contribution</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, University of Strasbourg / Hokkaido University.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/applications.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
