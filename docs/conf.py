@@ -19,7 +19,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../Synto'))
+sys.path.insert(0, os.path.abspath('../SynTool'))
 
 
 # -- General configuration ------------------------------------------------
@@ -43,8 +43,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Synto'
-copyright = '2023, University of Strasbourg'
+project = 'SynTool'
+copyright = '2023, University of Strasbourg / Hokkaido University'
 author = 'TA / DZ'
 
 # The version info for the project you're documenting, acts as replacement for

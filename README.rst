@@ -1,63 +1,21 @@
-Synto - SYNthesis planning TOol
-========
-Synto is a tool for chemical synthesis planning based on Monte-Carlo Tree Search (MCTS)
-with various implementations of policy and value functions.
 
+SynTool - a tool for synthesis planning
+========================================
+SynTool is a tool for reaction data curation, reaction rules extraction, retrosynthetic models training,
+and retrosynthesis planning. This is a multilayered software allowing for processing any source of
+reaction data and building a ready-to-use retrosynthesis planner.
 
 Installation
 ------------
 
-Important: all versions require **python from 3.8 and up to 3.10**!
+**Important-1:** all versions require **python from 3.8 and up to 3.10**!
+
+**Important-2:** currently for neural networks training GPU is necessary!
 
 Linux distributions
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
-Dev: Installation with conda-lock
-""""""
-
-`conda-lock` is a tool used for creating deterministic environment specifications for conda environments. This is useful for ensuring consistent environments across different machines or at different times. To install `conda-lock`, follow these steps:
-
-**1. Install conda-lock**
-
-You need to have `conda` or `mamba` installed on your system to install `conda-lock`. If you have not installed `conda` yet, you can download it from `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ or `Anaconda <https://www.anaconda.com/products/individual>`_.
-
-wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash Miniforge3-$(uname)-$(uname -m).sh
-
-
-Once `conda` is installed, you can install `conda-lock` by running:
-
-.. code-block:: bash
-
-   conda install -c conda-forge -n base conda-lock
-
-or, if you are using `mamba`:
-
-.. code-block:: bash
-
-   mamba install -c conda-forge -n base conda-lock
-
-**2. Install the environment using the conda-lock file**
-
-
-Once you have a `.conda-lock` file, you can create a conda environment that exactly matches the specifications in the lock file. To do this, use:
-
-.. code-block:: bash
-
-   conda-lock install -n synto --file conda-linux64-GPU-lock.yml
-
-This command will read the `.conda-lock` file and create an environment with the exact package versions specified in the file.
-
-.. note::
-   Make sure that the `.conda-lock` file is in your current working directory or provide the path to the file when using the `conda-lock install` command.
-
-Dev: Installation with poetry
-""""""
-
-It requires only poetry 1.3.2. To install poetry, follow the example below, or the instructions on
-https://python-poetry.org/docs/#installation
-
-For example, on Ubuntu we can install miniconda and set an environment in which we will install poetry with the following commands:
+SynTool can be installed by the following steps:
 
 .. code-block:: bash
 
@@ -65,16 +23,17 @@ For example, on Ubuntu we can install miniconda and set an environment in which 
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     bash Miniconda3-latest-Linux-x86_64.sh
 
-    # install poetry
-    conda create -n synto -c conda-forge "poetry=1.3.2" "python=3.10" -y
-    conda activate synto
+    # create a new environment and poetry
+    conda create -n syntool -c conda-forge "poetry=1.3.2" "python=3.10" -y
+    conda activate syntool
 
-    # install Synto
-    git clone https://github.com/Laboratoire-de-Chemoinformatique/Synto.git
+    # clone SynTool
+    git clone https://github.com/Laboratoire-de-Chemoinformatique/Syntool.git
 
-    # navigate to the Synto folder and run the following command:
-    cd Synto/
-    poetry install --with cpu
+    # navigate to the SynTool folder and install all the dependencies
+    cd SynTool/
+    poetry install --with gpu
+    conda activate syntool
 
 If Poetry fails with error, a possible solution is to update the bashrc file with the following command:
 
@@ -83,51 +42,70 @@ If Poetry fails with error, a possible solution is to update the bashrc file wit
     echo 'export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring' >> ~/.bashrc
     exec "bash"
 
-Optional
-^^^^^^^^^^^
-After installation, one can add the Synto environment in their Jupyter platform:
+After installation, one can add the ``syntool`` environment in their Jupyter platform:
 
 .. code-block:: bash
 
-    python -m ipykernel install --user --name synto --display-name "synto"
+    conda install ipykernel
+    python -m ipykernel install --user --name syntool --display-name "syntool"
 
-Usage
+Quick start
 ------------
-The usage is mostly optimized for the command line interface.
-Here are some implemented commands:
 
-* synto_planning
-* synto_training
-* synto_extract_rules
-* synto_policy_training
-* synto_self_tuning
+Each command in SynTool has a description that can be called with ``syntool --help`` and ``syntool command --help``
 
-Each command has a description that can be called with ``command --help``
+To run a retrosynthesis planning in SynTool the reaction rules, trained retrosynthetic models (policy network and value network),
+and building block molecules are needed.
 
-Run retrosynthetic planning
-^^^^^^^^^^^
+The planning command takes the file with the SMILES of target molecules listed one by one.
+Also, the target molecule can be provided in the SDF format.
+
+If you use your custom building blocks, be sure to canonicalize them before planning.
+
 .. code-block:: bash
 
-    synto_planning_data
-    synto_planning --config="planning_config.yaml"
+    # download planning data
+    syntool download_planning_data
 
-Run training from scratch
-^^^^^^^^^^^
-.. code-block:: bash
+    # canonicalize building blocks
+    syntool building_blocks_canonicalizing --input building_blocks_custom.smi --output planning_data/building_blocks.smi
 
-    synto_training_data
-    synto_training --config="training_config.yaml"
+    # planning with rollout evaluation
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --results_dir planning_results
 
+    # planning with value network evaluation
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --value_network planning_data/value_network.ckpt --results_dir planning_results
+
+After retrosynthesis planning is finished, the visualized retrosynthesis routes can be fund in the results folder (``planning_results/extracted_routes_html``).
+
+SynTool includes the full pipeline of reaction data curation, reaction rules extraction, and retrosynthetic models training.
+For more details consult the corresponding sections in the documentation `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
+
+Tutorials
+----------------------
+SynTool can be accessed via the Python interface. For a better understanding of SynTool and its functionalities consult
+the tutorials in `SynTool/tutorials`. Currently, two tutorials are available:
+
+``tutorials/general_tutorial.ipynb`` – explains how to do a reaction rules extraction, policy network training, and retrosynthesis planning in SynTool.
+
+``tutorials/planning_tutorial.ipynb`` – explains how to do a retrosynthesis planning with various configurations of planning algorithms (various expansion/evaluation functions and search strategies).
+
+
+Graphical user interface
+---------------------------
+
+Retrosynthesis planning in SynTool is also available by the simple graphical user interface (GUI).
+
+1. Create an account on HuggingFace: https://huggingface.co/join
+
+2. Once created and logged in, join SynTool group: https://huggingface.co/organizations/SynTool/share/rWSFhgqKxsMBQbObqspfFpRpZeTZQUGrol
+
+3. The GUI is then available on: https://huggingface.co/spaces/SynTool/SynTool_GUI
+
+The current version of GUI now is under development.
 
 Documentation
------------
+----------------------
 
-The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/Synto/>`_
+The detailed documentation can be found `here <https://laboratoire-de-chemoinformatique.github.io/SynTool/>`_.
 
-Tests
------------
-
-.. code-block:: bash
-
-    synto_training --config="configs/training_config.yaml"
-    synto_planning --config="configs/planning_config.yaml"
