@@ -83,8 +83,8 @@ The reaction rules extraction protocol can be adjusted with the configuration ya
     environment_atom_count: 1
     min_popularity: 3
     multicenter_rules: True
-    include_rings: False
-    keep_leaving_groups: False
+    include_rings: True
+    keep_leaving_groups: True
     keep_incoming_groups: False
     keep_reagents: False
     keep_metadata: False

@@ -28,7 +28,7 @@ SynTool can be installed by the following steps:
     conda activate syntool
 
     # clone SynTool
-    git clone https://github.com/Laboratoire-de-Chemoinformatique/Syntool.git
+    git clone https://github.com/Laboratoire-de-Chemoinformatique/SynTool.git
 
     # navigate to the SynTool folder and install all the dependencies
     cd SynTool/
@@ -52,6 +52,8 @@ After installation, one can add the ``syntool`` environment in their Jupyter pla
 Quick start
 ------------
 
+**Important-3:** currently for retrosynthesis planning in SynTool GPU is not required.
+
 Each command in SynTool has a description that can be called with ``syntool --help`` and ``syntool command --help``
 
 To run a retrosynthesis planning in SynTool the reaction rules, trained retrosynthetic models (policy network and value network),
@@ -71,10 +73,10 @@ If you use your custom building blocks, be sure to canonicalize them before plan
     syntool building_blocks_canonicalizing --input building_blocks_custom.smi --output syntool_planning_data/building_blocks.smi
 
     # planning with rollout evaluation
-    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules syntool_planning_data/reaction_rules.pickle --building_blocks syntool_planning_data/building_blocks.smi --policy_network syntool_planning_data/ranking_policy_network.ckpt --results_dir planning_results
+    syntool planning --config configs/planning.yaml --targets benchmark/targets_with_sascore_1.5_2.5.smi --reaction_rules syntool_planning_data/uspto_reaction_rules.pickle --building_blocks syntool_planning_data/building_blocks.smi --policy_network syntool_planning_data/ranking_policy_network.ckpt --results_dir planning_results
 
     # planning with value network evaluation
-    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules syntool_planning_data/reaction_rules.pickle --building_blocks syntool_planning_data/building_blocks.smi --policy_network syntool_planning_data/ranking_policy_network.ckpt --value_network syntool_planning_data/value_network.ckpt --results_dir planning_results
+    syntool planning --config configs/planning.yaml --targets benchmark/targets_with_sascore_1.5_2.5.smi --reaction_rules syntool_planning_data/uspto_reaction_rules.pickle --building_blocks syntool_planning_data/building_blocks.smi --policy_network syntool_planning_data/ranking_policy_network.ckpt --value_network syntool_planning_data/value_network.ckpt --results_dir planning_results
 
 After retrosynthesis planning is finished, the visualized retrosynthesis routes can be fund in the results folder (``planning_results/extracted_routes_html``).
 
