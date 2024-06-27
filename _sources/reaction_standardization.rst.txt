@@ -26,25 +26,25 @@ and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions
 The current available reaction standardizers in SynTool:
 
 .. table::
-    :widths: 30 50
+    :widths: 25 50
 
     ================================== =================================================================================
     Reaction standardizer              Description
     ================================== =================================================================================
-    reaction_mapping_config            Maps atoms of the reaction using chython (chytorch)
+    reaction_mapping_config            Maps atoms of the reaction using chython and chytorch
     functional_groups_config           Standardization of functional groups
-    kekule_form_config                 Transform molecules to Kekule form when possible
-    check_valence_config               Check atom valences
-    implicify_hydrogens_config         Remove hydrogen atoms
-    check_isotopes_config              Check and clean isotope atoms when possible
-    split_ions_config                  Split ions in reaction when possible
-    aromatic_form_config               Transform molecules to aromatic form when possible
-    mapping_fix_config                 Fix atom-to-atom mapping in reaction when needed and possible
-    unchanged_parts_config             Remove unchanged parts in reaction
-    small_molecules_config             Remove small molecule from reaction
-    remove_reagents_config             Remove reagents from reaction
-    rebalance_reaction_config          Rebalance reaction
-    duplicate_reaction_config          Remove duplicate reactions
+    kekule_form_config                 Transforms molecules to Kekule form when possible
+    check_valence_config               Checks atom valences
+    implicify_hydrogens_config         Removes hydrogen atoms
+    check_isotopes_config              Checks and clean isotope atoms when possible
+    split_ions_config                  Splits ions in reaction when possible
+    aromatic_form_config               Transforms molecules to aromatic form when possible
+    mapping_fix_config                 Fixes atom-to-atom mapping in reaction when needed and possible
+    unchanged_parts_config             Removes unchanged parts in reaction
+    small_molecules_config             Removes small molecule from reaction
+    remove_reagents_config             Removes reagents from reaction
+    rebalance_reaction_config          Rebalances reaction
+    duplicate_reaction_config          Removes duplicate reactions
     ================================== =================================================================================
 
 
@@ -66,7 +66,7 @@ Reaction standardization protocol can be adjusted configuration yaml file (these
     unchanged_parts_config:
     duplicate_reaction_config:
 
-**Important-1:** if the reaction standardizer name is listed in the configuration file (see above), it means that this filter will be activated.
+**Important-1:** if the reaction standardizer name is listed in the configuration file (see above), it means that this standardizer will be activated.
 
 **Important-2:** the order of standardizers listed in the configuration file defines the order of their application to the input reactions.
 

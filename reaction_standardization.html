@@ -54,8 +54,8 @@ and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions
 <p>The current available reaction standardizers in SynTool:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 37.5%" />
-<col style="width: 62.5%" />
+<col style="width: 33.3%" />
+<col style="width: 66.7%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Reaction standardizer</p></th>
@@ -64,46 +64,46 @@ and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions
 </thead>
 <tbody>
 <tr class="row-even"><td><p>reaction_mapping_config</p></td>
-<td><p>Maps atoms of the reaction using chython (chytorch)</p></td>
+<td><p>Maps atoms of the reaction using chython and chytorch</p></td>
 </tr>
 <tr class="row-odd"><td><p>functional_groups_config</p></td>
 <td><p>Standardization of functional groups</p></td>
 </tr>
 <tr class="row-even"><td><p>kekule_form_config</p></td>
-<td><p>Transform molecules to Kekule form when possible</p></td>
+<td><p>Transforms molecules to Kekule form when possible</p></td>
 </tr>
 <tr class="row-odd"><td><p>check_valence_config</p></td>
-<td><p>Check atom valences</p></td>
+<td><p>Checks atom valences</p></td>
 </tr>
 <tr class="row-even"><td><p>implicify_hydrogens_config</p></td>
-<td><p>Remove hydrogen atoms</p></td>
+<td><p>Removes hydrogen atoms</p></td>
 </tr>
 <tr class="row-odd"><td><p>check_isotopes_config</p></td>
-<td><p>Check and clean isotope atoms when possible</p></td>
+<td><p>Checks and clean isotope atoms when possible</p></td>
 </tr>
 <tr class="row-even"><td><p>split_ions_config</p></td>
-<td><p>Split ions in reaction when possible</p></td>
+<td><p>Splits ions in reaction when possible</p></td>
 </tr>
 <tr class="row-odd"><td><p>aromatic_form_config</p></td>
-<td><p>Transform molecules to aromatic form when possible</p></td>
+<td><p>Transforms molecules to aromatic form when possible</p></td>
 </tr>
 <tr class="row-even"><td><p>mapping_fix_config</p></td>
-<td><p>Fix atom-to-atom mapping in reaction when needed and possible</p></td>
+<td><p>Fixes atom-to-atom mapping in reaction when needed and possible</p></td>
 </tr>
 <tr class="row-odd"><td><p>unchanged_parts_config</p></td>
-<td><p>Remove unchanged parts in reaction</p></td>
+<td><p>Removes unchanged parts in reaction</p></td>
 </tr>
 <tr class="row-even"><td><p>small_molecules_config</p></td>
-<td><p>Remove small molecule from reaction</p></td>
+<td><p>Removes small molecule from reaction</p></td>
 </tr>
 <tr class="row-odd"><td><p>remove_reagents_config</p></td>
-<td><p>Remove reagents from reaction</p></td>
+<td><p>Removes reagents from reaction</p></td>
 </tr>
 <tr class="row-even"><td><p>rebalance_reaction_config</p></td>
-<td><p>Rebalance reaction</p></td>
+<td><p>Rebalances reaction</p></td>
 </tr>
 <tr class="row-odd"><td><p>duplicate_reaction_config</p></td>
-<td><p>Remove duplicate reactions</p></td>
+<td><p>Removes duplicate reactions</p></td>
 </tr>
 </tbody>
 </table>
@@ -124,7 +124,7 @@ and atom-to-atom mapping fixing. The duplicate reactions and erroneous reactions
 <span class="nt">duplicate_reaction_config</span><span class="p">:</span>
 </pre></div>
 </div>
-<p><strong>Important-1:</strong> if the reaction standardizer name is listed in the configuration file (see above), it means that this filter will be activated.</p>
+<p><strong>Important-1:</strong> if the reaction standardizer name is listed in the configuration file (see above), it means that this standardizer will be activated.</p>
 <p><strong>Important-2:</strong> the order of standardizers listed in the configuration file defines the order of their application to the input reactions.</p>
 </section>
 <section id="cli">
