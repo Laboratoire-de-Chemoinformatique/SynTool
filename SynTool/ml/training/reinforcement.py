@@ -115,6 +115,7 @@ def run_tree_search(
     building_blocks = load_building_blocks(building_blocks_path)
 
     # initialize tree
+    tree_config.evaluation_type = 'gcn'
     tree_config.silent = True
     tree = Tree(
         target=target,

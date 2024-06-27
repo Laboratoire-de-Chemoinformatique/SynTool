@@ -1,17 +1,10 @@
-environment_atom_count: 1
 min_popularity: 3
+environment_atom_count: 1
 multicenter_rules: True
-as_query_container: True
-reverse_rule: True
-reactor_validation: True
-include_func_groups: False
-func_groups_list:
-include_rings: False
-keep_leaving_groups: False
+include_rings: True
+keep_leaving_groups: True
 keep_incoming_groups: False
 keep_reagents: False
-keep_metadata: False
-single_reactant_only: True
 atom_info_retention:
   reaction_center:
     neighbors: True

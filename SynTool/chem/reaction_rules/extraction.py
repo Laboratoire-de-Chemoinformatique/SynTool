@@ -41,13 +41,12 @@ def add_environment_atoms(
         environment_atom_count is 0, the original set of center atoms is
         returned unchanged.
     """
-
     if environment_atom_count:
         env_cgr = cgr.augmented_substructure(center_atoms, deep=environment_atom_count)
-        # Combine the original center atoms with the new environment atoms
+        # combine the original center atoms with the new environment atoms
         return center_atoms | set(env_cgr)
 
-    # If no environment is to be included, return the original center atoms
+    # if no environment is to be included, return the original center atoms
     return center_atoms
 
 
@@ -74,18 +73,18 @@ def add_functional_groups(
     """
 
     rule_atoms = center_atoms.copy()
-    # Iterate over each molecule in the reaction
+    # iterate over each molecule in the reaction
     for molecule in reaction.molecules():
-        # For each functional group specified in the list
+        # for each functional group specified in the list
         for func_group in func_groups_list:
-            # Find mappings of the functional group in the molecule
+            # find mappings of the functional group in the molecule
             for mapping in func_group.get_mapping(molecule):
-                # Remap the functional group based on the found mapping
+                # remap the functional group based on the found mapping
                 func_group.remap(mapping)
-                # If the functional group intersects with center atoms, include it
+                # if the functional group intersects with center atoms, include it
                 if set(func_group.atoms_numbers) & center_atoms:
                     rule_atoms |= set(func_group.atoms_numbers)
-                # Reset the mapping to its original state for the next iteration
+                # reset the mapping to its original state for the next iteration
                 func_group.remap({v: k for k, v in mapping.items()})
     return rule_atoms
 
@@ -132,20 +131,20 @@ def add_leaving_incoming_groups(
 
     meta_debug = {"leaving": set(), "incoming": set()}
 
-    # Extract atoms from reactants and products
+    # extract atoms from reactants and products
     reactant_atoms = {atom for reactant in reaction.reactants for atom in reactant}
     product_atoms = {atom for product in reaction.products for atom in product}
 
-    # Identify leaving groups (reactant atoms not in products)
+    # identify leaving groups (reactant atoms not in products)
     if keep_leaving_groups:
         leaving_atoms = reactant_atoms - product_atoms
         new_leaving_atoms = leaving_atoms - rule_atoms
-        # Include leaving atoms in the rule atoms
+        # include leaving atoms in the rule atoms
         rule_atoms |= leaving_atoms
-        # Add leaving atoms to metadata
+        # add leaving atoms to metadata
         meta_debug["leaving"] |= new_leaving_atoms
 
-    # Identify incoming groups (product atoms not in reactants)
+    # identify incoming groups (product atoms not in reactants)
     if keep_incoming_groups:
         incoming_atoms = product_atoms - reactant_atoms
         new_incoming_atoms = incoming_atoms - rule_atoms
@@ -192,21 +191,7 @@ def clean_molecules(
                     rule_molecule
                 )
 
-                # Clean environment atoms
-                if not all(
-                    atom_retention_details["environment"].values()
-                ):  # if everything True, we keep all marks
-                    local_environment_atoms = (
-                        set(rule_molecule.atoms_numbers) - reaction_center_atoms
-                    )
-                    for atom_number in local_environment_atoms:
-                        query_rule_molecule = clean_atom(
-                            query_rule_molecule,
-                            atom_retention_details["environment"],
-                            atom_number,
-                        )
-
-                # Clean reaction center atoms
+                # clean reaction center atoms
                 if not all(
                     atom_retention_details["reaction_center"].values()
                 ):  # if everything True, we keep all marks
@@ -217,6 +202,20 @@ def clean_molecules(
                         query_rule_molecule = clean_atom(
                             query_rule_molecule,
                             atom_retention_details["reaction_center"],
+                            atom_number,
+                        )
+
+                # clean environment atoms
+                if not all(
+                    atom_retention_details["environment"].values()
+                ):  # if everything True, we keep all marks
+                    local_environment_atoms = (
+                        set(rule_molecule.atoms_numbers) - reaction_center_atoms
+                    )
+                    for atom_number in local_environment_atoms:
+                        query_rule_molecule = clean_atom(
+                            query_rule_molecule,
+                            atom_retention_details["environment"],
                             atom_number,
                         )
 
@@ -432,8 +431,6 @@ def create_rule(
         centers, environmental atoms, functional groups, and others.
     """
 
-    # 0. remove reagent # TODO put it here ?
-
     # 1. create reaction CGR
     cgr = ~reaction
     center_atoms = set(cgr.center_atoms)
@@ -466,7 +463,6 @@ def create_rule(
             reaction, rule_atoms, config.as_query_container, config.keep_reagents
         )
     )
-
     # 7. clean atom marks in the molecules if they are being converted to query containers
     if config.as_query_container:
         reactant_substructures = clean_molecules(
@@ -493,11 +489,12 @@ def create_rule(
         reaction,
     )
 
+    # 9. reverse extracted reaction rule and reaction
     if config.reverse_rule:
         rule = reverse_reaction(rule)
         reaction = reverse_reaction(reaction)
 
-    # 9. validate the rule using a reactor if validation is enabled in config
+    # 10. validate the rule using a reactor if validation is enabled in config
     if config.reactor_validation:
         if validate_rule(rule, reaction):
             rule.meta["reactor_validation"] = "passed"
@@ -528,7 +525,7 @@ def extract_rules(
         extracted, up to a maximum of 15 distinct centers.
     """
 
-    standardizer = RemoveReagentsStandardizer()
+    standardizer = RemoveReagentsStandardizer() # TODO reagents are needed in add reagents rule specification
     reaction = standardizer(reaction)
 
     if config.multicenter_rules:
@@ -685,6 +682,7 @@ def extract_rules_from_reactions(
         batch = []
         max_concurrent_batches = num_cpus
         extracted_rules_and_statistics = defaultdict(list)
+
         for index, reaction in tqdm(
             enumerate(reactions),
             desc="Number of reactions processed: ",

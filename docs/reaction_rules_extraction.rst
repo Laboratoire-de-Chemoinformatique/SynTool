@@ -7,14 +7,71 @@ This page explains how to do a reaction rules extraction in SynTool.
 
 Introduction
 ---------------------------
-The protocol for extraction of reaction rules from reactions in SynTool involves the following steps:
+The protocol for reaction rule extraction in SynTool includes several steps:
 
-    1. The atom-to-atom mapping (AAM) in reaction must be established
-    2. Each atom in the reaction is labeled with set of properties such as hybridization, the number of neighbors, the charge, and the ring sizes in which the atoms participate.
-    3. Based on the reaction AAM, the atoms of reactants that change their properties in products are included to the reaction center of the reaction
+**1. CGR creation**
 
-A reaction rule extracted by this protocol is applied to the product of the original reaction. If it successfully
-generates the reactants of the reaction, the reaction rule is considered valid.
+The input reaction is converted to the Condensed Graph of Reaction (CGR), which is a single graph encoding an ensemble
+of reactants and products. CGR results from the superposition of the atoms of products and reactants having the same numbers.
+It contains both conventional chemical bonds (single, double, triple, aromatic, etc.) and so-called “dynamic” bonds describing
+chemical transformations, i.e. breaking or forming a bond or changing bond order. Given CGRs it is possible to extract the
+reaction center of the reaction.
+
+**2. Reaction center extraction**
+
+Some reactions can have several reaction centers and if the ``multicenter_rules`` parameter is ``True``, these centers will be
+included in a single reaction rule. Otherwise, each reaction center will be included in different reaction rules.
+
+**3. Reaction center extension**
+
+The extracted reaction center can be extended by the inclusion of neighboring atoms (environmental atoms) of radius N
+(can be specified by ``environment_atom_count`` parameter). Usually, the environment of radius 1 is included.
+
+**4. Ring structures inclusion**
+
+If the reaction center atoms are part of ring structures or functional groups, they can be included in the reaction center.
+Ring structures are identified by the Smallest Set of Smallest Rings (SSSR) algorithm implemented in CGRTools.
+If the ``include_rings`` parameter is True and any atom of the reaction center is part of the identified ring structure,
+the whole ring is included in the reaction center.
+
+**5. Functional group inclusion**
+
+Functional groups to be included in the reaction center should be specified manually as a list of their SMILES in
+``func_groups_list`` in the configuration file. If ``include_func_groups`` is ``True``, any atom of the reaction center is part of
+any specified functional group, and the whole functional group is included in the reaction center.
+
+**6. Leaving/incoming groups inclusion**
+
+Leaving and incoming groups can be included in the reaction center. These groups are identified by comparison of
+the atoms in reactants and products. If some atoms in reactants are not observed in products, these atoms are identified
+as a leaving group. Likewise, if some atoms in products are not observed in reactants, these atoms are identified
+as an incoming group. This functionality is supposed to handle protection/deprotection reactions and identify protective agents.
+Leaving groups are added to the reaction center if the ``keep_leaving_groups`` parameter is ``True`` and incoming groups are added
+to the reaction center if ``keep_incoming_groups`` parameter is ``True``.
+
+**7. Reagents inclusion**
+
+Reaction rule can be further specified by the inclusion of reagents if the ``keep_reagents`` parameter is True.
+It means that structurally identical reaction rules with identical atom properties will be considered different
+if they are associated with different reagents.
+
+**8. Atom properties specification**
+
+Each atom in the extended and specified reaction center and its environment atoms (neighbor atoms) is described by four properties:
+the number of neighbors, hybridization type, the number of hydrogens, and the size of the ring (if the atom belongs to any ring).
+These properties determine the level of atom and reaction rule specification and can be disabled if needed in the
+``atom_info_retention`` section in the configuration file. If some property in ``atom_info_retention`` is ``True``, it means that this property of
+the atom will be included in the final reaction rule.
+
+**9. Reaction rule creation**
+
+After all settings, the final reaction rule is assembled, reversed (to be used in retrosynthesis mode),
+and validated by application of the final reaction rule to the original reaction, from which it was extracted.
+
+**10. Reaction rule validation**
+
+Finally, the extracted rules are filtered by popularity, which is defined by the ``min_popularity`` parameter.
+For example, ``min_popularity:3`` means, that only rules observed in not less than 3 reactions from the reaction dataset are remained.
 
 Configuration
 ---------------------------
@@ -26,17 +83,11 @@ The reaction rules extraction protocol can be adjusted with the configuration ya
     environment_atom_count: 1
     min_popularity: 3
     multicenter_rules: True
-    as_query_container: True
-    reverse_rule: True
-    reactor_validation: True
-    include_func_groups: False
-    func_groups_list:
     include_rings: False
     keep_leaving_groups: False
     keep_incoming_groups: False
     keep_reagents: False
     keep_metadata: False
-    single_reactant_only: True
     atom_info_retention:
       reaction_center:
         neighbors: True
@@ -57,20 +108,13 @@ The reaction rules extraction protocol can be adjusted with the configuration ya
     ================================== ======= =========================================================================
     Parameter                          Default  Description
     ================================== ======= =========================================================================
-    multicenter_rules                  True    Determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False).
-    as_query_container                 True    When set to True, the extracted rules are formatted as QueryContainer objects, similar to SMARTS for chemical pattern matching.
-    reverse_rule                       True    If True, the direction of the reaction is reversed during rule extraction, which is useful for retrosynthesis.
-    reactor_validation                 True    Activates the validation of each generated rule in a chemical reactor to confirm the accurate generation of products from reactants when set to True.
-    include_func_groups                False   If True, specific functional groups are included in the reaction rule in addition to the reaction center and its environment.
-    func_groups_list                   []      Specifies a list of functional groups to be included when include_func_groups is True.
-    include_rings                      False   Includes ring structures in the reaction rules connected to the reaction center atoms if set to True.
-    keep_leaving_groups                False   Keeps the leaving groups in the extracted reaction rule when set to True. The default is False.
-    keep_incoming_groups               False   Retains incoming groups in the extracted reaction rule if set to True. The default is False.
-    keep_reagents                      False   Includes reagents in the extracted reaction rule when True. The default is False.
     environment_atom_count             1       Determines the number of layers of atoms around the reaction center to be included in the reaction rule. A value of 0 includes only the reaction center, 1 includes the first surrounding layer, and so on.
-    min_popularity                     3       Determines the minimum number of occurrences of a reaction rule in the reaction dataset. The default is 3.
-    keep_metadata                      False   Preserves associated metadata with the reaction in the extracted rule when set to True. The default is False.
-    single_reactant_only               True    Limits the extracted reaction rules to those with only a single reactant molecule if True. The default is True.
+    min_popularity                     3       Determines the minimum number of occurrences of a reaction rule in the reaction dataset.
+    multicenter_rules                  True    Determines whether a single rule is extracted for all centers in multicenter reactions (True) or if separate rules are generated for each center (False).
+    include_rings                      True    Includes ring structures in the reaction rules connected to the reaction center atoms if set to True.
+    keep_leaving_groups                True    Keeps the leaving groups in the extracted reaction rule when set to True.
+    keep_incoming_groups               False   Retains incoming groups in the extracted reaction rule if set to True.
+    keep_reagents                      False   Includes reagents in the extracted reaction rule when True.
     atom_info_retention                --      Dictates the level of detail retained about atoms in the reaction center and their environment. Default settings retain information about neighbors, hybridization, implicit hydrogens, and ring sizes for both the reaction center and its environment.
     ================================== ======= =========================================================================
 

@@ -68,13 +68,13 @@ If you use your custom building blocks, be sure to canonicalize them before plan
     syntool download_planning_data
 
     # canonicalize building blocks
-    syntool building_blocks_canonicalizing --input building_blocks_custom.smi --output planning_data/building_blocks.smi
+    syntool building_blocks_canonicalizing --input building_blocks_custom.smi --output syntool_planning_data/building_blocks.smi
 
     # planning with rollout evaluation
-    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --results_dir planning_results
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules syntool_planning_data/reaction_rules.pickle --building_blocks syntool_planning_data/building_blocks.smi --policy_network syntool_planning_data/ranking_policy_network.ckpt --results_dir planning_results
 
     # planning with value network evaluation
-    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules planning_data/reaction_rules.pickle --building_blocks planning_data/building_blocks.smi --policy_network planning_data/ranking_policy_network.ckpt --value_network planning_data/value_network.ckpt --results_dir planning_results
+    syntool planning --config configs/planning.yaml --targets targets.smi --reaction_rules syntool_planning_data/reaction_rules.pickle --building_blocks syntool_planning_data/building_blocks.smi --policy_network syntool_planning_data/ranking_policy_network.ckpt --value_network syntool_planning_data/value_network.ckpt --results_dir planning_results
 
 After retrosynthesis planning is finished, the visualized retrosynthesis routes can be fund in the results folder (``planning_results/extracted_routes_html``).
 

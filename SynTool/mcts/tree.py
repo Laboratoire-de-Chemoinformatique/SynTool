@@ -91,7 +91,11 @@ class Tree:
         if self.config.evaluation_type == "gcn":
             if evaluation_function is None:
                 raise ValueError(
-                    "Value function not specified while evaluation mode is 'gcn'"
+                    "Value function not specified while evaluation type is 'gcn'"
+                )
+            if evaluation_function is not None and self.config.evaluation_type == "rollout":
+                raise ValueError(
+                    "Value function is not None while evaluation type is 'rollout'. What should  be evaluation type ?"
                 )
             self.value_network = evaluation_function
 

@@ -53,7 +53,7 @@ def apply_reaction_rule(
     top_reactions_num: int = 3,
     validate_products: bool = True,
     rebuild_with_cgr: bool = False,
-) -> Iterator[List[MoleculeContainer,]]:
+) -> Iterator[List[MoleculeContainer, ]]:
     """Applies a reaction rule to a given molecule.
 
     :param molecule: A molecule to which reaction rule will be applied.
@@ -81,9 +81,10 @@ def apply_reaction_rule(
                 reverse=True,
             )
 
+            # take top-N reactions from reactor
             reactions = sorted_reactions[
                 :top_reactions_num
-            ]  # Take top-N reactions from reactor
+            ]
         else:
             reactions = []
             for reaction in reaction_rule(reactants):
@@ -94,12 +95,20 @@ def apply_reaction_rule(
         reactions = []
 
     for reaction in reactions:
+
+        # # TODO temporary solution
+        # atom_diff = sum([len(i) for i in reaction.products]) - sum([len(i) for i in reaction.reactants])
+        # if abs(atom_diff) > 3:
+        #     continue
+
         if rebuild_with_cgr:
             cgr = reaction.compose()
             reactants = cgr.decompose()[1].split()
         else:
             reactants = reaction.products  # reactants are products in retro reaction
         reactants = [mol for mol in reactants if len(mol) > 0]
+
+        # validate products
         if validate_products:
             for mol in reactants:
                 try:
@@ -109,4 +118,5 @@ def apply_reaction_rule(
                     mol.thiele()
                 except InvalidAromaticRing:
                     yield None
+
         yield reactants

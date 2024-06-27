@@ -89,22 +89,25 @@ class RuleExtractionConfig(ConfigABC):
         each atom to retain ('none', 'reaction_center', or 'all').
     """
 
-    multicenter_rules: bool = True
-    as_query_container: bool = True
-    reverse_rule: bool = True
+    # default low-level parameters
+    single_reactant_only: bool = True # TODO single product only ?
+    keep_metadata: bool = False
     reactor_validation: bool = True
+    reverse_rule: bool = True
+    as_query_container: bool = True
     include_func_groups: bool = False
     func_groups_list: List[Union[MoleculeContainer, QueryContainer]] = field(
         default_factory=list
     )
-    include_rings: bool = False
-    keep_leaving_groups: bool = False
-    keep_incoming_groups: bool = False
-    keep_reagents: bool = False
+
+    # adjustable parameters
     environment_atom_count: int = 1
     min_popularity: int = 3
-    keep_metadata: bool = False
-    single_reactant_only: bool = True
+    include_rings: bool = True
+    multicenter_rules: bool = True
+    keep_leaving_groups: bool = True
+    keep_incoming_groups: bool = True
+    keep_reagents: bool = False
     atom_info_retention: Dict[str, Dict[str, bool]] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -412,6 +415,8 @@ class TreeConfig(ConfigABC):
             raise ValueError("max_iterations must be a positive integer.")
         if not isinstance(params["max_time"], int) or params["max_time"] < 1:
             raise ValueError("max_time must be a positive integer.")
+        if not isinstance(params["exclude_small"], bool):
+            raise TypeError("exclude_small must be a boolean.")
         if not isinstance(params["silent"], bool):
             raise TypeError("silent must be a boolean.")
         if not isinstance(params["init_node_value"], float):
@@ -421,6 +426,8 @@ class TreeConfig(ConfigABC):
                 f"Invalid search_strategy: {params['search_strategy']}: "
                 f"Allowed values are 'expansion_first', 'evaluation_first'"
             )
+        # TODO epsilon is not checked
+        # TODO min_mol_size is not checked
 
 
 @dataclass
